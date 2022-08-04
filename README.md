@@ -23,7 +23,7 @@ The payload is the `roblox-player:1+gameinfo:...` link you see inside the networ
 - `--strict`: If enabled, the launcher will not install Roblox and will instead exit with code 1 if there is no existing version of Roblox installed.
 
 ### Hooking the `roblox-player` Scheme
-To hook the launch scheme, you can do `starlight hook [launchOptions]`. To unhook, just do `starlight unhook`. To unhook, a valid installation of Roblox must exist. Refer to the Launch Options section for information.
+To hook the launch scheme, you can do `starlight hook [launchOptions]`. To unhook, just do `starlight unhook`. To unhook, a valid installation of Roblox must exist. Refer to the Launch Options section for information. If you are hooking, the `--payload` option is autofilled and should not be provided.
 
 ### Installing Roblox
 To install Roblox, do `starlight install [installOptions]`. There is currently no support for uninstalling Roblox.
