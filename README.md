@@ -37,5 +37,3 @@ To build Starlight, first clone the repository:
 git clone https://github.com/RealNickk/Starlight-Launcher.git
 ```
 After cloning, open `Starlight-Launcher/Starlight.sln` in Visual Studio, make sure you're in the `Release` build mode, then right click the solution and click `Build Solution`. The binaries will be in `Starlight-Launcher/bin`.
-
-Made by Nick stolen by Pepsi
