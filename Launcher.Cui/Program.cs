@@ -9,103 +9,22 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading.Tasks;
 using CommandLine;
 
-using static Starlight.Cui.CommandLineInterface;
+using static Starlight.CLI;
+using System.Collections.Generic;
 
 namespace Starlight.Cui
 {
-    public class CommandLineInterface
-    {
-        [Verb("launch", HelpText = "Launch using a Roblox launcher URL.")]
-        public class LaunchOptions
-        {
-            [Option("payload", Required = false, HelpText = "The Roblox launch payload.")]
-            public string Payload { get; set; }
-
-            [Option("headless", Required = false, Default = false, HelpText = "Launch without opening the window.")]
-            public bool Headless { get; set; }
-
-            [Option("no-spoof", Required = false, Default = false, HelpText = " Roblox's launch schema to launch this program.")]
-            public bool NoSpoof { get; set; }
-
-            [Option('h', "git-hash", Required = false, Default = "", HelpText = "Force launcher to run a specific verison of Roblox instead of the latest version.")]
-            public string GitHash { get; set; }
-            public bool ForceVersion { get => !GitHash.IsEmpty(); }
-
-            [Option('s', "strict", Required = false, Default = false, HelpText = "If you launch with strict mode, the launcher will not update Roblox if the binary is obsolete.")]
-            public bool Strict { get; set; }
-        }
-
-        [Verb("hook", HelpText = "Hook Roblox's schema to launch using this program.")]
-        public class HookOptions : LaunchOptions // Mirror the options
-        {
-            [Obsolete("This property is a placeholder and cannot be used", true)]
-            [Option("payload", Required = false, Hidden = true)]
-            public new string Payload { get; }
-        }
-
-        [Verb("unhook", HelpText = "Remove the hook on Roblox's schema.")]
-        public class UnhookOptions
-        {
-
-        }
-
-        [Verb("install", HelpText = "Install Roblox.")]
-        public class InstallOptions
-        {
-            [Option('h', "git-hash", Required = false, HelpText = "Install a specific version of Roblox.")]
-            public string GitHash { get; set; }
-        }
-    }
-
     static class Program
     {
-        // was unaware there was an api for this
-        static string SerializeOption(OptionAttribute opt)
-        {
-            if (opt.ShortName != string.Empty)
-                return $"-{opt.ShortName}";
-            else return $"--{opt.LongName}";
-        }
-
-        static string SerializeOptions(object options) // Reflection is hot
-        {
-            StringBuilder szOptions = new();
-            foreach (PropertyInfo prop in typeof(HookOptions).GetProperties())
-            {
-                if (prop.CanRead && prop.CanWrite)
-                {
-                    foreach (OptionAttribute attr in prop.GetCustomAttributes(true).Where(x => x as OptionAttribute != null))
-                    {
-                        var value = prop.GetValue(options);
-                        if (value != null)
-                        {
-                            //Console.WriteLine("{0} -> {1} ({2}", prop.Name, value, prop.PropertyType.Name);
-                            if (prop.PropertyType == typeof(string))
-                            {
-                                if (!((string)value).IsEmpty())
-                                    szOptions.Append(SerializeOption(attr) + ' ' + value.ToString() + ' ');
-                            }
-                            else if (prop.PropertyType == typeof(bool))
-                            {
-                                if ((bool)value)
-                                    szOptions.Append(SerializeOption(attr) + ' ');
-                            }
-                            else throw new Exception("Invalid command value type.");
-                        }
-                    }
-                }
-            }
-            return szOptions.ToString();
-        }
-
         static int Hook(HookOptions hookOptions)
         {
-            string szAssemblyPath = Assembly.GetExecutingAssembly().Location;
-            string szOptions = SerializeOptions(hookOptions); // smh their code sucks and errors so i had to make my own serializer
+            string szAssemblyPath = hookOptions.Gui ?
+                Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "Starlight.Gui.exe") :
+                Assembly.GetExecutingAssembly().Location;
+            string szOptions = SerializeOptions(hookOptions, new List<string> { "Gui" }); // smh their code sucks and errors so i had to make my own serializer
 
             using RegistryKey registryKey = Registry.CurrentUser.CreateSubKey("Software\\Classes\\roblox-player\\shell\\open\\command");
             registryKey.SetValue(string.Empty, $"\"{szAssemblyPath}\" launch {szOptions}--payload %1", RegistryValueKind.String);
@@ -119,14 +38,15 @@ namespace Starlight.Cui
             var installations = Roblox.GetInstallations();
             if (installations.Count < 1)
             {
-                Console.WriteLine("No suitable Roblox installation was found.");
-                return 1;
+                Registry.CurrentUser.DeleteSubKey("Software\\Classes\\roblox-player");
+                goto Unhooked;
             }
             string szBinary = Path.Combine(installations.First().Value, "RobloxPlayerLauncher.exe");
 
-            using RegistryKey registryKey = Registry.CurrentUser.CreateSubKey("Software\\Classes\\roblox-player\\shell\\open\\command");
-            registryKey.SetValue(string.Empty, $"\"{szBinary}\" %1", RegistryValueKind.String);
+            using (RegistryKey registryKey = Registry.CurrentUser.CreateSubKey("Software\\Classes\\roblox-player\\shell\\open\\command"))
+                registryKey.SetValue(string.Empty, $"\"{szBinary}\" %1", RegistryValueKind.String);
 
+        Unhooked:
             Console.WriteLine("Starlight has unhooked its launcher from Roblox.");
             return 0;
         }
@@ -190,6 +110,12 @@ namespace Starlight.Cui
             while (roblox.MainWindowHandle == IntPtr.Zero)
                 await Task.Delay(1500);
 
+            if (roblox.HasExited)
+            {
+                Console.WriteLine("Roblox opened but exited while joining.");
+                return 1;
+            }
+
             if (launchOptions.Headless) // I can't put a hidden window flag in the start info
                 Native.ShowWindow(roblox.MainWindowHandle, Native.SW_HIDE);
 
@@ -221,6 +147,7 @@ namespace Starlight.Cui
             }
         }
 
+#if DEBUG
         static void UnhandledExceptionHandler(object sender, UnhandledExceptionEventArgs args)
         {
             Exception ex = (Exception)args.ExceptionObject;
@@ -234,11 +161,13 @@ namespace Starlight.Cui
             Console.WriteLine("Press any key to continue.");
             Console.ReadLine();
         }
-        
+#endif
+
         static int Main(string[] args)
         {
+#if DEBUG
             AppDomain.CurrentDomain.UnhandledException += new UnhandledExceptionEventHandler(UnhandledExceptionHandler);
-            
+#endif
             int result = Parser.Default.ParseArguments<HookOptions, UnhookOptions, LaunchOptions, InstallOptions>(args)
                 .MapResult(
                     (HookOptions x) => Hook(x),

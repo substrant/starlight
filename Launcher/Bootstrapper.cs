@@ -12,6 +12,7 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 using static Starlight.Shared;
+using static Starlight.Output;
 
 namespace Starlight
 {
@@ -111,6 +112,7 @@ namespace Starlight
 
         public static async Task<Manifest> GetManifest(string szGitHash)
         {
+            WriteLineOut("Getting manifest...");
             string szRawData = await Web.DownloadStringTaskAsync($"http://{Endpoints.Setup}/version-{szGitHash}-rbxPkgManifest.txt");
             return new(szGitHash, szRawData);
         }
@@ -124,10 +126,14 @@ namespace Starlight
             {
                 string szFilePath = Path.Combine(szInstallationPath, file.Name);
                 if (!file.Check(szInstallationPath)) // Don't download it twice!
+                {
+                    WriteLineOut($"Downloading {file.Name}...");
                     await file.Download(szInstallationPath);
+                }
 
                 if (Path.GetExtension(szFilePath) == ".zip")
                 {
+                    WriteLineOut($"Extracting {file.Name}...");
                     using (ZipArchive archive = ZipFile.OpenRead(szFilePath))
                     {
                         string szExtractTo = Path.Combine(szInstallationPath, ZipMap[file.Name]);
@@ -137,6 +143,8 @@ namespace Starlight
                     }
                     File.Delete(szFilePath);
                 }
+
+                await Task.Delay(100); // visual purpose lol
             }
 
             File.WriteAllText(Path.Combine(szInstallationPath, "AppSettings.xml"), @"<?xml version=""1.0"" encoding=""UTF-8""?>

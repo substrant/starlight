@@ -13,8 +13,13 @@ using System.Threading.Tasks;
 
 namespace Starlight
 {
-    internal static class Extensions
+    public static class Extensions
     {
+        public static bool IsEmpty(this string szStr)
+        {
+            return szStr == null || szStr.Length == 0;
+        }
+
         public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
         {
             foreach (T element in source)
@@ -41,7 +46,7 @@ namespace Starlight
                     throw new IOException("Trying to extract file outside of destination directory. See this link for more info: https://snyk.io/research/zip-slip-vulnerability");
 
                 string szDirectoryName = Path.GetDirectoryName(completeFileName);
-                Console.WriteLine("Extracting {0}...", file.Name);
+                //Console.WriteLine("Extracting {0}...", file.Name);
                 //Console.WriteLine("Directory Path: {0}", szDirectoryName);
                 //Console.WriteLine("Directory Exists? {0}", Directory.Exists(szDirectoryName).ToString());
                 

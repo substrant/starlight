@@ -7,14 +7,6 @@ using System;
 
 namespace Starlight.Cui
 {
-    public static class Extensions
-    {
-        public static bool IsEmpty(this string szStr)
-        {
-            return szStr == null || szStr.Length == 0;
-        }
-    }
-
     public static class ConsoleExtensions
     {
         public static bool ShowDialog(string szMessage)

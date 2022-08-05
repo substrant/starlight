@@ -47,6 +47,9 @@
     </ItemGroup>
   </Target>
   <ItemGroup>
+    <Reference Include="CommandLine, Version=2.9.1.0, Culture=neutral, PublicKeyToken=5a870481e358d379, processorArchitecture=MSIL">
+      <HintPath>..\packages\CommandLineParser.2.9.1\lib\net461\CommandLine.dll</HintPath>
+    </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="PresentationFramework" />
     <Reference Include="System" />
@@ -72,6 +75,7 @@
     <Compile Include="Auxiliary\Exceptions.cs" />
     <Compile Include="Auxiliary\Extensions.cs" />
     <Compile Include="Auxiliary\Utility.cs" />
+    <Compile Include="CLI.cs" />
     <Compile Include="Launcher.cs" />
     <Compile Include="Auxiliary\Native.cs" />
     <Compile Include="Roblox.cs" />
@@ -89,6 +93,7 @@
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
     </Compile>
+    <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
