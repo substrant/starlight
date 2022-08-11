@@ -12,7 +12,6 @@ using System.Security.Cryptography;
 using System.Threading.Tasks;
 
 using static Starlight.Shared;
-using static Starlight.Output;
 
 namespace Starlight
 {
@@ -112,9 +111,32 @@ namespace Starlight
 
         public static async Task<Manifest> GetManifest(string szGitHash)
         {
-            WriteLineOut("Getting manifest...");
             string szRawData = await Web.DownloadStringTaskAsync($"http://{Endpoints.Setup}/version-{szGitHash}-rbxPkgManifest.txt");
             return new(szGitHash, szRawData);
+        }
+        
+        public static List<string> GetShortcutPaths()
+        {
+            string szStartMenuDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Start Menu");
+            string szDesktopDir = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            
+            return new()
+            {
+                Path.Combine(szStartMenuDir, "Roblox Player.lnk"),
+                Path.Combine(szDesktopDir, "Roblox Player.lnk"),
+            };
+        }
+        
+        public static void RewriteShortcuts(string szBinary)
+        {
+            foreach (string szShortcut in GetShortcutPaths())
+            {
+                if (File.Exists(szShortcut))
+                {
+                    File.Delete(szShortcut);
+                    CreateShortcut(szShortcut, szBinary); // TODO: Make CreateShortcut; can't research and I'm too lazy to do this from GitHub's editor.
+                }
+            }
         }
 
         public static async Task<string> InstallRoblox(Manifest manifest)
@@ -126,14 +148,10 @@ namespace Starlight
             {
                 string szFilePath = Path.Combine(szInstallationPath, file.Name);
                 if (!file.Check(szInstallationPath)) // Don't download it twice!
-                {
-                    WriteLineOut($"Downloading {file.Name}...");
                     await file.Download(szInstallationPath);
-                }
 
                 if (Path.GetExtension(szFilePath) == ".zip")
                 {
-                    WriteLineOut($"Extracting {file.Name}...");
                     using (ZipArchive archive = ZipFile.OpenRead(szFilePath))
                     {
                         string szExtractTo = Path.Combine(szInstallationPath, ZipMap[file.Name]);
@@ -143,8 +161,6 @@ namespace Starlight
                     }
                     File.Delete(szFilePath);
                 }
-
-                await Task.Delay(100); // visual purpose lol
             }
 
             File.WriteAllText(Path.Combine(szInstallationPath, "AppSettings.xml"), @"<?xml version=""1.0"" encoding=""UTF-8""?>
@@ -154,7 +170,33 @@ namespace Starlight
 </Settings>
 ");
 
+            RewriteShortcuts(Path.Combine(szInstallationPath, "RobloxPlayerLauncher.exe"));
             return szInstallationPath;
+        }
+        
+        public static void RemoveRoblox(string szGitHash)
+        {
+            string szInstallationPath = Path.Combine(Roblox.GetInstallationPath(), $"version-{szGitHash}");
+            if (!File.Exists(szInstallationPath))
+                throw new BootstrapError($"Roblox version-{szGitHash} does not exist.");
+            Directory.Delete(szInstallationPath);
+            
+            var installations = Roblox.GetInstallations();
+            if (installations.Count < 1)
+                goto RemoveShortcutsHit;
+            string szNextBinary = Path.Combine(installations.First().Value, "RobloxPlayerLauncher.exe");
+            
+            if (File.Exists(szBinary))
+                RewriteShortcuts(szNextBinary);
+            else return;
+            
+        RemoveShortcutsHit:
+            RemoveShortcuts();
+        }
+        
+        public static void RemoveRoblox(Manifest manifest)
+        {
+            RemoveRoblox(manifest.GitHash);
         }
     }
 }
