@@ -40,7 +40,7 @@ The only prerequisite for building Starlight is .NET Framework 4.8 build tools
 and Visual Studio. You can download both from the Visual Studio Installer.
 
 To build Starlight, simply open the solution in Visual Studio and build it. The
-binaries will be compiled into `Starlight-Launcher/bin`.
+binaries will be compiled into `Starlight/bin`.
 
 ## Issues
 If you have any issues with Starlight, please open an issue on the GitHub
