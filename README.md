@@ -1,39 +1,60 @@
 # Starlight
-A rewrite of the Roblox launcher that is able to launch and bootstrap Roblox.\
-This code is licensed under the GNU General Public License v3, so don't steal my code unless you use a compatible license.
+C# implementation of the Roblox launcher. This launcher has the full
+capabilities of the official launcher, and is designed to be a drop-in
+replacement. It's fast, logless, and has many features that the official
+launcher lacks such as an FPS unlocker.
+
+Adding on top of speed, Starlight has zero unnecessary features. It's
+designed to be a simple, lightweight launcher that does what it needs to do and
+nothing more. It's designed to be anonymous, and includes features to help
+protect your privacy such as tracker spoofing.
 
 ## Features
-- Roblox installation
-- Headless mode (Clients without a window)
-- Tracker ID spoofing
-- Launching specific versions of Roblox
+- ✔️ 2x+ faster than the official launcher
+- ✔️ Spoofs tracker ID (people call it "HWID spoofing" but it's not)
+- ✔️ Built-in FPS unlocker/limiter
+- ✔️ Multiple Roblox processes
+- ✔️ Management and launching of multiple versions of Roblox
+- ✔️ Headless mode (no GUI, good in combination with the FPS limiter)
+- ✔️ Can be used as a library
+- ✔️ Scheme hooking and handling (launching from the browser)
+- ❌ Disables rendering for headless mode (planned)
+- ❌ Support for Roblox Studio (not planned because useless and 64 bit)
 
-## Usage
-For help do, `starlight --help`.
+## Safety
+Starlight should work with any Roblox exploit that doesn't hook the launch
+scheme. If you're using a Roblox exploit that hooks the launch scheme, you
+will have to turn off the hooking feature in that specific exploit.
 
-### Launching Games
-To launch a game, you need to do `starlight launch [launchOptions] --payload <launchPayload>`.\
-The payload is the `roblox-player:1+gameinfo:...` link you see inside the network tab in your browser when you launch Roblox. Soon I'll make a more user-friendly way of launching the game but that's what I have for you right now.
+Exploits like Synapse X are known to hook the launch scheme, and may not work
+simultaneously with Starlight. You will explicitly have to disable the custom
+launcher in your exploit's settings.
 
-### Launch Options
-- `--payload`: The information needed to launch the game.
-- `--headless`: If enabled, the client will open, but the window will not show, which means no rendering is done on the client. Exploits will still work. This is mainly used for botting.
-- `--no-spoof`: If enabled, the launcher will not spoof the joining tracker ID.
-- `--git-hash`: The hash (`version-<hash>`) of Roblox to launch.
-- `--strict`: If enabled, the launcher will not install Roblox and will instead exit with code 1 if there is no existing version of Roblox installed.
-
-### Hooking the `roblox-player` Scheme
-To hook the launch scheme, you can do `starlight hook [launchOptions]`. To unhook, just do `starlight unhook`. To unhook, a valid installation of Roblox must exist. Refer to the Launch Options section for information. If you are hooking, the `--payload` option is autofilled and should not be provided.
-
-### Installing Roblox
-To install Roblox, do `starlight install [installOptions]`. There is currently no support for uninstalling Roblox.
-
-### Install Options
-- `--git-hash` The hash of Roblox to install.
+This program does not inject any DLLs, however it does modify the Roblox
+task scheduler from an external process. This is done to set the FPS cap. This
+shouldn't be a problem, but I thought I'd throw that out. It should be
+undetectable by Roblox's anti-cheat.
 
 ## Building
-To build Starlight, first clone the repository:
-```bash
-git clone https://github.com/RealNickk/Starlight-Launcher.git
-```
-After cloning, open `Starlight-Launcher/Starlight.sln` in Visual Studio, make sure you're in the `Release` build mode, then right click the solution and click `Build Solution`. The binaries will be in `Starlight-Launcher/bin`.
+The only prerequisite for building Starlight is .NET Framework 4.8 build tools
+and Visual Studio. You can download both from the Visual Studio Installer.
+
+To build Starlight, simply open the solution in Visual Studio and build it. The
+binaries will be compiled into `Starlight-Launcher/bin`.
+
+## Issues
+If you have any issues with Starlight, please open an issue on the GitHub
+repository. I will try to respond as soon as possible.
+
+## Contributing
+If you want to contribute, please make sure to follow the code style of the
+project. There's not much to it, but it's important to keep it consistent. I
+don't have any more rules, so as long as that's followed, you're good to go.
+
+## License
+Starlight is licensed under the MIT License. See [LICENSE](LICENSE) for more
+information.
+
+I'd prefer that you don't steal my code. If you want to use it for your own
+projects, please give me credit. At the least, to follow legal requirements,
+you have to include the license file in your project and follow its terms.
