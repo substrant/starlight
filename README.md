@@ -52,7 +52,7 @@ project. There's not much to it, but it's important to keep it consistent. I
 don't have any more rules, so as long as that's followed, you're good to go.
 
 ## License
-Starlight is licensed under the MIT License. See [LICENSE](LICENSE) for more
+Starlight is licensed under the GNU General Public License. See [LICENSE](LICENSE) for more
 information.
 
 I'd prefer that you don't steal my code. If you want to use it for your own
