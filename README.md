@@ -1,4 +1,9 @@
 # Starlight
+
+![Downloads](https://img.shields.io/github/downloads/Substrant/Starlight/total)
+![Open Issues](https://img.shields.io/github/issues-raw/Substrant/Starlight)
+![Open Issues](https://img.shields.io/github/issues-closed-raw/Substrant/Starlight)
+
 C# implementation of the Roblox launcher. This launcher has the full
 capabilities of the official launcher, and is designed to be a drop-in
 replacement. It's fast, logless, and has many features that the official
