@@ -1,6 +1,6 @@
-/.vs/
-/bin/
-/packages/
+/src/.vs/
+/src/bin/
+/src/packages/
 Debug/
 Release/
 obj/
