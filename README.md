@@ -10,7 +10,9 @@ more features that the official launcher lacks. This may be the 2nd rewrite of
 Starlight, but it's the first one that's actually good, and finally out of
 early development hell.
 
-The current feature list and roadmap can be found in [Roadmap.md](Roadmap.md).
+Sources:
+* [Roadmap](Roadmap.md)
+* [Documentation](Docs/Home.md)
 
 ## Safety
 Starlight should work with any Roblox exploit that doesn't hook the launch
