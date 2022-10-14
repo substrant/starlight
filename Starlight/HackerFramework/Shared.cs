@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace HackerFramework
+﻿namespace HackerFramework
 {
     public class VirtualRange<T> where T : unmanaged
     {

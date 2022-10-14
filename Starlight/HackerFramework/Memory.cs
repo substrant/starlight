@@ -22,7 +22,7 @@ namespace HackerFramework
 
         public static MemoryProtection Protect(this Target target, uint address, int size, MemoryProtection protection)
         {
-            VirtualProtectEx(target.Handle, address, size, protection, out MemoryProtection old);
+            VirtualProtectEx(target.Handle, address, size, protection, out var old);
             return old;
         }
 
@@ -42,7 +42,7 @@ namespace HackerFramework
             WriteProcessMemory(target.Handle, addr, value, value.Length, out _);
 
         public static void WriteByte(this Target target, uint addr, byte value) =>
-            WriteBytes(target, addr, new byte[] { value });
+            WriteBytes(target, addr, new[] { value });
 
         /* int16 */
 

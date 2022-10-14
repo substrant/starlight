@@ -7,7 +7,7 @@ using static HackerFramework.Native;
 
 namespace HackerFramework
 {
-    public class Target
+    public class Target : IDisposable
     {
         public readonly int Handle;
         
@@ -36,7 +36,16 @@ namespace HackerFramework
             ModuleEnd = ModuleStart + ModuleSize;
         }
 
-        ~Target() =>
+        bool _disposed = false;
+        public void Dispose()
+        {
+            if (_disposed) return;
+            _disposed = true;
+
             CloseHandle(Handle);
+        }
+
+        ~Target() =>
+            Dispose();
     }
 }

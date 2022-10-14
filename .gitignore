@@ -1,4 +1,6 @@
 /.vs/
 /bin/
 /packages/
+Debug/
+Release/
 obj/

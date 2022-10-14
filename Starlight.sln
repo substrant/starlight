@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Starlight", "Starlight\Star
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Starlight.Cli", "Starlight.Cli\Starlight.Cli.csproj", "{B60FB38B-824F-45CC-84B4-1BFCB6059334}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Starlight.Launcher", "Starlight.Launcher\Starlight.Launcher.csproj", "{B92B746F-1372-4321-B55D-405993DF30C7}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Starlight.Rbx", "Starlight.Rbx\Starlight.Rbx.csproj", "{79C73613-663B-4C7E-9504-DEDFA488BAE5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +25,14 @@ Global
 		{B60FB38B-824F-45CC-84B4-1BFCB6059334}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B60FB38B-824F-45CC-84B4-1BFCB6059334}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B60FB38B-824F-45CC-84B4-1BFCB6059334}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B92B746F-1372-4321-B55D-405993DF30C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B92B746F-1372-4321-B55D-405993DF30C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B92B746F-1372-4321-B55D-405993DF30C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B92B746F-1372-4321-B55D-405993DF30C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{79C73613-663B-4C7E-9504-DEDFA488BAE5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{79C73613-663B-4C7E-9504-DEDFA488BAE5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{79C73613-663B-4C7E-9504-DEDFA488BAE5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{79C73613-663B-4C7E-9504-DEDFA488BAE5}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

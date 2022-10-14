@@ -1,14 +1,58 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Starlight
+namespace Starlight.Misc
 {
     public class Native
     {
         [DllImport("user32.dll", SetLastError = true)]
+        public static extern bool GetWindowRect(IntPtr hWnd, out NativeRect lpRect);
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct NativeRect
+        {
+            public int Left;
+            public int Top;
+            public int Right;
+            public int Bottom;
+        }
+
+        [DllImport("user32.dll", SetLastError = true)]
         public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-        
+
+        [DllImport("user32.dll", SetLastError = true)]
+        public static extern IntPtr SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int Y, int cx, int cy, uint wFlags);
+
+        public static readonly IntPtr HWND_TOPMOST = new(-1);
+        public static readonly IntPtr HWND_NOTOPMOST = new(-2);
+
+        public const uint SWP_NOSIZE = 0x0001;
+        public const uint SWP_NOMOVE = 0x0002;
+        public const uint SWP_NOZORDER = 0x0004;
+        public const uint SWP_NOREDRAW = 0x0008;
+        public const uint SWP_NOACTIVATE = 0x0010;
+        public const uint SWP_DRAWFRAME = 0x0020;
+        public const uint SWP_FRAMECHANGED = 0x0020;
+        public const uint SWP_SHOWWINDOW = 0x0040;
+        public const uint SWP_HIDEWINDOW = 0x0080;
+        public const uint SWP_NOCOPYBITS = 0x0100;
+        public const uint SWP_NOOWNERZORDER = 0x0200;
+        public const uint SWP_NOREPOSITION = 0x0200;
+        public const uint SWP_NOSENDCHANGING = 0x0400;
+        public const uint SWP_DEFERERASE = 0x2000;
+        public const uint SWP_ASYNCWINDOWPOS = 0x4000;
+
+        public const uint TOPMOST_FLAGS = SWP_NOMOVE | SWP_NOSIZE;
+        public const uint NOTOPMOST_FLAGS = SWP_SHOWWINDOW;
+
+        public const int SW_SHOW = 5;
         public const int SW_HIDE = 0;
+        public const uint WS_POPUPWINDOW = 0x80880000;
+
+        [DllImport("user32.dll")]
+        public static extern int SetWindowLong(IntPtr hWnd, int nIndex, uint dwNewLong);
+
+        public const int GWL_STYLE = -16;
 
         [DllImport("kernel32.dll", SetLastError = true, CharSet = CharSet.Auto)]
         public static extern bool CreateProcess(string lpApplicationName, string lpCommandLine, uint lpProcessAttributes, uint lpThreadAttributes, bool bInheritHandles, ProcessCreationFlags dwCreationFlags, uint lpEnvironment, string lpCurrentDirectory, [In] ref STARTUPINFO lpStartupInfo, [Out] out PROCESS_INFORMATION lpProcessInformation);

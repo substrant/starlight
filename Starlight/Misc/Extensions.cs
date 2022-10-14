@@ -4,9 +4,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
-using System.Threading.Tasks;
 
-namespace Starlight
+namespace Starlight.Misc
 {
     internal static class Extensions
     {
@@ -14,32 +13,38 @@ namespace Starlight
 
         internal static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
         {
-            foreach (T element in source)
+            foreach (var element in source)
                 action(element);
         }
 
         /* string */
 
         internal static string[] Split(this string str, string delim) =>
-            str.Split(new string[] { delim }, StringSplitOptions.None);
+            str.Split(new[] { delim }, StringSplitOptions.None);
+        
+        internal static string[] Split(this string str, params string[] delim) =>
+            str.Split(delim, StringSplitOptions.None);
+
+        internal static string[] Split(this string str, StringSplitOptions opt, params string[] delim) =>
+            str.Split(delim, StringSplitOptions.None);
 
         internal static string[] Split(this string str, string delim, StringSplitOptions opt) =>
-            str.Split(new string[] { delim }, opt);
+            str.Split(new[] { delim }, opt);
 
         /* HttpClient */
-
-        internal static async Task<string> DownloadStringTaskAsync(this HttpClient client, string url)
+        
+        internal static string DownloadString(this HttpClient client, string url)
         {
-            using Stream stm = await client.GetStreamAsync(url);
+            using var stm = client.GetStreamAsync(url).Result;
             using StreamReader rstm = new(stm);
-            return await rstm.ReadToEndAsync();
+            return rstm.ReadToEnd();
         }
 
-        internal static async Task DownloadFileTaskAsync(this HttpClient client, string url, string filePath)
+        internal static void DownloadFile(this HttpClient client, string url, string filePath)
         {
-            using Stream stm = await client.GetStreamAsync(url);
-            using FileStream fstm = File.Create(filePath);
-            await stm.CopyToAsync(fstm);
+            using var stm = client.GetStreamAsync(url).Result;
+            using var fstm = File.Create(filePath);
+            stm.CopyTo(fstm);
         }
 
         /* ZipArchive (because whoever wrote it doesn't know what the hell overwriting means) */
@@ -63,6 +68,7 @@ namespace Starlight
                 if (!completeFileName.StartsWith(destDir, StringComparison.OrdinalIgnoreCase))
                     throw new IOException("Trying to extract file outside of destination directory. See this link for more info: https://snyk.io/research/zip-slip-vulnerability");
 
+                // ReSharper disable AssignNullToNotNullAttribute
                 var dirName = Path.GetDirectoryName(completeFileName);
                 if (!Directory.Exists(dirName))
                     Directory.CreateDirectory(dirName);
@@ -72,32 +78,21 @@ namespace Starlight
                     Directory.CreateDirectory(dirName);
                     continue;
                 }
+                // ReSharper enable AssignNullToNotNullAttribute
 
                 file.ExtractToFile(completeFileName, true);
             }
         }
+        
 
         internal static void ExtractSelectedToDirectory(this ZipArchive file, string destDir, string selector)
         {
             var entries = file.Entries.Where(entry => selector == entry.FullName);
-            if (entries.Count() < 1)
+            var archiveEntries = entries as ZipArchiveEntry[] ?? entries.ToArray();
+            if (!archiveEntries.Any())
                 throw new IOException($"\"{selector}\" does not exist in the zip file.");
             
-            entries.ForEach(entry => entry.ExtractToFile(Path.Combine(destDir, entry.FullName)));
-        }
-
-        internal static void ExtractSelectedToDirectory(this ZipArchive file, string destDir, string[] selector)
-        {
-            var entries = file.Entries.Where(entry => selector.Contains(entry.FullName));
-            if (entries.Count() < selector.Length)
-            {
-                var nonExistentEntries = selector
-                    .Where(name => entries.Where(entry => name != entry.FullName).Count() > 0)
-                    .Select(name => $"\"{name}\""); // I'd prefer a better way to do this.
-                throw new IOException($"The paths [{string.Join(", ", nonExistentEntries)}] do not exist in the zip file.");
-            }
-
-            entries.ForEach(entry => entry.ExtractToFile(Path.Combine(destDir, entry.FullName)));
+            archiveEntries.ForEach(entry => entry.ExtractToFile(Path.Combine(destDir, entry.FullName)));
         }
     }
 }

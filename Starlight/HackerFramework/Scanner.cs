@@ -8,12 +8,14 @@ namespace HackerFramework
     public class Pattern
     {
         public readonly int Length;
+        
         public readonly byte[] Data;
+        
         public readonly bool[] Mask;
 
         internal bool Compare(ref byte[] buffer, ref int idx)
         {
-            for (int i = 0; i < Length; i++)
+            for (var i = 0; i < Length; i++)
             {
                 if (Mask[i] || buffer[idx + i] == Data[i])
                     continue;
@@ -36,11 +38,11 @@ namespace HackerFramework
 
         public Pattern(string patternStr) // "AA BB ?? ?? ?? ?? CC DD"
         {
-            string[] parts = patternStr.Split(' ');
-            byte[] pattern = new byte[parts.Length];
-            bool[] mask = new bool[parts.Length];
+            var parts = patternStr.Split(' ');
+            var pattern = new byte[parts.Length];
+            var mask = new bool[parts.Length];
 
-            for (int i = 0; i < parts.Length; i++)
+            for (var i = 0; i < parts.Length; i++)
             {
                 if (parts[i] == "??" || parts[i] == "?")
                 {
@@ -61,10 +63,10 @@ namespace HackerFramework
             if (raw.Length != maskStr.Length)
                 throw new Exception("Pattern and mask must be the same length");
 
-            byte[] pattern = new byte[raw.Length];
-            bool[] mask = new bool[raw.Length];
+            var pattern = new byte[raw.Length];
+            var mask = new bool[raw.Length];
             
-            for (int i = 0; i < raw.Length; i++)
+            for (var i = 0; i < raw.Length; i++)
             {
                 if (maskStr[i] != '?')
                     pattern[i] = (byte)raw[i];
@@ -87,7 +89,7 @@ namespace HackerFramework
             range ??= new(target.ModuleStart, target.ModuleEnd);
 
             MemoryBasicInformation mbi;
-            for (uint at = range.Min; at < range.Max; at += (uint)mbi.RegionSize)
+            for (var at = range.Min; at < range.Max; at += (uint)mbi.RegionSize)
             {
                 VirtualQueryEx(target.Handle, at, out mbi, 0x2C); // smh 0x2C is sizeof(MemoryBasicInformation) but C# cries about some unsafe crap
 
@@ -99,8 +101,8 @@ namespace HackerFramework
                     (mbi.Protect & (uint)MemoryProtection.Guard) != 0) // Make sure the memory can be accessed
                     continue;
                 
-                byte[] buffer = target.ReadBytes(at, mbi.RegionSize); // todo: unugly
-                for (int i = 0; i < mbi.RegionSize; i++)
+                var buffer = target.ReadBytes(at, mbi.RegionSize); // todo: unugly
+                for (var i = 0; i < mbi.RegionSize; i++)
                 {
                     if (pattern.Compare(ref buffer, ref i))
                         results.Add(at + (uint)i);

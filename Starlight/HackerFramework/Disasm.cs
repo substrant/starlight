@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 
 namespace HackerFramework
 {
@@ -126,7 +125,7 @@ namespace HackerFramework
             List<uint> calls = new();
 
             var end = target.GetEpilogue(addr) - 5;
-            for (uint at = addr; at < end || calls.Count == max; at++)
+            for (var at = addr; at < end || calls.Count == max; at++)
             {
                 var rel = target.CallAt(at);
                 if (rel != 0)
@@ -160,7 +159,7 @@ namespace HackerFramework
 
         public static uint NextNCalls(this Target target, uint addr, int n)
         {
-            for (int i = 0; i < n; i++)
+            for (var i = 0; i < n; i++)
                 addr = target.NextCall(addr);
 
             return addr;
@@ -168,7 +167,7 @@ namespace HackerFramework
 
         public static uint LastNCalls(this Target target, uint addr, int n)
         {
-            for (int i = 0; i < n; i++)
+            for (var i = 0; i < n; i++)
                 addr = target.LastCall(addr);
 
             return addr;
