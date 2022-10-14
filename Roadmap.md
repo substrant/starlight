@@ -6,7 +6,7 @@
 * [x] Bootstrapping
 * [x] Roblox API
 * [ ] Management UI
-* [ ] Documentation
+* [x] Documentation
 * [x] Logging (log4net), no clue why I didn't do this earlier
 * [ ] Profiling
 * [ ] Unit tests
@@ -41,9 +41,10 @@
 * [ ] Server browser
 
 ## Documentation
+* [x] General documentation
 * [ ] API documentation
 * [ ] Exploit integration
-* [ ] Detailed guide with screenshots
+* [x] Detailed guide with screenshots
 
 ## Ease of Use
 * [x] Command line interface
