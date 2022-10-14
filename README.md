@@ -12,7 +12,7 @@ early development hell.
 
 Sources:
 * [Roadmap](Roadmap.md)
-* [Documentation](Docs/Home.md)
+* [Documentation](docs/Home.md)
 
 ## Safety
 Starlight should work with any Roblox exploit that doesn't hook the launch
