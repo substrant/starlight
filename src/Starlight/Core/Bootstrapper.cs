@@ -2,11 +2,15 @@
 using Starlight.Misc;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Web;
 using static Starlight.Misc.Shared;
 
 namespace Starlight.Core
@@ -16,8 +20,7 @@ namespace Starlight.Core
         // ReSharper disable once PossibleNullReferenceException
         internal static readonly ILog Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
         
-        // TODO: Figure out how to do this without a map like the official launcher.
-        static readonly IReadOnlyDictionary<string, string> ZipMap = new Dictionary<string, string>()
+        static readonly IReadOnlyDictionary<string, string> ZipMap = new Dictionary<string, string>
         {
             { "content-avatar.zip",            "content\\avatar" },
             { "content-configs.zip",           "content\\configs" },
@@ -38,36 +41,121 @@ namespace Starlight.Core
             { "shaders.zip",                   "shaders" },
             { "ssl.zip",                       "ssl" },
         };
-        
+
         public static Client QueryClient(string hash)
         {
             var client = GetClients().FirstOrDefault(x => x.Hash == hash);
-            Log.Debug($"Client {hash} query " + (client is null ? "succeeded." : "failed."));
+            if (client is null)
+                Log.Warn($"QueryClient {hash}: Failed to find client");
+            else
+                Log.Debug($"QueryClient {hash}: Success");
             return client;
         }
 
+        static string _latestHash; // Cache for a micro-optimization
         public static string GetLatestHash()
         {
-            var version = Web.DownloadString("http://setup.rbxcdn.com/version.txt");
-            return version.Split("version-")[1];
+            if (_latestHash is not null)
+                return _latestHash;
+            
+            try
+            {
+                string version;
+                lock (Web)
+                    version = Web.DownloadString("http://setup.rbxcdn.com/version.txt");
+                Log.Info($"GetLatestHash: Latest Roblox version: {version}");
+                return _latestHash = version.Split("version-")[1];
+            }
+            catch (HttpException innerEx)
+            {
+                var ex = new BootstrapException("Failed to get latest hash.", innerEx);
+                Log.Fatal("GetLatestHash: Failed to get latest hash", ex);
+                throw ex;
+            }
         }
 
         public static async Task<string> GetLatestHashAsync() =>
             await Task.Run(GetLatestHash);
 
+        public static Client NativeInstall()
+        {
+            var latestHash = GetLatestHash();
+            var installPath = Path.Combine(GetInstallationPath(), $"version-{latestHash}");
+            var tempPath = Utility.GetTempDir();
+            
+            var installerBin = Path.Combine(tempPath, "RobloxPlayerLauncher.exe");
+            Log.Debug($"NativeInstall: Downloading installer to {installerBin}...");
+            try
+            {
+                lock (Web)
+                    Web.DownloadFile($"https://setup.rbxcdn.com/version-{latestHash}-Roblox.exe", installerBin);
+            }
+            catch (HttpException innerEx)
+            {
+                var ex = new BootstrapException("Failed to download installer.", innerEx);
+                Log.Fatal("NativeInstall: Failed to download installer", ex);
+                throw ex;
+            }
+
+            Process setup;
+            try
+            {
+                setup = Process.Start(new ProcessStartInfo(installerBin) { WorkingDirectory = tempPath });
+            }
+            catch (Win32Exception innerEx)
+            {
+                var ex = new BootstrapException("Failed to start installer.", innerEx);
+                Log.Fatal("NativeInstall: Failed to start installer", ex);
+                throw ex;
+            }
+
+            if (setup is null)
+            {
+                var ex = new BootstrapException("Failed to start installer: Process is null.");
+                Log.Fatal("NativeInstall: Failed to start installer: Process is null", ex);
+                throw ex;
+            }
+
+            Log.Debug("NativeInstall: Waiting for installer to exit...");
+            setup.WaitForExit();
+
+            if (Directory.Exists(installPath))
+            {
+                Thread.Sleep(1000); // Idk it just fixes access denied exception :shrug:
+                Directory.Delete(tempPath, true);
+                Log.Debug("NativeInstall: Cleaned up.");
+                return new Client(installPath, latestHash);
+            }
+
+            // if !installSuccess
+            {
+                var ex = new BootstrapException("Installer failed to execute.");
+                Log.Fatal("NativeInstall: Installer failed to execute", ex);
+                throw ex;
+            }
+        }
+
+        public static async Task<Client> NativeInstallAsync() =>
+            await Task.Run(NativeInstall);
+
+        static volatile bool _loggedInstallPathDoesntExist;
         internal static string GetInstallationPath()
         {
             var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-
             var installPath = Path.Combine(localAppData, "Roblox\\Versions");
+
             if (Directory.Exists(installPath))
                 return installPath;
-            
-            Log.Error("Installation directory does not exist.");
-            return null;
 
+            if (_loggedInstallPathDoesntExist)
+                return null;
+            _loggedInstallPathDoesntExist = true;
+
+            Log.Warn("GetInstallationPath: Installation path doesn't exist");
+            return null;
         }
 
+        static readonly List<string> SkippedClients = new();
         public static IReadOnlyList<Client> GetClients()
         {
             List<Client> clients = new();
@@ -77,12 +165,34 @@ namespace Starlight.Core
                 return clients;
             
             foreach (var item in Directory.EnumerateDirectories(path))
-            {
-                // I don't want this to error because someone was an idiot and put a random folder in the directory.
-                if (!File.Exists(Path.Combine(item, "RobloxPlayerBeta.exe")) || !Path.GetFileName(item).StartsWith("version-"))
+            {               
+                var dirName = Path.GetFileName(item);
+
+                // Multiple threads could access this
+                lock (SkippedClients)
                 {
-                    Log.Warn($"Skipping {Path.GetFileName(item)} because it doesn't look like a Roblox installation.");
-                    continue;
+                    // I don't want this to error because someone was an idiot and put a random folder in the directory.
+                    if (!dirName.StartsWith("version-"))
+                    {
+                        if (!SkippedClients.Contains(dirName))
+                        {
+                            SkippedClients.Add(dirName);
+                            Log.Warn($"GetClients: Skipping {dirName}: invalid directory name.");
+                        }
+                        continue;
+                    }
+
+                    if (!File.Exists(Path.Combine(item, "RobloxPlayerBeta.exe")))
+                    {
+                        if (!SkippedClients.Contains(dirName))
+                        {
+                            if (File.Exists(Path.Combine(item, "RobloxStudioBeta.exe")))
+                                Log.Warn($"GetClients: Skipping {Path.GetFileName(item)}: invalid installation.");
+                            else
+                                Log.Warn($"GetClients: Skipping {Path.GetFileName(item)}: invalid installation.");
+                        }
+                        continue;
+                    }
                 }
                 
                 var fileHash = Path.GetFileName(item).Split("version-")[1];
@@ -98,39 +208,58 @@ namespace Starlight.Core
         {
             try
             {
-                var raw = Web.DownloadString($"http://setup.rbxcdn.com/version-{hash}-rbxPkgManifest.txt");
+                string raw;
+                lock (Web) 
+                    raw = Web.DownloadString($"http://setup.rbxcdn.com/version-{hash}-rbxPkgManifest.txt");
                 return new Manifest(hash, raw);
             }
-            catch (HttpRequestException)
+            catch (HttpRequestException ex)
             {
-                Log.Error($"Failed to get manifest for version-{hash}. This is probably because the version doesn't exist.");
+                Log.Error($"GetManifest: Failed to get manifest for version-{hash}. Is an invalid hash provided?", ex);
                 return null;
             }
         }
 
         public static async Task<Manifest> GetManifestAsync(string hash) =>
             await Task.Run(() => GetManifest(hash));
-        
+
         public static Client Install(Manifest manifest)
         {
-            Log.Info($"Preparing to install Roblox version-{manifest.Hash}...");
+            var installationPath = GetInstallationPath();
+            if (installationPath is null)
+            {
+                Log.Info("Install: Running native installer for initial setup...");
+                NativeInstall();
+                var client = QueryClient(manifest.Hash);
+                if (client is not null) // Installer may have already installed the client.
+                    return client;
+                installationPath = GetInstallationPath();
+            }
+
+            Log.Info($"Install: Preparing to install Roblox version-{manifest.Hash}...");
             var tempPath = Utility.GetTempDir();
-            var path = Path.Combine(GetInstallationPath(), $"version-{manifest.Hash}");
+            var path = Path.Combine(installationPath, $"version-{manifest.Hash}");
             Directory.CreateDirectory(path);
 
+            // Download all files in parallel
+            Utility.DisperseActions(manifest.Files, file =>
+            {
+                Log.Info($"Install: Downloading {file.Name}...");
+                file.Download(tempPath);
+            }, 5);
+
+            // Unzip all files
             foreach (var file in manifest.Files)
             {
                 var filePath = Path.Combine(tempPath, file.Name);
-                Log.Info($"Downloading {file.Name}...");
-                file.Download(tempPath);
-
                 if (Path.GetExtension(filePath) == ".zip")
                 {
+                    Log.Debug($"Install: Unzipping {file.Name}...");
                     using (var archive = ZipFile.OpenRead(filePath))
                     {
                         if (!ZipMap.TryGetValue(file.Name, out var extractPath))
                         {
-                            Log.Warn($"No extraction path found for \"{file.Name}\".");
+                            Log.Warn($"Install: No extraction path found for \"{file.Name}\".");
                             goto ExtractFin;
                         }
 
@@ -140,12 +269,12 @@ namespace Starlight.Core
 
                         archive.ExtractToDirectory(extractTo, true);
                     }
-                    
+
                     ExtractFin:
                     File.Delete(filePath);
                 }
                 else
-                    Log.Warn($"Skipped unknown file \"{file.Name}\".");
+                    Log.Warn($"Install: Skipped unknown file \"{file.Name}\".");
             }
 
             // No clue where the client got this. I just copied it and called it a day
@@ -158,7 +287,7 @@ namespace Starlight.Core
 
             // Clean up the temp directory
             Directory.Delete(tempPath, true);
-            Log.Info("Installation completed.");
+            Log.Info("Install: Installation completed.");
 
             return new Client(path, manifest.Hash);
         }
@@ -173,7 +302,7 @@ namespace Starlight.Core
                 return Install(manifest);
 
             var ex = new BootstrapException("Failed to get manifest.");
-            Log.Fatal("Failed to get manifest. Is an invalid hash provided?", ex);
+            Log.Fatal($"Install: Failed to get manifest for version-{hash}", ex);
             throw ex;
         }
 
@@ -192,7 +321,7 @@ namespace Starlight.Core
             else
                 AddShortcuts(clients[0].Hash);
 
-            Log.Info($"Uninstalled Roblox version-{hash}.");
+            Log.Debug($"Uninstall: Uninstalled Roblox version-{hash}.");
         }
 
         public static void Uninstall(Client client) =>
@@ -211,7 +340,7 @@ namespace Starlight.Core
             Utility.CreateShortcut(menuShortcut, launcher, roblox);
             Utility.CreateShortcut(desktopShorctut, launcher, roblox);
 
-            Log.Info("Created shortcuts.");
+            Log.Debug("AddShortcuts: Created shortcuts.");
         }
 
         internal static void RemoveShortcuts()
@@ -225,7 +354,7 @@ namespace Starlight.Core
             if (File.Exists(desktopShorctut))
                 File.Delete(desktopShorctut);
 
-            Log.Info("Removed shortcuts.");
+            Log.Debug("RemoveShortcuts: Removed shortcuts.");
         }
     }
 }
