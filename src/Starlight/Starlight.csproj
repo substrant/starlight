@@ -81,12 +81,6 @@
     <Compile Include="Misc\Shared.cs" />
     <Compile Include="RbxApp\RbxInstance.cs" />
     <Compile Include="RbxApp\AppModException.cs" />
-    <Compile Include="HackerFramework\Disasm.cs" />
-    <Compile Include="HackerFramework\Memory.cs" />
-    <Compile Include="HackerFramework\Native.cs" />
-    <Compile Include="HackerFramework\Scanner.cs" />
-    <Compile Include="HackerFramework\Shared.cs" />
-    <Compile Include="HackerFramework\Target.cs" />
     <Compile Include="Core\IRobloxLaunchParams.cs" />
     <Compile Include="Core\IStarlightLaunchParams.cs" />
     <Compile Include="Core\LaunchParams.cs" />
@@ -119,6 +113,10 @@
       <Project>{79c73613-663b-4c7e-9504-dedfa488bae5}</Project>
       <Name>Starlight.Rbx</Name>
       <Private>True</Private>
+    </ProjectReference>
+    <ProjectReference Include="..\submodules\HackerFramework\src\HackerFramework\HackerFramework.csproj">
+      <Project>{e47f58ed-1bbe-47f4-9fa9-facd2317fe90}</Project>
+      <Name>HackerFramework</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

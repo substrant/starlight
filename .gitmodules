@@ -1,0 +1,3 @@
+[submodule "src/submodules/HackerFramework"]
+	path = src/submodules/HackerFramework
+	url = https://github.com/RealNickk/HackerFramework.git
