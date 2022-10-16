@@ -11,7 +11,9 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
+using Microsoft.Win32;
 using static Starlight.Misc.Shared;
+using static Starlight.Misc.Native;
 
 namespace Starlight.Core
 {
@@ -79,6 +81,10 @@ namespace Starlight.Core
 
         public static Client NativeInstall()
         {
+            var launcherPath = Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\ROBLOX Corporation\Environments\roblox-player\", null, null);
+            if (!string.IsNullOrWhiteSpace(launcherPath.ToString()))
+                Registry.SetValue(@"HKEY_CURRENT_USER\SOFTWARE\ROBLOX Corporation\Environments\roblox-player\", null, "");
+
             var latestHash = GetLatestHash();
             var installPath = Path.Combine(GetInstallationPath(), $"version-{latestHash}");
             var tempPath = Utility.GetTempDir();
@@ -116,12 +122,39 @@ namespace Starlight.Core
                 throw ex;
             }
 
+            IntPtr hWnd;
+            var waitStart = DateTime.Now;
+            while ((hWnd = setup.MainWindowHandle) == IntPtr.Zero)
+            {
+                Thread.Sleep(TimeSpan.FromSeconds(1.0d / 15));
+                if (DateTime.Now - waitStart <= TimeSpan.FromSeconds(10))
+                    continue;
+
+                var ex = new BootstrapException("Installer unexpectedly closed.");
+                Log.Fatal("NativeInstall: Installer unexpectedly closed", ex);
+                throw ex;
+            }
+            ShowWindow(hWnd, SW_HIDE); // hide window to prevent user from seeing it
+
             Log.Debug("NativeInstall: Waiting for installer to exit...");
-            setup.WaitForExit();
+
+            waitStart = DateTime.Now;
+            while (!string.IsNullOrEmpty(Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\ROBLOX Corporation\Environments\roblox-player\", null, null).ToString())) // last things to happen in installer
+            {
+                Thread.Sleep(TimeSpan.FromSeconds(1.0d / 15));
+                if (DateTime.Now - waitStart <= TimeSpan.FromSeconds(120)) // two minutes should be plenty
+                    continue;
+
+                var ex = new BootstrapException("Installer timed out.");
+                Log.Fatal("NativeInstall: Installer timed out", ex);
+                throw ex;
+            }
+
+            setup.Kill();
+            Thread.Sleep(1000);
 
             if (Directory.Exists(installPath))
             {
-                Thread.Sleep(1000); // Idk it just fixes access denied exception :shrug:
                 Directory.Delete(tempPath, true);
                 Log.Debug("NativeInstall: Cleaned up.");
                 return new Client(installPath, latestHash);
