@@ -34,7 +34,7 @@ namespace Starlight.Core
     {
         // ReSharper disable once PossibleNullReferenceException
         internal static readonly ILog Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        
+
         internal static IReadOnlyDictionary<string, string> ParseRaw(string payload)
         {
             try
@@ -54,7 +54,7 @@ namespace Starlight.Core
             LaunchParams info = new();
             var args = ParseRaw(rawArgs);
             ParseResultFlags result = 0;
-            
+
             if (args.TryGetValue("gameinfo", out var ticket))
             {
                 result |= ParseResultFlags.TicketExists;
@@ -128,7 +128,7 @@ namespace Starlight.Core
                 Log.Fatal("Failed to deserialize payload into LaunchParams.", ex);
                 throw ex;
             }
-            
+
             return await Launcher.LaunchAsync(parsed, extras);
         }
 
