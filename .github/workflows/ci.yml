@@ -1,0 +1,42 @@
+name: Starlight CI
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "src/**"
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        submodules: recursive
+
+    - name: Setup MSBuild
+      uses: warrenbuckley/Setup-MSBuild@v1
+
+    - name: Setup VSTest
+      uses: darenm/Setup-VSTest@v1
+
+    - name: Setup NuGet
+      uses: NuGet/setup-nuget@v1.0.2
+
+    - name: Restore packages
+      run: nuget restore src/Starlight.sln
+
+    - name: Build solution
+      run: msbuild.exe src/Starlight.sln -p:Configuration=Release
+
+    - name: Upload artifacts
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: starlight-bundle
+        path: "/src/Starlight/bin/Release"
+
+    - name: Run tests
+      run: vstest.console.exe /Platform:x86 /Logger:console;verbosity=detailed src/Starlight.Test/bin/Release/Starlight.Test.dll
