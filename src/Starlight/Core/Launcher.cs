@@ -35,36 +35,35 @@ namespace Starlight.Core
             if (string.IsNullOrWhiteSpace(info.Hash))
                 info.Hash = Bootstrapper.GetLatestHash();
 
-            Log.Info($"Preparing to launch Roblox version-{info.Hash}...");
+            Log.Info($"Launch: Preparing to launch Roblox version-{info.Hash}...");
 
             // Spoof the trackers if spoofing is enabled
             if (info.Spoof)
             {
                 info.TrackerId = Utility.SecureRandomInteger();
                 info.LaunchTime = DateTime.Now;
-                Log.Debug($"Spoofed BrowserTrackerId to {info.TrackerId} and LaunchTime to {info.LaunchTime}");
+                Log.Debug($"Launch: Spoofed BrowserTrackerId to {info.TrackerId} and LaunchTime to {info.LaunchTime}");
             }
 
             // Get client
-            Log.Debug($"Querying {info.Hash}...");
+            Log.Debug($"Launch: Querying {info.Hash}...");
             var client = Bootstrapper.QueryClient(info.Hash);
             if (client is null)
             {
                 var ex = new LaunchException("No valid client corresponds the given hash.");
-                Log.Fatal("Client does not exist.", ex);
+                Log.Fatal("Launch: Client does not exist.", ex);
                 throw ex;
             }
 
             // Open Roblox client
-            Log.Debug("Native open...");
+            Log.Debug("Launch: Native open...");
             if (!OpenRoblox(client.Path, info, out var procInfo))
             {
                 var ex = new LaunchException("Failed to open Roblox application.");
-                Log.Fatal("Failed to open Roblox.", ex);
+                Log.Fatal("Launch: Failed to open Roblox.", ex);
                 throw ex;
             }
             ResumeThread(procInfo.hThread);
-
 
             RbxInstance inst;
             try
@@ -74,25 +73,37 @@ namespace Starlight.Core
             catch
             {
                 var ex = new LaunchException("Failed to initialize Roblox instance.");
-                Log.Fatal("Failed to initialize Roblox instance. Roblox may have prematurely exited.", ex);
+                Log.Fatal("Launch: Failed to initialize Roblox instance. Roblox may have prematurely exited.", ex);
                 throw ex;
             }
+
+            // Wait for Roblox's window to open
+            Log.Debug("Launch: Waiting for Roblox window...");
+
+            IntPtr hWnd;
+            var waitStart = DateTime.Now;
+            while ((hWnd = inst.Proc.MainWindowHandle) == IntPtr.Zero)
+            {
+                Thread.Sleep(TimeSpan.FromSeconds(1.0d / 15));
+                if (DateTime.Now - waitStart <= TimeSpan.FromSeconds(10))
+                    continue;
+
+                var ex = new LaunchException("Roblox unexpectedly closed.");
+                Log.Fatal("Launch: Roblox unexpectedly closed.", ex);
+                throw ex;
+            }
+
+            Log.Debug("Roblox launched!");
 
             /* Runtime */
 
             // Set FPS cap
+            // TODO: Disable rendering by hooking render job instead of limiting fps, will be more efficient.
             if (info.FpsCap != 0)
             {
                 inst.SetFrameDelay(1.0d / info.FpsCap);
-                Log.Debug($"Set FPS cap to {info.FpsCap}.");
+                Log.Debug($"Launch: Set FPS cap to {info.FpsCap}.");
             }
-
-            // Wait for Roblox's window to open
-            // TODO: Disable rendering by hooking render job instead of limiting fps, will be more efficient.
-            Log.Debug("Waiting for Roblox window...");
-            while (inst.Proc.MainWindowHandle == IntPtr.Zero)
-                Thread.Sleep(TimeSpan.FromSeconds(1.0d / 15));
-            var hWnd = inst.Proc.MainWindowHandle;
 
             // Set resolution of Roblox
             if (!string.IsNullOrWhiteSpace(info.Resolution))
@@ -114,20 +125,21 @@ namespace Starlight.Core
                     SetWindowLong(hWnd, GWL_STYLE, WS_POPUPWINDOW); // Remove window styles (title bar, etc.)
                     ShowWindow(hWnd, SW_SHOW);
                     
-                    Log.Debug($"Set resolution to {info.Resolution}.");
+                    Log.Debug($"Launch: Set resolution to {info.Resolution}.");
                 }
                 else
-                    Log.Error("Skipped setting resolution because parse failed.");
+                    Log.Error("Launch: Skipped setting resolution because parse failed.");
             }
 
             // Enter headless mode
             if (info.Headless)
             {
                 ShowWindow(hWnd, SW_HIDE);
-                Log.Debug("Roblox window hidden. Client is now headless.");
+                Log.Debug("Launch: Roblox window hidden. Client is now headless.");
             }
-
-            Log.Info("Roblox has launched.");
+            
+            Log.Debug("Launch: Finished post-launch.");
+            Log.Info("Launch: Roblox launched.");
 
             return inst;
         }
