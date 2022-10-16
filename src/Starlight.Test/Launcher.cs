@@ -10,29 +10,31 @@ namespace Starlight.Test
     public class Launcher
     {
         [TestMethod]
-        public void RunTest()
+        public void TestLauncher()
         {
+            // Skip if it's CI
+            if (Environment.GetEnvironmentVariable("GITHUB_ACTIONS") is not null)
+            {
+                // Invalid ticket = no launch; Github Actions can't do it since Roblox invalidates the token every time a new IP address uses it
+                Assert.Inconclusive("Skipping test because CI doesn't support launching. ENSURE THAT LAUNCHING WORKS BEFORE MERGING A PR!");
+            }
+            
+            Setup.Init(); // Setup a clean environment
+
             // Install Roblox if not installed
             if (Core.Bootstrapper.GetClients().Count < 1)
                 Core.Bootstrapper.Install();
-            
-            // Get ticket
-            string token, ticket;
-            if ((token = Environment.GetEnvironmentVariable("STARLIGHT_ROBLOSECURITY", EnvironmentVariableTarget.Machine)) is null) // idk if theres a better way to do this
-                if ((token = Environment.GetEnvironmentVariable("STARLIGHT_ROBLOSECURITY", EnvironmentVariableTarget.User)) is null)
-                    token = Environment.GetEnvironmentVariable("STARLIGHT_ROBLOSECURITY", EnvironmentVariableTarget.Process);
 
-            if (token is not null)
-            {
-                var session = Session.Login(token);
-                ticket = session.GetTicket();
-            }
-            else
-                ticket = "notprovided";
+            // Get ticket
+            var token = Environment.GetEnvironmentVariable("AUTH_TOKEN");
+            Assert.IsFalse(token is null, "No Roblox token was provided. Please set the AUTH_TOKEN environment variable.");
+
+            var session = Session.Login(token);
+            var ticket = session.GetTicket();
 
             var info = new LaunchParams
             {
-                // Roblox join stuff
+                // Roblox join stuff.
                 Ticket = ticket,
                 Request = new JoinRequest
                 {

@@ -8,8 +8,10 @@ namespace Starlight.Test
         string _latestHash;
 
         [TestMethod]
-        public void RunTest()
+        public void TestBootstrapper()
         {
+            Setup.Init(); // Setup a clean environment
+
             LatestHash();
             GetManifest();
             NativeInstall();
@@ -17,7 +19,7 @@ namespace Starlight.Test
             Install();
             Query();
         }
-        
+
         void LatestHash()
         {
             _latestHash = Core.Bootstrapper.GetLatestHash();
@@ -36,19 +38,19 @@ namespace Starlight.Test
             if (client is null)
                 Assert.Fail("Native install failed");
         }
-        
+
         void GetClientAndUninstall()
         {
             Core.Bootstrapper.Uninstall(Core.Bootstrapper.GetClients()[0]);
         }
-        
+
         void Install()
         {
             var client = Core.Bootstrapper.Install(_latestHash);
             if (client is null)
                 Assert.Fail("Install failed");
         }
-        
+
         void Query()
         {
             var client = Core.Bootstrapper.QueryClient(_latestHash);
