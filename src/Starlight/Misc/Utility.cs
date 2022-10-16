@@ -39,7 +39,7 @@ namespace Starlight.Misc
         {
             try
             {
-                ci = new CultureInfo(name);
+                ci = new CultureInfo(name, false);
                 return true;
             }
             catch (CultureNotFoundException)
