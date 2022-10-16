@@ -15,7 +15,7 @@ namespace Starlight.Core
     {
         // ReSharper disable once PossibleNullReferenceException
         internal static readonly ILog Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
-        
+
         internal static IReadOnlyDictionary<string, string> ParseRaw(string payload)
         {
             try
@@ -29,7 +29,7 @@ namespace Starlight.Core
                 return null;
             }
         }
-        
+
         public static LaunchParams Parse(string rawArgs)
         {
             LaunchParams info = new();
@@ -51,16 +51,14 @@ namespace Starlight.Core
             if (b &= args.TryGetValue("browsertrackerid", out var trackerIdStr))
                 if (b &= long.TryParse(trackerIdStr, out var trackerId))
                     info.TrackerId = trackerId;
-            
-            if ((b &= args.TryGetValue("robloxLocale", out var rbxLocaleStr)) &&
-                (b &= args.TryGetValue("gameLocale", out var gameLocaleStr)))
-            {
-                if (b &= Utility.TryGetCultureInfo(rbxLocaleStr, out var rbxLocale))
+
+            if (b &= args.TryGetValue("robloxLocale", out var rbxLocaleStr))
+                if (Utility.TryGetCultureInfo(rbxLocaleStr, out var rbxLocale))
                     info.RobloxLocale = rbxLocale;
 
-                if (b &= Utility.TryGetCultureInfo(gameLocaleStr, out var gameLocale))
+            if (b &= args.TryGetValue("gameLocale", out var gameLocaleStr))
+                if (Utility.TryGetCultureInfo(gameLocaleStr, out var gameLocale))
                     info.GameLocale = gameLocale;
-            }
             // ReSharper enable AssignmentInConditionalExpression
 
             if (b)
@@ -80,7 +78,7 @@ namespace Starlight.Core
                 Log.Fatal("Failed to deserialize payload into LaunchParams.", ex);
                 throw ex;
             }
-            
+
             return await Launcher.LaunchAsync(parsed, extras);
         }
 
