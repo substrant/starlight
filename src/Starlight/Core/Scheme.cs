@@ -11,6 +11,25 @@ using System.Web;
 
 namespace Starlight.Core
 {
+    [Flags]
+    enum ParseResultFlags
+    {
+        TicketExists       = 0x0,
+        RequestExists      = 0x2,
+        RequestParsed      = 0x4,
+        LaunchTimeExists   = 0x8,
+        LaunchTimeParsed   = 0x10,
+        TrackerIdExists    = 0x20,
+        TrackerIdParsed    = 0x40,
+        RobloxLocaleExists = 0x80,
+        RobloxLocaleParsed = 0x100,
+        GameLocaleExists   = 0x200,
+        GameLocaleParsed   = 0x300,
+        Success = TicketExists | RequestExists | RequestParsed | LaunchTimeExists
+            | LaunchTimeParsed | TrackerIdExists | TrackerIdParsed | RobloxLocaleExists
+            | RobloxLocaleParsed | GameLocaleExists | GameLocaleParsed
+    }
+
     public class Scheme
     {
         // ReSharper disable once PossibleNullReferenceException
@@ -34,37 +53,68 @@ namespace Starlight.Core
         {
             LaunchParams info = new();
             var args = ParseRaw(rawArgs);
-            var b = true; // Success
+            ParseResultFlags result = 0;
 
-            // ReSharper disable AssignmentInConditionalExpression
-            if (b &= args.TryGetValue("gameinfo", out var ticket))
+            if (args.TryGetValue("gameinfo", out var ticket))
+            {
+                result |= ParseResultFlags.TicketExists;
                 info.Ticket = ticket;
+            }
 
-            if (b &= args.TryGetValue("placelauncherurl", out var launchUrl))
-                if (b &= Uri.TryCreate(launchUrl, UriKind.Absolute, out var launchUri))
+            if (args.TryGetValue("placelauncherurl", out var launchUrl))
+            {
+                result |= ParseResultFlags.RequestExists;
+                if (Uri.TryCreate(launchUrl, UriKind.Absolute, out var launchUri))
+                {
+                    result |= ParseResultFlags.RequestParsed;
                     info.Request = new JoinRequest(launchUri);
+                }
+            }
 
-            if (b &= args.TryGetValue("launchtime", out var launchTimeStr))
-                if (b &= long.TryParse(launchTimeStr, out var launchTime))
+            if (args.TryGetValue("launchtime", out var launchTimeStr))
+            {
+                result |= ParseResultFlags.LaunchTimeExists;
+                if (long.TryParse(launchTimeStr, out var launchTime))
+                {
+                    result |= ParseResultFlags.LaunchTimeParsed;
                     info.LaunchTime = DateTimeOffset.FromUnixTimeMilliseconds(launchTime);
+                }
+            }
 
-            if (b &= args.TryGetValue("browsertrackerid", out var trackerIdStr))
-                if (b &= long.TryParse(trackerIdStr, out var trackerId))
+            if (args.TryGetValue("browsertrackerid", out var trackerIdStr))
+            {
+                result |= ParseResultFlags.TrackerIdExists;
+                if (long.TryParse(trackerIdStr, out var trackerId))
+                {
+                    result |= ParseResultFlags.TrackerIdParsed;
                     info.TrackerId = trackerId;
+                }
+            }
 
-            if (b &= args.TryGetValue("robloxLocale", out var rbxLocaleStr))
+            if (args.TryGetValue("robloxLocale", out var rbxLocaleStr))
+            {
+                result |= ParseResultFlags.RobloxLocaleExists;
                 if (Utility.TryGetCultureInfo(rbxLocaleStr, out var rbxLocale))
+                {
+                    result |= ParseResultFlags.RobloxLocaleParsed;
                     info.RobloxLocale = rbxLocale;
+                }
+            }
 
-            if (b &= args.TryGetValue("gameLocale", out var gameLocaleStr))
+            if (args.TryGetValue("gameLocale", out var gameLocaleStr))
+            {
+                result |= ParseResultFlags.GameLocaleExists;
                 if (Utility.TryGetCultureInfo(gameLocaleStr, out var gameLocale))
+                {
+                    result |= ParseResultFlags.GameLocaleParsed;
                     info.GameLocale = gameLocale;
-            // ReSharper enable AssignmentInConditionalExpression
+                }
+            }
 
-            if (b)
+            if (result.HasFlag(ParseResultFlags.Success))
                 return info;
 
-            Log.Error($"Failed to parse scheme payload. Dump: {info}");
+            Log.Error($"Failed to parse scheme payload. Parse result: {result}");
             return null;
         }
 

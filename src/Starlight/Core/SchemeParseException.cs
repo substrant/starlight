@@ -4,9 +4,6 @@ namespace Starlight.Core
 {
     public class SchemeParseException : Exception
     {
-        public SchemeParseException(string message) : base(message)
-        {
-        
-        }
+        public SchemeParseException(string message) : base(message) { }
     }
 }

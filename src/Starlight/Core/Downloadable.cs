@@ -2,9 +2,9 @@
 using Starlight.Misc;
 using System;
 using System.IO;
+using System.Net.Http;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
-using static Starlight.Misc.Shared;
 
 namespace Starlight.Core
 {
@@ -35,13 +35,15 @@ namespace Starlight.Core
         internal string Download(string dir)
         {
             var outPath = Path.Combine(dir, Name);
-            Web.DownloadFile($"http://setup.rbxcdn.com/version-{_manifest.Hash}-{Name}", outPath);
+
+            using (var web = new HttpClient()) // Multithreading requires a separate client for each thread.
+                web.DownloadFile($"http://setup.rbxcdn.com/version-{_manifest.Hash}-{Name}", outPath);
 
             if (Check(dir))
                 return outPath;
 
             var ex = new BootstrapException($"Downloaded file {Name} is corrupt!");
-            Log.Fatal("Corrupt file.", ex);
+            Log.Fatal($"Download: Corrupt file: {Name}", ex);
             throw ex;
         }
 

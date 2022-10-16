@@ -1,15 +1,23 @@
 ﻿using IWshRuntimeLibrary;
+using log4net;
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
 using static Starlight.Misc.Native;
 
 namespace Starlight.Misc
 {
     internal class Utility
     {
+        // ReSharper disable once PossibleNullReferenceException
+        internal static readonly ILog Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+
         public static string GetTempDir()
         {
             var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
@@ -75,5 +83,46 @@ namespace Starlight.Misc
                 Height = nRect.Bottom - nRect.Top
             };
         }
+
+        public static void DisperseActions(IReadOnlyList<Action> actions, int maxConcurrency)
+        {
+            var curConcurrency = 0;
+            var threadFinishedEvent = new AutoResetEvent(false);
+            
+            foreach (var action in actions)
+            {
+                var thread = new Thread(() =>
+                {
+                    action();
+                    threadFinishedEvent.Set();
+                });
+                
+                thread.Start();
+                curConcurrency++;
+                
+                while (curConcurrency >= maxConcurrency)
+                {
+                    Log.Debug("DisperseActions: Waiting for available thread slot...");
+                    threadFinishedEvent.WaitOne();
+                    curConcurrency--;
+                }
+            }
+            
+            while (curConcurrency > 0)
+            {
+                Log.Debug($"DisperseActions: {curConcurrency} threads left");
+                threadFinishedEvent.WaitOne();
+                curConcurrency--;
+            }
+        }
+        
+        public static async Task DisperseActionsAsync(IReadOnlyList<Action> actions, int maxConcurrency) =>
+            await Task.Run(() => DisperseActions(actions, maxConcurrency));
+        
+        public static void DisperseActions<T>(IReadOnlyList<T> list, Action<T> action, int maxConcurrency) =>
+            DisperseActions(list.Select(x => new Action(() => action(x))).ToList(), maxConcurrency);
+
+        public static async Task DisperseActionsAsync<T>(IReadOnlyList<T> list, Action<T> action, int maxConcurrency) =>
+            await Task.Run(() => DisperseActions(list, action, maxConcurrency));
     }
 }
