@@ -18,7 +18,7 @@ jobs:
         submodules: recursive
 
     - name: Setup MSBuild
-      uses: warrenbuckley/Setup-MSBuild@v1
+      uses: microsoft/setup-msbuild@v1.1
 
     - name: Setup VSTest
       uses: darenm/Setup-VSTest@v1
