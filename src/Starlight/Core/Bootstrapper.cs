@@ -11,7 +11,6 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
-using Microsoft.Win32;
 using static Starlight.Misc.Shared;
 using static Starlight.Misc.Native;
 
@@ -81,10 +80,11 @@ namespace Starlight.Core
 
         public static Client NativeInstall()
         {
-            var launcherPath = Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\ROBLOX Corporation\Environments\roblox-player\", null, null);
-            if (!string.IsNullOrWhiteSpace(launcherPath.ToString()))
-                Registry.SetValue(@"HKEY_CURRENT_USER\SOFTWARE\ROBLOX Corporation\Environments\roblox-player\", null, "");
-
+            // TODO: use a less crappy method for checking installer exit
+            var desktopShorctut = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop), "Roblox Player.lnk");
+            if (File.Exists(desktopShorctut))
+                File.Delete(desktopShorctut);
+            
             var latestHash = GetLatestHash();
             var installPath = Path.Combine(GetInstallationPath(), $"version-{latestHash}");
             var tempPath = Utility.GetTempDir();
@@ -139,10 +139,11 @@ namespace Starlight.Core
             Log.Debug("NativeInstall: Waiting for installer to exit...");
 
             waitStart = DateTime.Now;
-            while (!string.IsNullOrEmpty(Registry.GetValue(@"HKEY_CURRENT_USER\SOFTWARE\ROBLOX Corporation\Environments\roblox-player\", null, null).ToString())) // last things to happen in installer
+            while (!File.Exists(desktopShorctut))
             {
-                Thread.Sleep(TimeSpan.FromSeconds(1.0d / 15));
-                if (DateTime.Now - waitStart <= TimeSpan.FromSeconds(120)) // two minutes should be plenty
+                Thread.Sleep(TimeSpan.FromSeconds(1.0));
+
+                if (DateTime.Now - waitStart <= TimeSpan.FromSeconds(120)) // Two minutes should be plenty. We also don't want CI to hang forever.
                     continue;
 
                 var ex = new BootstrapException("Installer timed out.");
@@ -151,7 +152,7 @@ namespace Starlight.Core
             }
 
             setup.Kill();
-            Thread.Sleep(1000);
+            Thread.Sleep(2000);
 
             if (Directory.Exists(installPath))
             {
@@ -170,8 +171,8 @@ namespace Starlight.Core
 
         public static async Task<Client> NativeInstallAsync() =>
             await Task.Run(NativeInstall);
-
-        static volatile bool _loggedInstallPathDoesntExist;
+        
+        static volatile bool _pathDoesntExist;
         internal static string GetInstallationPath()
         {
             var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
@@ -180,12 +181,12 @@ namespace Starlight.Core
             if (Directory.Exists(installPath))
                 return installPath;
 
-            if (_loggedInstallPathDoesntExist)
-                return null;
-            _loggedInstallPathDoesntExist = true;
+            if (_pathDoesntExist)
+                return installPath;
+            _pathDoesntExist = true;
 
             Log.Warn("GetInstallationPath: Installation path doesn't exist");
-            return null;
+            return installPath;
         }
 
         static readonly List<string> SkippedClients = new();
@@ -194,7 +195,7 @@ namespace Starlight.Core
             List<Client> clients = new();
 
             var path = GetInstallationPath();
-            if (path == null) // No valid installation of Roblox exists.
+            if (!Directory.Exists(path)) // No valid installation of Roblox exists.
                 return clients;
             
             foreach (var item in Directory.EnumerateDirectories(path))
@@ -259,14 +260,13 @@ namespace Starlight.Core
         public static Client Install(Manifest manifest)
         {
             var installationPath = GetInstallationPath();
-            if (installationPath is null)
+            if (!Directory.Exists(installationPath))
             {
                 Log.Info("Install: Running native installer for initial setup...");
                 NativeInstall();
                 var client = QueryClient(manifest.Hash);
                 if (client is not null) // Installer may have already installed the client.
                     return client;
-                installationPath = GetInstallationPath();
             }
 
             Log.Info($"Install: Preparing to install Roblox version-{manifest.Hash}...");
