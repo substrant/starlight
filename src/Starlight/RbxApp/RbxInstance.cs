@@ -12,9 +12,9 @@ namespace Starlight.RbxApp
         // ReSharper disable once PossibleNullReferenceException
         internal static readonly ILog Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
 
-        internal readonly Process Proc;
-        
-        internal readonly Target Rbx;
+        public readonly Process Proc;
+
+        public readonly Target Rbx;
 
         long _userId;
         public long GetUserId()
