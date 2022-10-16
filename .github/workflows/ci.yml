@@ -43,4 +43,4 @@ jobs:
         path: "src/Starlight/bin/Release"
 
     - name: Run tests
-      run: "vstest.console.exe /Platform:x86 /Logger:console;verbosity=detailed src/Starlight.Test/bin/Release/Starlight.Test.dll"
+      run: vstest.console.exe /Platform:x86 src/Starlight.Test/bin/Release/Starlight.Test.dll
