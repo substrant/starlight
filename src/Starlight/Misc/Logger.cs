@@ -28,7 +28,6 @@ namespace Starlight.Misc
                 RollingStyle = RollingFileAppender.RollingMode.Size,
                 StaticLogFileName = true
             };
-            
             roller.ActivateOptions();
             hierarchy.Root.AddAppender(roller);
 
