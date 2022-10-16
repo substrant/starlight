@@ -114,7 +114,7 @@ namespace Starlight.Rbx
 
             var ticketHeader = res.Headers?.FirstOrDefault(x => x.Name == "rbx-authentication-ticket");
             if (ticketHeader is null)
-                throw new Exception("Failed to get xsrf token");
+                throw new Exception("Failed to get auth ticket");
             
             return ticketHeader.Value?.ToString();
         }
