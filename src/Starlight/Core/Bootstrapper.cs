@@ -295,8 +295,10 @@ namespace Starlight.Core
         public static async Task<Client> InstallAsync(Manifest manifest) =>
             await Task.Run(() => Install(manifest));
 
-        public static Client Install(string hash)
+        public static Client Install(string hash = null)
         {
+            hash ??= GetLatestHash();
+
             var manifest = GetManifest(hash);
             if (manifest is not null)
                 return Install(manifest);
@@ -306,11 +308,13 @@ namespace Starlight.Core
             throw ex;
         }
 
-        public static async Task<Client> InstallAsync(string hash) =>
+        public static async Task<Client> InstallAsync(string hash = null) =>
             await Task.Run(() => Install(hash));
 
-        public static void Uninstall(string hash)
+        public static void Uninstall(string hash = null)
         {
+            hash ??= GetLatestHash();
+
             var path = Path.Combine(GetInstallationPath(), $"version-{hash}");
             if (Directory.Exists(path))
                 Directory.Delete(path, true);
