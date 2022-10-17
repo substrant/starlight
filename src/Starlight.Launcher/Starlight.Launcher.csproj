@@ -10,7 +10,7 @@
     <Description>Launcher proxy for Starlight</Description>
     <Copyright>Copyright (c) 2022 Substrant</Copyright>
     <Platforms>x86</Platforms>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <DebugType>portable</DebugType>
