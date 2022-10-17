@@ -28,14 +28,6 @@ task scheduler from an external process. This is done to set the FPS cap. This
 shouldn't be a problem, but I thought I'd throw that out. It should be
 undetectable by Roblox's anti-cheat.
 
-## Building
-The only prerequisite for building Starlight is .NET Framework 4.8 build tools
-and Visual Studio. You can download both from the Visual Studio Installer.
-
-To build Starlight, simply open the solution in Visual Studio, set the build
-target to "Release", right click the solution, and click build. The binaries
-will be compiled into `Starlight/bin/Release`.
-
 ## Issues and Support
 **Starlight does not have a Discord server.**
 
@@ -50,6 +42,6 @@ project. There's not much to it, but it's important to keep it consistent. I
 don't have any more rules, so as long as that's followed, you're good to go.
 
 ## License
-Starlight is licensed under the BSD-3-Clause license. See [LICENSE](LICENSE) for
+Starlight is licensed under the BSD 3-Clause license. See [LICENSE](LICENSE) for
 more information. I probably won't enforce it unless you're being a jerk by
 saying you made 100% of it or something along the lines of that.
