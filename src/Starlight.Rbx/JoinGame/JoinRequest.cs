@@ -101,19 +101,20 @@ namespace Starlight.Rbx.JoinGame
         }
 
         [JsonProperty("accessCode")]
-        public string AccessCode
+        public Guid? AccessCode
         {
             get
             {
-                Options.TryGetValue("accessCode", out var x);
-                return x;
+                if (Options.TryGetValue("accessCode", out var accessCode) && Guid.TryParse(accessCode, out var x))
+                    return x;
+                return null;
             }
             set
             {
                 if (value is null)
                     Options.Remove("accessCode");
                 else
-                    Options["accessCode"] = value;
+                    Options["accessCode"] = value.ToString();
             }
         }
 
@@ -204,10 +205,10 @@ namespace Starlight.Rbx.JoinGame
 
         public string Serialize()
         {
-            const string urlTemplate = "https://assetgame.roblox.com/game/PlaceLauncher.ashx?request={0}&{1}";
-            return string.Format(urlTemplate, RequestName, string.Join("&", Options.Select(x => $"{x.Key}={HttpUtility.UrlEncode(x.Value.ToString())}")));
+            const string urlTemplate = "https://assetgame.roblox.com/game/PlaceLauncher.ashx?{0}";
+            return string.Format(urlTemplate, string.Join("&", Options.Select(x => $"{x.Key}={HttpUtility.UrlEncode(x.Value.ToString())}")));
         }
-
+        
         public JoinRequest()
         {
             Options = new Dictionary<string, string>();
