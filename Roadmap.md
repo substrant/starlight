@@ -9,7 +9,7 @@
 * [x] Documentation
 * [x] Logging (log4net), no clue why I didn't do this earlier
 * [ ] Profiling
-* [ ] Unit tests
+* [x] Unit tests
 
 ## Launching
 * [x] `roblox-player` scheme hooking
