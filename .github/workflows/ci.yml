@@ -37,7 +37,7 @@ jobs:
       run: msbuild.exe Starlight.sln -p:Configuration=Release
 
     - name: Run tests
-      run: testrunner/NUnit.ConsoleRunner.3.15.2/tools/nunit3-console.exe src/Starlight.Test/bin/Release/Starlight.Test.dll
+      run: mkdir testresults; testrunner/NUnit.ConsoleRunner.3.15.2/tools/nunit3-console.exe --out testresults/TestResult.xml src/Starlight.Test/bin/Release/Starlight.Test.dll
 
     - name: Upload artifacts
       uses: actions/upload-artifact@v1.0.0
@@ -50,5 +50,5 @@ jobs:
       with:
         name: test-results
         path: |
-          "TestResult.xml"
+          "testresults/"
           "src/Starlight.Test/bin/Release/Logs/"
