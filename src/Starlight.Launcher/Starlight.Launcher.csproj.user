@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
     <StartArguments>roblox-player:1+launchmode:play+gameinfo:TEST_TICKET_LAUNCHER_SHOULD_FAIL_TO_NATIVELY_OPEN_ROBLOX+launchtime:1665716979689+placelauncherurl:https%253A%252F%252Fassetgame.roblox.com%252Fgame%252FPlaceLauncher.ashx%253Frequest%253DRequestGame%2526browserTrackerId%253D12345%2526placeId%253D4483381587%2526isPlayTogetherGame%253Dfalse+browsertrackerid:12345+robloxLocale:en_us+gameLocale:en_us+channel:+LaunchExp:InApp</StartArguments>
   </PropertyGroup>
 </Project>
