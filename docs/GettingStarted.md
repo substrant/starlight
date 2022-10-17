@@ -1,4 +1,4 @@
-# Getting Started With Starlight
+# Getting Started
 
 You're interested in using Starlight, but you don't know where to start? This guide will help you get started with Starlight.
 

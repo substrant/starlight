@@ -6,6 +6,7 @@ Welcome to the Starlight documentation! This documentation is a work in progress
 * [Introduction](Introduction.md)
 * [Getting Started](GettingStarted.md)
 * [Building](Building.md)
+* [Testing](Testing.md)
 * [Commands](Commands.md)
 * [API](API.md)
 * [License](../LICENSE)
