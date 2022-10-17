@@ -11,6 +11,7 @@
     <Copyright>Copyright (c) 2022 Substrant</Copyright>
     <Platforms>x86</Platforms>
     <IsPackable>false</IsPackable>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
     <DebugType>portable</DebugType>
