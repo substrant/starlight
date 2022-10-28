@@ -1,40 +1,39 @@
 ﻿using System.Runtime.InteropServices;
 
-namespace Starlight.Cli
+namespace Starlight.Cli;
+
+internal class Native
 {
-    internal class Native
-    {
 #if DEBUG
         [DllImport("kernel32.dll")]
         public static extern bool IsDebuggerPresent();
 #endif
 
-        [DllImport("user32.dll")]
-        public static extern bool ShowWindow(int hWnd, int nCmdShow);
+    [DllImport("user32.dll")]
+    public static extern bool ShowWindow(int hWnd, int nCmdShow);
 
-        [DllImport("user32.dll")]
-        public static extern int FindWindow(string lpClassName, string lpWindowName);
+    [DllImport("user32.dll")]
+    public static extern int FindWindow(string lpClassName, string lpWindowName);
 
-        [DllImport("kernel32.dll")]
-        public static extern int GetConsoleWindow();
-        
-        [DllImport("user32.dll")]
-        public static extern int GetWindowThreadProcessId(int hWnd, out int lpdwProcessId);
+    [DllImport("kernel32.dll")]
+    public static extern int GetConsoleWindow();
 
-        public const uint STD_OUTPUT_HANDLE = 0xFFFFFFF5;
-        
-        [DllImport("kernel32.dll")]
-        public static extern uint GetStdHandle(uint nStdHandle);
-        
-        [DllImport("kernel32.dll")]
-        public static extern void SetStdHandle(uint nStdHandle, uint handle);
-        
-        [DllImport("kernel32.dll")]
-        public static extern bool AllocConsole();
+    [DllImport("user32.dll")]
+    public static extern int GetWindowThreadProcessId(int hWnd, out int lpdwProcessId);
 
-        [DllImport("kernel32.dll")]
-        public static extern bool FreeConsole();
+    public const uint STD_OUTPUT_HANDLE = 0xFFFFFFF5;
 
-        public const int SW_HIDE = 0;
-    }
+    [DllImport("kernel32.dll")]
+    public static extern uint GetStdHandle(uint nStdHandle);
+
+    [DllImport("kernel32.dll")]
+    public static extern void SetStdHandle(uint nStdHandle, uint handle);
+
+    [DllImport("kernel32.dll")]
+    public static extern bool AllocConsole();
+
+    [DllImport("kernel32.dll")]
+    public static extern bool FreeConsole();
+
+    public const int SW_HIDE = 0;
 }

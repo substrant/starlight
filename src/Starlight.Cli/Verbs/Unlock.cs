@@ -1,78 +1,77 @@
-﻿using CommandLine;
-using System;
-using Starlight.Core;
+﻿using System;
 using System.Threading;
+using CommandLine;
+using Starlight.Launch;
 using static Starlight.Cli.Native;
 
-namespace Starlight.Cli.Verbs
+namespace Starlight.Cli.Verbs;
+
+[Verb("unlock", HelpText = "Enable multiple Roblox clients.")]
+public class Unlock : VerbBase
 {
-    [Verb("unlock", HelpText = "Enable multiple Roblox clients.")]
-    public class Unlock : VerbBase
+    [Option('e', "relock", Required = false, Default = false, HelpText = "Lock when all clients close.")]
+    public bool Relock { get; set; }
+
+    protected override int Init()
     {
-        [Option('e', "relock", Required = false, Default = false, HelpText = "Lock when all clients close.")]
-        public bool Relock { get; set; }
+        return 0;
+    }
 
-        protected override int Init()
+    static void CommitThread(CancellationToken cancelToken)
+    {
+        // I use FindWindow because scanning process list kills my CPU.
+        while (!cancelToken.IsCancellationRequested)
         {
-            return 0;
+            while (FindWindow(null, "Roblox") == 0) // If Roblox isn't open yet, wait for open.
+            {
+                cancelToken.WaitHandle.WaitOne(TimeSpan.FromSeconds(1.0d / 15));
+                if (cancelToken.IsCancellationRequested)
+                    break;
+            }
+
+            Launcher.CommitSingleton();
+
+            while (FindWindow(null, "Roblox") != 0) // Wait for all instances to close.
+            {
+                cancelToken.WaitHandle.WaitOne(TimeSpan.FromSeconds(1.0d / 15));
+                if (cancelToken.IsCancellationRequested)
+                    break;
+            }
+
+            Launcher.ReleaseSingleton();
+        }
+    }
+
+    protected override int InternalInvoke()
+    {
+        if (FindWindow(null, "Roblox") != 0)
+        {
+            Console.WriteLine("Waiting for all Roblox processes to close...");
+            while (FindWindow(null, "Roblox") != 0)
+                Thread.Sleep(TimeSpan.FromSeconds(1.0d / 15));
         }
 
-        static void CommitThread(CancellationToken cancelToken)
+        if (Relock)
         {
-            // I use FindWindow because scanning process list kills my CPU.
-            while (!cancelToken.IsCancellationRequested)
-            {
-                while (FindWindow(null, "Roblox") == 0) // If Roblox isn't open yet, wait for open.
-                {
-                    cancelToken.WaitHandle.WaitOne(TimeSpan.FromSeconds(1.0d / 15));
-                    if (cancelToken.IsCancellationRequested)
-                        break;
-                }
+            Launcher.CommitSingleton();
 
-                Launcher.CommitSingleton();
+            while (FindWindow(null, "Roblox") != 0)
+                Thread.Sleep(TimeSpan.FromSeconds(1.0d / 15));
 
-                while (FindWindow(null, "Roblox") != 0) // Wait for all instances to close.
-                {
-                    cancelToken.WaitHandle.WaitOne(TimeSpan.FromSeconds(1.0d / 15));
-                    if (cancelToken.IsCancellationRequested)
-                        break;
-                }
-                
-                Launcher.ReleaseSingleton();
-            }
+            Launcher.ReleaseSingleton();
+        }
+        else
+        {
+            Console.ForegroundColor = ConsoleColor.Gray;
+            Console.Write("Press enter to release singleton...");
+
+            CancellationTokenSource commitTask = new();
+            new Thread(() => CommitThread(commitTask.Token)).Start();
+
+            Console.ReadLine();
+            commitTask.Cancel(); // Stop the commit thread
         }
 
-        protected override int InternalInvoke()
-        {
-            if (FindWindow(null, "Roblox") != 0)
-            {
-                Console.WriteLine("Waiting for all Roblox processes to close...");
-                while (FindWindow(null, "Roblox") != 0)
-                    Thread.Sleep(TimeSpan.FromSeconds(1.0d / 15));
-            }
-
-            if (Relock)
-            {
-                Launcher.CommitSingleton();
-
-                while (FindWindow(null, "Roblox") != 0)
-                    Thread.Sleep(TimeSpan.FromSeconds(1.0d / 15));
-
-                Launcher.ReleaseSingleton();
-            }
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Gray;
-                Console.Write("Press enter to release singleton...");
-
-                CancellationTokenSource commitTask = new();
-                new Thread(() => CommitThread(commitTask.Token)).Start();
-
-                Console.ReadLine();
-                commitTask.Cancel(); // Stop the commit thread
-            }
-
-            return 0;
-        }
+        return 0;
     }
 }

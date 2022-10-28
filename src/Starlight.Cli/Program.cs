@@ -1,18 +1,16 @@
 ﻿using System;
 using System.Linq;
-using System.Threading;
 using CommandLine;
 using Starlight.Cli.Verbs;
 using Starlight.Misc;
-using static Starlight.Cli.Native;
 
-namespace Starlight.Cli
+namespace Starlight.Cli;
+
+internal class Program
 {
-    internal class Program
+    static int Main(string[] args)
     {
-        static int Main(string[] args)
-        {
-            Console.Title = "Starlight CLI";
+        Console.Title = "Starlight CLI";
 
 #if DEBUG
             // In Debug mode: Starlight.Cli.exe [nodebug] <verb> [options], skips requirement to attach debugger.
@@ -31,31 +29,30 @@ namespace Starlight.Cli
             else
                 args = args.Skip(1).ToArray();
 #else
-            if (args.Length > 0 && args[0] == "debug")
-            {
-                Logger.Init(true);
-                args = args.Skip(1).ToArray();
-            }
+        if (args.Length > 0 && args[0] == "debug")
+        {
+            Logger.Init(true);
+            args = args.Skip(1).ToArray();
+        }
 #endif
 
-            // I do not like how this is done, but it works.
-            var code = Parser.Default.ParseArguments<Hook, Install, RawLaunch, Launch, Unhook, Uninstall, Unlock>(args)
-                .MapResult(
-                    (Hook x) => x.Invoke(),
-                    (Install x) => x.Invoke(),
-                    (Launch x) => x.Invoke(),
-                    (RawLaunch x) => x.Invoke(),
-                    (Unhook x) => x.Invoke(),
-                    (Uninstall x) => x.Invoke(),
-                    (Unlock x) => x.Invoke(),
-                    _ => 1);
+        // I do not like how this is done, but it works.
+        var code = Parser.Default.ParseArguments<Hook, Install, RawLaunch, Verbs.Launch, Unhook, Uninstall, Unlock>(args)
+            .MapResult(
+                (Hook x) => x.Invoke(),
+                (Install x) => x.Invoke(),
+                (Verbs.Launch x) => x.Invoke(),
+                (RawLaunch x) => x.Invoke(),
+                (Unhook x) => x.Invoke(),
+                (Uninstall x) => x.Invoke(),
+                (Unlock x) => x.Invoke(),
+                _ => 1);
 
 #if DEBUG
             Console.WriteLine($"Exit code: 0x{code:X}. Press any key to exit...");
             Console.ReadKey();
 #endif
 
-            return code;
-        }
+        return code;
     }
 }

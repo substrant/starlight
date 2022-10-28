@@ -1,128 +1,158 @@
-﻿using IWshRuntimeLibrary;
-using log4net;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+using IWshRuntimeLibrary;
+using log4net;
 using static Starlight.Misc.Native;
 
-namespace Starlight.Misc
+namespace Starlight.Misc;
+
+internal class Utility
 {
-    internal class Utility
+    // ReSharper disable once PossibleNullReferenceException
+    internal static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
+
+    public static string GetTempDir()
     {
-        // ReSharper disable once PossibleNullReferenceException
-        internal static readonly ILog Log = LogManager.GetLogger(System.Reflection.MethodBase.GetCurrentMethod().DeclaringType);
+        var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
+        Directory.CreateDirectory(dir);
+        return dir;
+    }
 
-        public static string GetTempDir()
+    public static void CreateShortcut(string filePath, string target, string workingDir)
+    {
+        WshShell shell = new(); // This is a nasty library; I wish COM didn't exist.
+        var shortcut = (IWshShortcut)shell.CreateShortcut(filePath);
+
+        shortcut.TargetPath = target;
+        shortcut.WorkingDirectory = workingDir;
+        shortcut.Save();
+    }
+
+    public static int SecureRandomInteger()
+    {
+        using RNGCryptoServiceProvider rng = new();
+        var seed = new byte[4];
+        rng.GetBytes(seed);
+        return new Random(BitConverter.ToInt32(seed, 0)).Next();
+    }
+
+    public static bool TryGetCultureInfo(string name, out CultureInfo ci)
+    {
+        try
         {
-            var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
-            Directory.CreateDirectory(dir);
-            return dir;
+            ci = new CultureInfo(name, false);
+            return true;
         }
-
-        public static void CreateShortcut(string filePath, string target, string workingDir)
+        catch (CultureNotFoundException)
         {
-            WshShell shell = new(); // This is a nasty library; I wish COM didn't exist.
-            var shortcut = (IWshShortcut)shell.CreateShortcut(filePath);
-            
-            shortcut.TargetPath = target;
-            shortcut.WorkingDirectory = workingDir;
-            shortcut.Save();
+            ci = null;
+            return false;
         }
+    }
 
-        public static int SecureRandomInteger()
-        {
-            using RNGCryptoServiceProvider rng = new();
-            var seed = new byte[4];
-            rng.GetBytes(seed);
-            return new Random(BitConverter.ToInt32(seed, 0)).Next();
-        }
+    public static (int, int)? ParseResolution(string res)
+    {
+        var parts = res.Split('x');
+        if (parts.Length != 2)
+            return null;
 
-        public static bool TryGetCultureInfo(string name, out CultureInfo ci)
+        var b = true;
+        b &= int.TryParse(parts[0], out var p1);
+        b &= int.TryParse(parts[1], out var p2);
+
+        return b ? (p1, p2) : null;
+    }
+
+    public static Rectangle GetWindowBounds(IntPtr hWnd)
+    {
+        if (!GetWindowRect(hWnd, out var nRect))
+            return Rectangle.Empty;
+
+        return new Rectangle
         {
-            try
+            X = nRect.Left,
+            Y = nRect.Top,
+            Width = nRect.Right - nRect.Left,
+            Height = nRect.Bottom - nRect.Top
+        };
+    }
+
+    public static void DisperseActions(IReadOnlyList<Action> actions, int maxConcurrency)
+    {
+        var curConcurrency = 0;
+        var threadFinishedEvent = new AutoResetEvent(false);
+
+        foreach (var action in actions)
+        {
+            var thread = new Thread(() =>
             {
-                ci = new CultureInfo(name, false);
-                return true;
-            }
-            catch (CultureNotFoundException)
+                action();
+                threadFinishedEvent.Set();
+            });
+
+            thread.Start();
+            curConcurrency++;
+
+            while (curConcurrency >= maxConcurrency)
             {
-                ci = null;
-                return false;
-            }
-        }
-
-        public static (int, int)? ParseResolution(string res)
-        {
-            var parts = res.Split('x');
-            if (parts.Length != 2)
-                return null;
-
-            var b = true;
-            b &= int.TryParse(parts[0], out var p1);
-            b &= int.TryParse(parts[1], out var p2);
-            
-            return b ? (p1, p2) : null;
-        }
-
-        public static Rectangle GetWindowBounds(IntPtr hWnd)
-        {
-            if (!GetWindowRect(hWnd, out var nRect))
-                return Rectangle.Empty;
-
-            return new Rectangle
-            {
-                X = nRect.Left,
-                Y = nRect.Top,
-                Width = nRect.Right - nRect.Left,
-                Height = nRect.Bottom - nRect.Top
-            };
-        }
-
-        public static void DisperseActions(IReadOnlyList<Action> actions, int maxConcurrency)
-        {
-            var curConcurrency = 0;
-            var threadFinishedEvent = new AutoResetEvent(false);
-            
-            foreach (var action in actions)
-            {
-                var thread = new Thread(() =>
-                {
-                    action();
-                    threadFinishedEvent.Set();
-                });
-                
-                thread.Start();
-                curConcurrency++;
-                
-                while (curConcurrency >= maxConcurrency)
-                {
-                    Log.Debug("DisperseActions: Waiting for available thread slot...");
-                    threadFinishedEvent.WaitOne();
-                    curConcurrency--;
-                }
-            }
-            
-            while (curConcurrency > 0)
-            {
-                Log.Debug($"DisperseActions: {curConcurrency} threads left");
+                Log.Debug("DisperseActions: Waiting for available thread slot...");
                 threadFinishedEvent.WaitOne();
                 curConcurrency--;
             }
         }
-        
-        public static async Task DisperseActionsAsync(IReadOnlyList<Action> actions, int maxConcurrency) =>
-            await Task.Run(() => DisperseActions(actions, maxConcurrency));
-        
-        public static void DisperseActions<T>(IReadOnlyList<T> list, Action<T> action, int maxConcurrency) =>
-            DisperseActions(list.Select(x => new Action(() => action(x))).ToList(), maxConcurrency);
 
-        public static async Task DisperseActionsAsync<T>(IReadOnlyList<T> list, Action<T> action, int maxConcurrency) =>
-            await Task.Run(() => DisperseActions(list, action, maxConcurrency));
+        while (curConcurrency > 0)
+        {
+            Log.Debug($"DisperseActions: {curConcurrency} threads left");
+            threadFinishedEvent.WaitOne();
+            curConcurrency--;
+        }
+    }
+
+    public static async Task DisperseActionsAsync(IReadOnlyList<Action> actions, int maxConcurrency)
+    {
+        await Task.Run(() => DisperseActions(actions, maxConcurrency));
+    }
+
+    public static void DisperseActions<T>(IReadOnlyList<T> list, Action<T> action, int maxConcurrency)
+    {
+        DisperseActions(list.Select(x => new Action(() => action(x))).ToList(), maxConcurrency);
+    }
+
+    public static async Task DisperseActionsAsync<T>(IReadOnlyList<T> list, Action<T> action, int maxConcurrency)
+    {
+        await Task.Run(() => DisperseActions(list, action, maxConcurrency));
+    }
+
+    public static bool CanShare(string path, FileShare flags)
+    {
+        try
+        {
+            using var sr = new FileStream(path, FileMode.Open, FileAccess.Read, flags);
+            return sr.Length > 0;
+        }
+        catch (Exception)
+        {
+            return false;
+        }
+    }
+
+    public static void WaitShare(string path, FileShare flags, CancellationToken ct = default)
+    {
+        while (!CanShare(path, flags))
+        {
+            if (ct.IsCancellationRequested)
+                return;
+
+            Thread.Sleep(100);
+        }
     }
 }

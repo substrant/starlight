@@ -26,7 +26,6 @@
     <PackageReference Include="NUnit.Analyzers" Version="3.3.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Starlight.Rbx\Starlight.Rbx.csproj" />
     <ProjectReference Include="..\Starlight\Starlight.csproj" />
   </ItemGroup>
 </Project>

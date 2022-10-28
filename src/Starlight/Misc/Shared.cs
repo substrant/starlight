@@ -1,9 +1,8 @@
 ﻿using System.Net.Http;
 
-namespace Starlight.Misc
+namespace Starlight.Misc;
+
+internal static class Shared
 {
-    internal static class Shared
-    {
-        internal static readonly HttpClient Web = new();
-    }
+    internal static readonly HttpClient Web = new();
 }

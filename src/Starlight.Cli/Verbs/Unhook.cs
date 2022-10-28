@@ -1,32 +1,31 @@
-﻿using CommandLine;
-using Starlight.Core;
-using System;
+﻿using System;
+using CommandLine;
+using Starlight.Bootstrap;
+using Starlight.SchemeLaunch;
 
-namespace Starlight.Cli.Verbs
+namespace Starlight.Cli.Verbs;
+
+[Verb("unhook", HelpText = "Unhook from Roblox's scheme.")]
+public class Unhook : VerbBase
 {
-    [Verb("unhook", HelpText = "Unhook from Roblox's scheme.")]
-    public class Unhook : VerbBase
+    protected override int Init()
     {
-        protected override int Init()
-        {
-            if (Bootstrapper.GetClients().Count >= 1)
-                return 0;
-            
-            Console.WriteLine("No Roblox clients are installed.");
-            return 1;
+        if (Bootstrapper.GetClients().Count >= 1)
+            return 0;
 
+        Console.WriteLine("No Roblox clients are installed.");
+        return 1;
+    }
+
+    protected override int InternalInvoke()
+    {
+        if (Scheme.Unhook())
+        {
+            Console.WriteLine("Unhooked scheme. Launching Roblox from the browser should no longer open Starlight.");
+            return 0;
         }
 
-        protected override int InternalInvoke()
-        {
-            if (Scheme.Unhook())
-            {
-                Console.WriteLine("Unhooked scheme. Launching Roblox from the browser should no longer open Starlight.");
-                return 0;
-            }
-
-            Console.WriteLine("Failed to unhook scheme.");
-            return 1;
-        }
+        Console.WriteLine("Failed to unhook scheme.");
+        return 1;
     }
 }

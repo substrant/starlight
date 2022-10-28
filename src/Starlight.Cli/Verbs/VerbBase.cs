@@ -1,15 +1,20 @@
-﻿namespace Starlight.Cli.Verbs
+﻿namespace Starlight.Cli.Verbs;
+
+public abstract class VerbBase
 {
-    public abstract class VerbBase
+    protected virtual int Init()
     {
-        protected virtual int Init() => 0;
+        return 0;
+    }
 
-        protected virtual int InternalInvoke() => 0;
+    protected virtual int InternalInvoke()
+    {
+        return 0;
+    }
 
-        public int Invoke()
-        {
-            var initRes = Init();
-            return initRes != 0 ? initRes : InternalInvoke();
-        }
+    public int Invoke()
+    {
+        var initRes = Init();
+        return initRes != 0 ? initRes : InternalInvoke();
     }
 }

@@ -1,106 +1,106 @@
-﻿using NUnit.Framework;
-using Starlight.Core;
-using Starlight.Misc;
-using System;
+﻿using System;
 using System.IO;
 using System.Threading;
+using NUnit.Framework;
+using Starlight.Bootstrap;
+using Starlight.Except;
+using Starlight.Misc;
 
-namespace Starlight.Test
+namespace Starlight.Test;
+
+[TestFixture]
+public class BootstrapperTests
 {
-    [TestFixture]
-    public class BootstrapperTests
+    [OneTimeSetUp]
+    public void InitLogger()
     {
-        [OneTimeSetUp]
-        public void InitLogger()
+        Logger.Init(true);
+    }
+
+    [Test]
+    public void GetLatestHash()
+    {
+        try
         {
-            Logger.Init(true);
+            Bootstrapper.GetLatestHash();
+        }
+        catch (BadIntegrityException)
+        {
+            Assert.Inconclusive("Couldn't fetch latest hash.");
+        }
+    }
+
+    [Test]
+    public void FetchManifest()
+    {
+        var manifest = Bootstrapper.GetManifest(Bootstrapper.GetLatestHash());
+        if (manifest is null)
+            Assert.Inconclusive("Couldn't fetch manifest.");
+    }
+
+    static void PreNativeInstall()
+    {
+        var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        var installPath = Path.Combine(localAppData, "Roblox");
+
+        // Uninstall Roblox if it's installed.
+        if (Directory.Exists(installPath))
+            Directory.Delete(installPath, true);
+    }
+
+    [Test]
+    public void NativeInstall()
+    {
+        Env.AssertCi();
+
+        PreNativeInstall();
+        try
+        {
+            var client = Bootstrapper.NativeInstall();
+            Assert.IsFalse(client is null, "Client installation failed.");
+        }
+        catch (BadIntegrityException ex)
+        {
+            Assert.Fail("Client installation failed due to integrity check fail.", ex);
         }
 
-        [Test]
-        public void GetLatestHash()
-        {
-            try
-            {
-                Bootstrapper.GetLatestHash();
-            }
-            catch (BootstrapException)
-            {
-                Assert.Inconclusive("Couldn't fetch latest hash.");
-            }
-        }
+        Thread.Sleep(1000); // idk bruh it works lol
+    }
 
-        [Test]
-        public void FetchManifest()
-        {
-            var manifest = Bootstrapper.GetManifest(Bootstrapper.GetLatestHash());
-            if (manifest is null)
-                Assert.Inconclusive("Couldn't fetch manifest.");
-        }
+    [Test]
+    public void Query()
+    {
+        Env.AssertCi();
 
-        static void PreNativeInstall()
-        {
-            var localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            var installPath = Path.Combine(localAppData, "Roblox");
+        if (Bootstrapper.GetClients().Count < 1)
+            Bootstrapper.Install();
 
-            // Uninstall Roblox if it's installed.
-            if (Directory.Exists(installPath))
-                Directory.Delete(installPath, true);
-        }
+        var clients = Bootstrapper.GetClients();
+        if (clients.Count < 1)
+            Assert.Fail("Failed to find any clients.");
 
-        [Test]
-        public void NativeInstall()
-        {
-            Env.AssertCi();
+        Bootstrapper.QueryClient(clients[0].Hash);
+    }
 
-            PreNativeInstall();
-            try
-            {
-                var client = Bootstrapper.NativeInstall();
-                Assert.IsFalse(client is null, "Client installation failed.");
-            }
-            catch (BootstrapException ex)
-            {
-                Assert.Fail("Client installation failed: " + ex.Message, ex);
-            }
-            Thread.Sleep(1000); // idk bruh it works lol
-        }
+    [Test]
+    public void Uninstall()
+    {
+        Env.AssertCi();
 
-        [Test]
-        public void Query()
-        {
-            Env.AssertCi();
+        if (Bootstrapper.GetClients().Count < 1)
+            Bootstrapper.Install();
 
-            if (Bootstrapper.GetClients().Count < 1)
-                Bootstrapper.Install();
+        var clients = Bootstrapper.GetClients();
+        Bootstrapper.Uninstall(clients[0]);
+    }
 
-            var clients = Bootstrapper.GetClients();
-            if (clients.Count < 1)
-                Assert.Fail("Failed to find any clients.");
-            
-            var client = Bootstrapper.QueryClient(clients[0].Hash);
-            Assert.IsFalse(client is null, "Client query failed.");
-        }
+    [Test]
+    public void Install()
+    {
+        Env.AssertCi();
 
-        [Test]
-        public void Uninstall()
-        {
-            Env.AssertCi();
-
-            if (Bootstrapper.GetClients().Count < 1)
-                Bootstrapper.Install();
-
-            var clients = Bootstrapper.GetClients();
-            Bootstrapper.Uninstall(clients[0]);
-        }
-
-        [Test]
-        public void Install()
-        {
-            Env.AssertCi();
-
-            var client = Bootstrapper.Install();
-            if (client is null)
-                Assert.Fail("Client installation failed.");
-        }
+        var client = Bootstrapper.Install();
+        if (client is null)
+            Assert.Fail("Client installation failed.");
     }
 }
