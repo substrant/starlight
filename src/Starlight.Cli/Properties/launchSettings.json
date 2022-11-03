@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Starlight.Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "hook"
+    }
+  }
+}

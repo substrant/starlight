@@ -216,7 +216,7 @@ public class JoinRequest
         return ExecuteAsync(session, maxTries).Result;
     }
 
-    public string Serialize()
+    public override string ToString()
     {
         const string urlTemplate = "https://assetgame.roblox.com/game/PlaceLauncher.ashx?{0}";
         return string.Format(urlTemplate,

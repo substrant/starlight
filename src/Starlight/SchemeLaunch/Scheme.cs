@@ -110,33 +110,6 @@ public class Scheme
     }
 
     /// <summary>
-    ///     Launch Roblox using a launcher scheme payload.
-    /// </summary>
-    /// <param name="args">The raw payload data.</param>
-    /// <param name="extras">The extra Starlight launch parameters to use.</param>
-    /// <returns>A <see cref="ClientInstance" /> returned by <see cref="Launcher.Launch" />.</returns>
-    public static ClientInstance Launch(string args, IStarlightLaunchParams extras = null)
-    {
-        var parsed = Parse(args);
-
-        if (parsed != null)
-            return Launcher.Launch(parsed, extras);
-
-        var ex = new SchemeParseException("Failed to parse scheme payload.");
-        Log.Fatal("Failed to deserialize payload into LaunchParams.", ex);
-        throw ex;
-    }
-
-    /// <summary>
-    ///     Launch Roblox using a launcher scheme payload.
-    /// </summary>
-    /// <param name="args">The raw payload data.</param>
-    /// <param name="extras">The extra Starlight launch parameters to use.</param>
-    /// <returns>A <see cref="ClientInstance" /> returned by <see cref="Launcher.Launch" />.</returns>
-    public static async Task<ClientInstance> LaunchAsync(string args, IStarlightLaunchParams extras = null) => 
-        await Task.Run(() => Launch(args, extras));
-
-    /// <summary>
     ///     Registers the Starlight scheme handler.
     /// </summary>
     /// <param name="launcherBin">The binary path to launch.</param>

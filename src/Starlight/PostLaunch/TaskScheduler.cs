@@ -11,6 +11,6 @@ public class TaskScheduler
     public void WriteDouble(uint offset, double value)
     {
         var addr = BaseAddress + offset;
-        Instance.Rbx.WriteDouble(addr, value);
+        Instance.Target.WriteDouble(addr, value);
     }
 }

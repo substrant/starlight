@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
@@ -92,7 +93,6 @@ internal static class Extensions
             file.ExtractToFile(completeFileName, true);
         }
     }
-
 
     internal static void ExtractSelectedToDirectory(this ZipArchive file, string destDir, string selector)
     {

@@ -1,10 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Net.Http;
-using System.Reflection;
 using System.Security.Cryptography;
-using System.Threading.Tasks;
-using log4net;
 using Starlight.Except;
 using Starlight.Misc;
 
@@ -12,22 +9,19 @@ namespace Starlight.Bootstrap;
 
 public class Downloadable
 {
-    // ReSharper disable once PossibleNullReferenceException
-    internal static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-    readonly Manifest _manifest;
-
-    public readonly string Checksum;
+    public readonly string VersionHash;
 
     public readonly string Name;
+
+    public readonly string Checksum;
 
     public readonly long Size;
 
     public readonly long TrueSize;
 
-    internal Downloadable(Manifest manifest, string name, string checksum, long size, long trueSize)
+    internal Downloadable(string versionHash, string name, string checksum, long size, long trueSize)
     {
-        _manifest = manifest;
+        VersionHash = versionHash;
         Name = name;
         Checksum = checksum;
         TrueSize = trueSize;
@@ -36,36 +30,27 @@ public class Downloadable
 
     internal string Download(string dir)
     {
-        var outPath = Path.Combine(dir, Name);
+        var filePath = Path.Combine(dir, Name);
 
         using (var web = new HttpClient()) // Multithreading requires a separate client for each thread.
         {
-            web.DownloadFile($"http://setup.rbxcdn.com/version-{_manifest.Hash}-{Name}", outPath);
+            web.DownloadFile($"http://setup.rbxcdn.com/version-{VersionHash}-{Name}", filePath);
         }
 
-        if (Check(dir))
-            return outPath;
+        if (Validate(filePath))
+            return filePath;
 
         var ex = new BadIntegrityException($"Downloaded file {Name} is corrupt!");
-        Log.Fatal($"Download: Corrupt file: {Name}", ex);
+        // TODO: Add logging
         throw ex;
     }
 
-    internal async Task<string> DownloadAsync(string dir)
+    internal bool Validate(string filePath)
     {
-        return await Task.Run(() => Download(dir));
-    }
-
-    internal bool Check(string dir)
-    {
-        var outPath = Path.Combine(dir, Name);
-        if (!File.Exists(outPath))
+        if (!File.Exists(filePath) || new FileInfo(filePath).Length != Size)
             return false;
 
-        if (new FileInfo(outPath).Length != Size)
-            return false;
-
-        using var stm = File.OpenRead(outPath);
+        using var stm = File.OpenRead(filePath);
         using var hasher = MD5.Create();
         var hash = BitConverter.ToString(hasher.ComputeHash(stm)).Replace("-", "").ToLower();
 

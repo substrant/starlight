@@ -58,7 +58,7 @@ internal class Utility
         }
     }
 
-    public static (int, int)? ParseResolution(string res)
+    public static Resolution? ParseResolution(string res)
     {
         var parts = res.Split('x');
         if (parts.Length != 2)
@@ -68,7 +68,7 @@ internal class Utility
         b &= int.TryParse(parts[0], out var p1);
         b &= int.TryParse(parts[1], out var p2);
 
-        return b ? (p1, p2) : null;
+        return new Resolution(p1, p2);
     }
 
     public static Rectangle GetWindowBounds(IntPtr hWnd)
@@ -153,6 +153,19 @@ internal class Utility
                 return;
 
             Thread.Sleep(100);
+        }
+    }
+
+    public struct Resolution
+    {
+        public int X;
+
+        public int Y;
+
+        public Resolution(int x, int y)
+        {
+            X = x;
+            Y = y;
         }
     }
 }

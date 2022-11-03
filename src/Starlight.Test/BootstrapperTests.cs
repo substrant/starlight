@@ -22,7 +22,7 @@ public class BootstrapperTests
     {
         try
         {
-            Bootstrapper.GetLatestHash();
+            Bootstrapper.GetLatestVersionHash();
         }
         catch (BadIntegrityException)
         {
@@ -33,7 +33,7 @@ public class BootstrapperTests
     [Test]
     public void FetchManifest()
     {
-        var manifest = Bootstrapper.GetManifest(Bootstrapper.GetLatestHash());
+        var manifest = Bootstrapper.GetManifest(Bootstrapper.GetLatestVersionHash());
         if (manifest is null)
             Assert.Inconclusive("Couldn't fetch manifest.");
     }

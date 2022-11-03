@@ -2,14 +2,14 @@
 using System.Globalization;
 using System.Text;
 using Starlight.Apis.JoinGame;
-using Starlight.PostLaunch;
+using Starlight.Bootstrap;
 
 namespace Starlight.Launch;
 
-public class LaunchParams : IRobloxLaunchParams, IStarlightLaunchParams
+public class LaunchParams
 {
     JoinRequest _request;
-
+    
     public long? TrackerId
     {
         get => Request?.BrowserTrackerId;
@@ -35,27 +35,6 @@ public class LaunchParams : IRobloxLaunchParams, IStarlightLaunchParams
         }
     }
 
-    public int FpsCap { get; set; }
-
-    public bool Headless { get; set; }
-
-    public bool Spoof { get; set; }
-
-    public string Hash { get; set; }
-
-    public string Resolution { get; set; }
-
-    public AttachMethod AttachMethod { get; set; }
-
-    public void Merge<T>(T args)
-    {
-        foreach (var member in typeof(T).GetProperties())
-        {
-            var value = member.GetValue(args);
-            member.SetValue(this, value);
-        }
-    }
-
     public override string ToString()
     {
         var sb = new StringBuilder();
@@ -65,7 +44,7 @@ public class LaunchParams : IRobloxLaunchParams, IStarlightLaunchParams
 
         foreach (var prop in GetType().GetProperties())
         {
-            if (!prop.CanRead || prop.Name is "Ticket" or "Request")
+            if (!prop.CanRead || prop.Name is "Ticket")
                 continue;
 
             var defaultValue = prop.PropertyType.IsValueType ? Activator.CreateInstance(prop.PropertyType) : null;

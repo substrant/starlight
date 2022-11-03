@@ -8,8 +8,8 @@ namespace Starlight.Except;
 /// </summary>
 public sealed class ClientNotFoundException : Exception
 {
-    internal ClientNotFoundException(string hash)
+    internal ClientNotFoundException(string versionHash)
     {
-        Data.Add("Hash", hash);
+        Data.Add("VersionHash", versionHash);
     }
 }

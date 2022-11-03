@@ -7,6 +7,12 @@ using RestSharp;
 
 namespace Starlight.Apis;
 
+public enum AuthType
+{
+    Token,
+    Ticket
+}
+
 public class Session
 {
     internal readonly RestClient AuthClient = new("https://auth.roblox.com/");
@@ -102,20 +108,33 @@ public class Session
 
     /* Session Management */
 
-    public static Session Login(string authToken)
+    public static Session Login(string authString, AuthType type)
     {
-        var session = new Session { AuthToken = authToken };
+        Session session;
+        switch (type)
+        {
+            case AuthType.Token:
+                session = new Session { AuthToken = authString };
+                break;
+            case AuthType.Ticket:
+                session = new Session();
+                session.RedeemTicket(authString);
+                break;
+            default:
+                throw new NotImplementedException();
+        }
 
         if (!session.Validate())
             return null;
+
         session.RetrieveInfo();
 
         return session;
     }
 
-    public static async Task<Session> LoginAsync(string authToken)
+    public static async Task<Session> LoginAsync(string authToken, AuthType type)
     {
-        return await Task.Run(() => Login(authToken));
+        return await Task.Run(() => Login(authToken, type));
     }
 
     /* Tickets */
@@ -138,6 +157,23 @@ public class Session
     public async Task<string> GetTicketAsync()
     {
         return await Task.Run(GetTicket);
+    }
+
+    public void RedeemTicket(string ticket)
+    {
+        var req = new RestRequest("/v1/authentication-ticket/redeem", Method.Post)
+            .AddHeader("RBXAuthenticationNegotiation", "haha yes") // lmao
+            .AddJsonBody(new { authenticationTicket = ticket });
+
+        var res = AuthClient.Execute(req);
+
+        if (res.StatusCode != HttpStatusCode.OK)
+            throw new NotImplementedException();
+    }
+
+    public async Task RedeemTicketAsync(string ticket)
+    {
+        await Task.Run(() => RedeemTicket(ticket));
     }
 
     ~Session()

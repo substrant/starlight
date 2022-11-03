@@ -1,13 +1,11 @@
 ﻿using System;
 using System.IO;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using log4net;
+using Microsoft.Win32.SafeHandles;
 using Starlight.Bootstrap;
 using Starlight.Except;
-using Starlight.Misc;
+using Starlight.Plugins;
 using Starlight.PostLaunch;
 using static Starlight.Misc.Native;
 
@@ -15,179 +13,94 @@ namespace Starlight.Launch;
 
 public class Launcher
 {
-    // ReSharper disable once PossibleNullReferenceException
-    internal static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-    /* Singleton */
-
-    static Mutex _rbxSingleton;
-
-    /// <summary>
-    ///     Creates a new systemwide mutex that will allow multiple instances of Roblox from running by making the singleton
-    ///     instance thread yield forever.
-    /// </summary>
-    public static void CommitSingleton()
+    static EventWaitHandle GetNativeEventWaitHandle(int handle)
     {
-        _rbxSingleton = new Mutex(true, "ROBLOX_singletonMutex");
+        return new EventWaitHandle(false, EventResetMode.ManualReset)
+        {
+            SafeWaitHandle = new SafeWaitHandle((IntPtr)handle, false)
+        };
     }
 
-    /// <summary>
-    ///     Closes the systemwide mutex that was created by <see cref="CommitSingleton" />.
-    /// </summary>
-    public static void ReleaseSingleton()
+    public static ClientInstance Launch(LaunchParams info, Client client)
     {
-        // Releases on thread exit as well.
-        _rbxSingleton.Dispose();
-    }
+        foreach (var plugin in PluginArbiter.GetEnabledPlugins())
+            plugin.PreLaunch(info, ref client);
 
-    /* Launcher */
-
-    /// <summary>
-    ///     Launches Roblox with the specified arguments.
-    /// </summary>
-    /// <param name="info">The basic information for launching Roblox.</param>
-    /// <param name="extras">The custom Starlight parameters for launching Roblox.</param>
-    /// <returns>A <see cref="ClientInstance" /> class that governs the new instance of Roblox.</returns>
-    /// <exception cref="System.Web.HttpException">Thrown when anything related to Roblox web services fails.</exception>
-    /// <exception cref="ClientNotFoundException">The specfied client doesn't exist.</exception>
-    /// <exception cref="PrematureCloseException">Roblox closed before Starlight could do anything with it.</exception>
-    /// <exception cref="PostLaunchException">A post-launch task failed.</exception>
-    public static ClientInstance Launch(LaunchParams info, IStarlightLaunchParams extras = null)
-    {
-        if (extras != null)
-            info.Merge(extras);
-
-        if (string.IsNullOrWhiteSpace(info.Hash))
-            info.Hash = Bootstrapper.GetLatestHash();
-
-        Log.Info($"Launch: Preparing to launch Roblox version-{info.Hash}...");
-
-        // Spoof the trackers if spoofing is enabled
-        if (info.Spoof)
+        client ??= Bootstrapper.GetLatestClient();
+        if (!client.Exists)
         {
-            info.TrackerId = Utility.SecureRandomInteger();
-            info.LaunchTime = DateTime.Now;
-            Log.Debug($"Launch: Spoofed BrowserTrackerId to {info.TrackerId} and LaunchTime to {info.LaunchTime}");
-        }
-
-        // Get client
-        Log.Debug($"Launch: Querying {info.Hash}...");
-        var client = Bootstrapper.QueryClient(info.Hash);
-
-        // Open Roblox client
-        Log.Debug("Launch: Native open...");
-        if (!OpenRoblox(client.Player, info, out var procInfo))
-        {
-            var ex = new PrematureCloseException();
-            Log.Fatal("Launch: Failed to open Roblox.", ex);
+            var ex = new ClientNotFoundException(client.VersionHash);
             throw ex;
         }
 
-        ResumeThread(procInfo.hThread);
+        // blah
+        var cancelSrc = new CancellationTokenSource();
+
+        if (!OpenRoblox(client.Player, info, out var procInfo))
+        {
+            var ex = new PrematureCloseException();
+            throw ex;
+        }
+        ResumeThread(procInfo.HThread);
 
         // Create an instance
         ClientInstance inst;
         try
         {
-            inst = new ClientInstance(procInfo.dwProcessId);
+            inst = new ClientInstance(procInfo.DwProcessId);
         }
         catch
         {
             var ex = new PrematureCloseException();
-            Log.Fatal("Launch: Failed to initialize Roblox instance.", ex);
             throw ex;
         }
 
+        var exitEvent = GetNativeEventWaitHandle(inst.Target.Handle);
+        Task.Run(() =>
+        {
+            if (WaitHandle.WaitAny(new[] { exitEvent, cancelSrc.Token.WaitHandle }) == 0)
+                cancelSrc.Cancel();
+        }, cancelSrc.Token);
+
+        foreach (var plugin in PluginArbiter.GetEnabledPlugins())
+            plugin.PostLaunch(inst);
+        
         // Wait for Roblox's window to open
-        Log.Debug("Launch: Waiting for Roblox window...");
-
-        IntPtr hWnd;
-        var waitStart = DateTime.Now;
-        while ((hWnd = inst.Proc.MainWindowHandle) == IntPtr.Zero)
+        // todo: better method for this garbage
+        var hWnd = IntPtr.Zero;
+        var windowTask = Task.Run(() =>
         {
-            Thread.Sleep(TimeSpan.FromSeconds(1.0d / 15));
-            if (DateTime.Now - waitStart <= TimeSpan.FromSeconds(10))
-                continue;
+            while ((hWnd = inst.Proc.MainWindowHandle) == IntPtr.Zero
+                   && !cancelSrc.IsCancellationRequested)
+                Thread.Sleep(TimeSpan.FromSeconds(1.0d / 15));
+        }, cancelSrc.Token);
 
-            var ex = new PrematureCloseException();
-            Log.Fatal("Launch: Roblox unexpectedly closed.", ex);
-            throw ex;
+        // ReSharper disable once MethodSupportsCancellation
+        windowTask.Wait();
+
+        if (cancelSrc.IsCancellationRequested)
+        {
+            // todo: logs n' pieces o' crap
+            throw new PrematureCloseException();
         }
 
-        Log.Debug("Roblox launched!");
-
-        /* Runtime */
-
-        // Set FPS cap
-        if (info.FpsCap != 0)
-        {
-            inst.SetFrameDelay(1.0d / info.FpsCap);
-            Log.Debug($"Launch: Set FPS cap to {info.FpsCap}.");
-        }
-
-        // Set resolution of Roblox
-        if (!string.IsNullOrWhiteSpace(info.Resolution))
-        {
-            var res = Utility.ParseResolution(info.Resolution);
-            if (res.HasValue)
-            {
-                var bounds = Utility.GetWindowBounds(hWnd);
-                var screenBounds = Screen.PrimaryScreen.WorkingArea with { X = 0, Y = 0 };
-
-                SetWindowPos(
-                    hWnd,
-                    IntPtr.Zero,
-                    screenBounds.Right / 2 - bounds.Width / 2, // Center X
-                    screenBounds.Bottom / 2 - bounds.Height / 2, // Center Y
-                    res.Value.Item1,
-                    res.Value.Item2,
-                    SWP_NOOWNERZORDER | SWP_NOZORDER);
-                SetWindowLong(hWnd, GWL_STYLE, WS_POPUPWINDOW); // Remove window styles (title bar, etc.)
-                ShowWindow(hWnd, SW_SHOW);
-
-                Log.Debug($"Launch: Set resolution to {info.Resolution}.");
-            }
-            else
-            {
-                Log.Error("Launch: Skipped setting resolution because parse failed.");
-            }
-        }
-
-        // Enter headless mode
-        if (info.Headless)
-        {
-            SendMessage(hWnd, WM_SYSCOMMAND, SC_MINIMIZE,
-                IntPtr.Zero); // Just learned that minimize = no render :thumbsup:
-            ShowWindow(hWnd, SW_HIDE);
-            Log.Debug("Launch: Roblox window hidden. Client is now headless.");
-        }
-
-        // Attach
-        if (info.AttachMethod != AttachMethod.None)
-            inst.Attach(info.AttachMethod);
-
-        Log.Debug("Launch: Finished post-launch.");
-        Log.Info("Launch: Roblox launched.");
+        foreach (var plugin in PluginArbiter.GetEnabledPlugins())
+            plugin.PostWindow(hWnd);
 
         return inst;
     }
 
-    public static async Task<ClientInstance> LaunchAsync(LaunchParams info, IStarlightLaunchParams extras = null)
+    internal static bool OpenRoblox(string robloxPath, LaunchParams info, out ProcInfo procInfo)
     {
-        return await Task.Run(() => Launch(info, extras));
-    }
-
-    internal static bool OpenRoblox(string robloxPath, LaunchParams info, out PROCESS_INFORMATION procInfo)
-    {
-        STARTUPINFO startInfo = new();
+        var startInfo = new StartupInfo();
         return CreateProcess(
             Path.GetFullPath(robloxPath),
-            $"--play -a https://auth.roblox.com/v1/authentication-ticket/redeem -t {info.Ticket} -j {info.Request.Serialize()} -b {info.TrackerId} " + // Updated to another endpoint.
+            $"--play -a https://auth.roblox.com/v1/authentication-ticket/redeem -t {info.Ticket} -j {info.Request} -b {info.TrackerId} " +
             $"--launchtime={info.LaunchTime.ToUnixTimeMilliseconds()} --rloc {info.RobloxLocale.Name} --gloc {info.GameLocale.Name}",
             0,
             0,
             false,
-            ProcessCreationFlags.CREATE_SUSPENDED,
+            CreateSuspended,
             0,
             null,
             ref startInfo,

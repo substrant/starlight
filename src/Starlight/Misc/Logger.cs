@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
 using log4net;
 using log4net.Appender;
 using log4net.Core;
@@ -11,7 +12,7 @@ public class Logger
 {
     public static string LogFile { get; protected set; }
 
-    public static void Init(bool verbose)
+    public static void Init()
     {
         var hierarchy = (Hierarchy)LogManager.GetRepository();
 
@@ -36,7 +37,44 @@ public class Logger
         memory.ActivateOptions();
         hierarchy.Root.AddAppender(memory);
 
-        hierarchy.Root.Level = verbose ? Level.Debug : Level.Info;
+        hierarchy.Root.Level = Level.Debug;
         hierarchy.Configured = true;
+    }
+
+    public static void Out(string message, Level level, [CallerMemberName] string methodName = "anonymous method")
+    {
+        var logger = LogManager.GetLogger(methodName);
+
+        if (level == Level.Debug)
+            logger.Debug(message);
+        else if (level == Level.Info)
+            logger.Info(message);
+        else if (level == Level.Warn)
+            logger.Warn(message);
+        else if (level == Level.Error)
+            logger.Error(message);
+        else if (level == Level.Fatal)
+            logger.Fatal(message);
+        else
+            throw new NotImplementedException();
+    }
+
+    public static void Out(string message, Exception inner, Level level,
+        [CallerMemberName] string methodName = "anonymous method")
+    {
+        var logger = LogManager.GetLogger(methodName);
+
+        if (level == Level.Debug)
+            logger.Debug(message, inner);
+        else if (level == Level.Info)
+            logger.Info(message, inner);
+        else if (level == Level.Warn)
+            logger.Warn(message, inner);
+        else if (level == Level.Error)
+            logger.Error(message, inner);
+        else if (level == Level.Fatal)
+            logger.Fatal(message, inner);
+        else
+            throw new NotImplementedException();
     }
 }
