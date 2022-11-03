@@ -13,8 +13,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Submodules", "Submodules", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "HackerFramework", "submodules\HackerFramework\src\HackerFramework\HackerFramework.csproj", "{E47F58ED-1BBE-47F4-9FA9-FACD2317FE90}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Starlight.YARAProxy", "Starlight.YARAProxy\Starlight.YARAProxy.vcxproj", "{0D25BEC3-DB58-4AE8-9C46-E60B31123546}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -73,18 +71,6 @@ Global
 		{E47F58ED-1BBE-47F4-9FA9-FACD2317FE90}.Release|x64.Build.0 = Release|Any CPU
 		{E47F58ED-1BBE-47F4-9FA9-FACD2317FE90}.Release|x86.ActiveCfg = Release|Any CPU
 		{E47F58ED-1BBE-47F4-9FA9-FACD2317FE90}.Release|x86.Build.0 = Release|Any CPU
-		{0D25BEC3-DB58-4AE8-9C46-E60B31123546}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{0D25BEC3-DB58-4AE8-9C46-E60B31123546}.Debug|Any CPU.Build.0 = Debug|x64
-		{0D25BEC3-DB58-4AE8-9C46-E60B31123546}.Debug|x64.ActiveCfg = Debug|x64
-		{0D25BEC3-DB58-4AE8-9C46-E60B31123546}.Debug|x64.Build.0 = Debug|x64
-		{0D25BEC3-DB58-4AE8-9C46-E60B31123546}.Debug|x86.ActiveCfg = Debug|Win32
-		{0D25BEC3-DB58-4AE8-9C46-E60B31123546}.Debug|x86.Build.0 = Debug|Win32
-		{0D25BEC3-DB58-4AE8-9C46-E60B31123546}.Release|Any CPU.ActiveCfg = Release|x64
-		{0D25BEC3-DB58-4AE8-9C46-E60B31123546}.Release|Any CPU.Build.0 = Release|x64
-		{0D25BEC3-DB58-4AE8-9C46-E60B31123546}.Release|x64.ActiveCfg = Release|x64
-		{0D25BEC3-DB58-4AE8-9C46-E60B31123546}.Release|x64.Build.0 = Release|x64
-		{0D25BEC3-DB58-4AE8-9C46-E60B31123546}.Release|x86.ActiveCfg = Release|Win32
-		{0D25BEC3-DB58-4AE8-9C46-E60B31123546}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
