@@ -6,4 +6,5 @@
 			Starlight.Rbx
 		</ExcludeAssemblies>
 	</Costura>
+	<Anotar.Serilog />
 </Weavers>

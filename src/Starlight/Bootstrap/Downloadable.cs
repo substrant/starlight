@@ -2,8 +2,9 @@
 using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
-using Starlight.Except;
+using System.Threading.Tasks;
 using Starlight.Misc;
+using Starlight.Misc.Extensions;
 
 namespace Starlight.Bootstrap;
 
@@ -28,21 +29,29 @@ public class Downloadable
         Size = size;
     }
 
-    internal string Download(string dir)
+    internal async Task<string> DownloadAsync(string dir)
     {
         var filePath = Path.Combine(dir, Name);
 
         using (var web = new HttpClient()) // Multithreading requires a separate client for each thread.
         {
-            web.DownloadFile($"http://setup.rbxcdn.com/version-{VersionHash}-{Name}", filePath);
+            await web.DownloadFileAsync($"http://setup.rbxcdn.com/version-{VersionHash}-{Name}", filePath);
         }
 
         if (Validate(filePath))
             return filePath;
 
-        var ex = new BadIntegrityException($"Downloaded file {Name} is corrupt!");
+        // yuck delete it
+        File.Delete(filePath);
+        
+        var ex = new BadIntegrityException(this);
         // TODO: Add logging
         throw ex;
+    }
+
+    internal string Download(string dir)
+    {
+        return AsyncHelpers.RunSync(() => DownloadAsync(dir));
     }
 
     internal bool Validate(string filePath)

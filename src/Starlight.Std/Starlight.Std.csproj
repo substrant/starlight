@@ -1,0 +1,45 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup Label="Metadata">
+		<Version>0.1.0</Version>
+		<BuildNumber>0</BuildNumber>
+	</PropertyGroup>
+	<PropertyGroup>
+		<Product>Starlight.Std</Product>
+		<Description>Core plugin library for built-in Starlight features.</Description>
+		<Company>Substrant</Company>
+		<AssemblyTitle>Starlight.Std</AssemblyTitle>
+		<AssemblyName>Starlight.Std</AssemblyName>
+		<OutputType>Library</OutputType>
+		<TargetFramework>net48</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<Platforms>AnyCPU;x86;x64</Platforms>
+		<Configurations>Debug;Release</Configurations>
+	</PropertyGroup>
+	<PropertyGroup>
+		<RootNamespace>$(AssemblyName)</RootNamespace>
+		<InformationalVersion>$(Version)+$(BuildNumber)</InformationalVersion>
+		<AssemblyVersion>$(Version).$(BuildNumber)</AssemblyVersion>
+		<FileVersion>$(Version).$(BuildNumber)</FileVersion>
+		<Copyright>Copyright (c) 2022 $(Company)</Copyright>
+		<OutputPath>bin\$(Configuration)\</OutputPath>
+		<BaseIntermediateOutputPath>obj\$(Configuration)\</BaseIntermediateOutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+		<DebugType>portable</DebugType>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+		<DebugType>embedded</DebugType>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Remove="obj\**" />
+	  <EmbeddedResource Remove="obj\**" />
+	  <None Remove="obj\**" />
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Starlight\Starlight.csproj" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Include="System.Windows.Forms" />
+	</ItemGroup>
+</Project>

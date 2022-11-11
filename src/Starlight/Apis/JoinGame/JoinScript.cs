@@ -6,8 +6,6 @@ namespace Starlight.Apis.JoinGame;
 
 public class JoinScript
 {
-    // IGNORE INTELLISENSE IT'S LEGALLY BLIND
-
     [JsonProperty("MachineAddress")] internal string Address;
 
     [JsonProperty("ServerPort")] internal int? Port;
@@ -19,8 +17,7 @@ public class JoinScript
         IPAddress ipAddr;
         int port;
 
-        if
-            (UdmuxEndpoints is not null) // No clue what this is but I tested it and it was requesting to the endpoint there. MachineAddress here would be a private IP so all I can think is that it's proxied or just weird like Roblox web devs made it.
+        if (UdmuxEndpoints is not null)
         {
             var endpoint = UdmuxEndpoints.FirstOrDefault();
             if (endpoint is null)

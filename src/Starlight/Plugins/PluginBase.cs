@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Reflection;
+using Newtonsoft.Json.Linq;
 using Starlight.Bootstrap;
 using Starlight.Launch;
 using Starlight.PostLaunch;
@@ -7,13 +10,13 @@ namespace Starlight.Plugins;
 
 public abstract class PluginBase
 {
-    public readonly PluginApi Api;
+    public readonly PluginSdk Sdk;
 
     bool _enabled = true;
 
     protected PluginBase()
     {
-        Api = new PluginApi(this);
+        Sdk = new PluginSdk(Assembly.GetCallingAssembly(), this);
     }
 
     public abstract string Name { get; }
@@ -29,11 +32,24 @@ public abstract class PluginBase
         {
             _enabled = value;
             if (_enabled)
+            {
+                PluginArbiter.Plugins.Add(this);
                 Load();
+            }
             else
+            {
                 Unload();
+                PluginArbiter.Plugins.Remove(this);
+            }
         }
     }
+
+    public void OverloadConfig(IReadOnlyDictionary<string, dynamic> obj)
+    {
+        Sdk.MergeConfig(JObject.FromObject(obj));
+    }
+
+    /* Don't call load/unload, do enabled = true, enabled = false */
 
     public virtual void Load()
     {

@@ -12,7 +12,6 @@ namespace Starlight.Apis.JoinGame;
 public class JoinRequest
 {
     [JsonIgnore] internal Dictionary<string, string> Options;
-    // This file is very cancerous. Proceed with caution.
 
     [JsonIgnore] public JoinType? ReqType = JoinType.Auto;
 
@@ -190,24 +189,32 @@ public class JoinRequest
         {
             var reqBody = JsonConvert.SerializeObject(this, Formatting.None,
                 new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
-            var req = new RestRequest(Endpoint, Method.Post).AddHeader("Content-Type", "application/json")
+
+            var req = new RestRequest(Endpoint, Method.Post)
+                .AddHeader("Content-Type", "application/json")
                 .AddHeader("User-Agent", "Roblox/WinInet") // pov you use undocumented endpoints
-                .AddBody(reqBody);
+                .AddJsonBody(reqBody);
 
-            var res = await session.GameClient
-                .ExecuteAsync(req); // response body should look like this: https://i.imgur.com/GZChdWo.png
-            var body = JsonConvert.DeserializeObject<JoinResponse>(res.Content);
+            var res = await session.GameClient.ExecuteAsync<JoinResponse>(req); // response body should look like this: https://i.imgur.com/GZChdWo.png
 
-            if (body.Status == JoinStatus.Retry && tries != maxTries)
+            if (res.Data is null)
+                return new JoinResponse { Success = false };
+
+            if (res.StatusCode != HttpStatusCode.OK || res.Data.Status == JoinStatus.Fail)
+            {
+                res.Data.Success = false;
+                return res.Data;
+            }
+
+            if (res.Data.Status == JoinStatus.Retry && tries != maxTries)
             {
                 await Task.Delay(2000); // Wait a bit.
                 tries++;
                 continue;
             }
 
-            if (res.StatusCode == HttpStatusCode.OK && body.Status != JoinStatus.Fail) body.Success = true;
-
-            return body;
+            res.Data.Success = true;
+            return res.Data;
         }
     }
 

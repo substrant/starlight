@@ -1,13 +1,15 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 using Starlight.Bootstrap;
-using Starlight.Except;
+using Starlight.Misc;
 using Starlight.Plugins;
 using Starlight.PostLaunch;
-using static Starlight.Misc.Native;
+using static HackerFramework.Native;
 
 namespace Starlight.Launch;
 
@@ -24,34 +26,48 @@ public class Launcher
     public static ClientInstance Launch(LaunchParams info, Client client)
     {
         foreach (var plugin in PluginArbiter.GetEnabledPlugins())
-            plugin.PreLaunch(info, ref client);
+            try
+            {
+                plugin.PreLaunch(info, ref client);
+            }
+            catch (Exception ex)
+            {
+                //Logger.Out($"Plugin {plugin.Name} threw an exception during PreLaunch.", Level.Error);
+            }
 
         client ??= Bootstrapper.GetLatestClient();
         if (!client.Exists)
         {
-            var ex = new ClientNotFoundException(client.VersionHash);
+            var ex = new ClientNotFoundException(client);
             throw ex;
         }
 
         // blah
         var cancelSrc = new CancellationTokenSource();
 
-        if (!OpenRoblox(client.Player, info, out var procInfo))
+        // thanks roblox engineers for making my life harder
+        var proc = Process.Start(new ProcessStartInfo
         {
-            var ex = new PrematureCloseException();
+            FileName = client.Player,
+            Arguments = "\"" + Path.GetFullPath(client.Player) + "\" " + info.GetCliParams(),
+            WorkingDirectory = client.Location
+        });
+
+        if (proc is null)
+        {
+            var ex = new PrematureCloseException(client, null);
             throw ex;
         }
-        ResumeThread(procInfo.HThread);
 
         // Create an instance
         ClientInstance inst;
         try
         {
-            inst = new ClientInstance(procInfo.DwProcessId);
+            inst = new ClientInstance(client, proc);
         }
         catch
         {
-            var ex = new PrematureCloseException();
+            var ex = new PrematureCloseException(client, proc.Id);
             throw ex;
         }
 
@@ -62,8 +78,16 @@ public class Launcher
                 cancelSrc.Cancel();
         }, cancelSrc.Token);
 
-        foreach (var plugin in PluginArbiter.GetEnabledPlugins())
-            plugin.PostLaunch(inst);
+        try
+        {
+            foreach (var plugin in PluginArbiter.GetEnabledPlugins())
+                plugin.PostLaunch(inst);
+        }
+        catch (Exception)
+        {
+            inst.Proc.Kill();
+            throw;
+        }
         
         // Wait for Roblox's window to open
         // todo: better method for this garbage
@@ -81,29 +105,20 @@ public class Launcher
         if (cancelSrc.IsCancellationRequested)
         {
             // todo: logs n' pieces o' crap
-            throw new PrematureCloseException();
+            throw new PrematureCloseException(client, proc.Id);
         }
 
-        foreach (var plugin in PluginArbiter.GetEnabledPlugins())
-            plugin.PostWindow(hWnd);
+        try
+        {
+            foreach (var plugin in PluginArbiter.GetEnabledPlugins())
+                plugin.PostWindow(hWnd);
+        }
+        catch (Exception)
+        {
+            inst.Proc.Kill();
+            throw;
+        }
 
         return inst;
-    }
-
-    internal static bool OpenRoblox(string robloxPath, LaunchParams info, out ProcInfo procInfo)
-    {
-        var startInfo = new StartupInfo();
-        return CreateProcess(
-            Path.GetFullPath(robloxPath),
-            $"--play -a https://auth.roblox.com/v1/authentication-ticket/redeem -t {info.Ticket} -j {info.Request} -b {info.TrackerId} " +
-            $"--launchtime={info.LaunchTime.ToUnixTimeMilliseconds()} --rloc {info.RobloxLocale.Name} --gloc {info.GameLocale.Name}",
-            0,
-            0,
-            false,
-            CreateSuspended,
-            0,
-            null,
-            ref startInfo,
-            out procInfo);
     }
 }

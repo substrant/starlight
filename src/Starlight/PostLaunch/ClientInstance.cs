@@ -3,12 +3,14 @@ using System.Diagnostics;
 using System.Threading;
 using System.Threading.Tasks;
 using HackerFramework;
-using Starlight.Except;
+using Starlight.Bootstrap;
 
 namespace Starlight.PostLaunch;
 
 public class ClientInstance
 {
+    public Client Client;
+
     public readonly Process Proc;
 
     public readonly Target Target;
@@ -19,15 +21,10 @@ public class ClientInstance
 
     long _userId;
 
-    public ClientInstance(int procId)
+    internal ClientInstance(Client client, Process proc)
     {
-        Proc = Process.GetProcessById(procId);
-        if (Proc is null || Proc.HasExited)
-        {
-            var ex = new PrematureCloseException();
-            throw ex;
-        }
-
+        Client = client;
+        Proc = proc;
         Target = new Target(Proc);
     }
 
@@ -39,7 +36,7 @@ public class ClientInstance
         var results = Target.FindPattern(RobloxData.UserIdSignature);
         if (results.Count is 0 or > 1)
         {
-            var ex = new PostLaunchException("Failed to find UserId.");
+            var ex = new PostLaunchException(this, "Failed to find UserId");
             throw ex;
         }
 
@@ -65,7 +62,7 @@ public class ClientInstance
         var results = Target.FindPattern(RobloxData.TaskSchedulerSignature);
         if (results.Count is 0 or > 1)
         {
-            var ex = new PostLaunchException("Failed to find TaskScheduler.");
+            var ex = new PostLaunchException(this, "Failed to find TaskScheduler");
             throw ex;
         }
 
@@ -101,7 +98,7 @@ public class ClientInstance
 
             if (_frameDelayOff == 0)
             {
-                var ex = new PostLaunchException("Failed to find FrameDelay.");
+                var ex = new PostLaunchException(this, "Failed to find FrameDelay");
                 throw ex;
             }
         }

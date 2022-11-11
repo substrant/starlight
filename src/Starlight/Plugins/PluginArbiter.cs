@@ -13,38 +13,54 @@ public class PluginArbiter
 
     internal static List<PluginBase> Plugins = new();
 
-    internal static IEnumerable<PluginBase> GetEnabledPlugins()
+    public static PluginBase GetPlugin(string name)
+    {
+        return Plugins.FirstOrDefault(x => x.Name == name);
+    }
+
+    public static IEnumerable<PluginBase> GetEnabledPlugins()
     {
         return Plugins.Where(x => x.Enabled);
     }
 
     internal static void LoadPluginsInAssembly(Assembly asm)
     {
+        var asmName = Path.GetFileName(asm.Location);
+        //Logger.Out($"Loading plugin assembly '{asmName}'", Level.Trace);
+
         try
         {
             foreach (var type in asm.GetTypes()
                          .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(PluginBase))))
             {
+                //Logger.Out($"Loading plugin '{type.FullName}' in '{asmName}'", Level.Debug);
+                
                 var plugin = (PluginBase)Activator.CreateInstance(type);
-                Plugins.Add(plugin);
-                plugin.Load();
+                plugin.Enabled = true;
             }
         }
         catch (ReflectionTypeLoadException)
         {
-            // Whoever gets this to throw is stupid
+            //Logger.Out($"Couldn't get types in plugin assembly '{asmName}'", Level.Warn);
         }
     }
 
     public static void LoadPlugins()
     {
-        if (_loaded) return;
+        if (_loaded)
+        {
+            //Logger.Out("Plugins are already loaded", Level.Trace);
+            return;
+        }
         _loaded = true;
 
         if (!Directory.Exists(Shared.PluginDir))
+        {
+            //Logger.Out($"Plugin directory at '{Shared.PluginDir}' doesn't exist", Level.Debug);
             Directory.CreateDirectory(Shared.PluginDir);
+        }
 
-        LoadPluginsInAssembly(Assembly.GetExecutingAssembly());
+        //Logger.Out("Enumerating plugins", Level.Trace);
         foreach (var file in Directory.GetFiles(Shared.PluginDir, "*.dll"))
             try
             {
@@ -53,7 +69,7 @@ public class PluginArbiter
             }
             catch (BadImageFormatException)
             {
-                // Retard probably put a non-managed DLL in there
+               // Logger.Out($"Plugin '{file}' is not a .NET DLL", Level.Warn);
             }
     }
 }

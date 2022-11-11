@@ -1,59 +1,61 @@
 ﻿using System;
 using System.Globalization;
 using System.Text;
+using System.Threading.Tasks;
+using Starlight.Apis;
 using Starlight.Apis.JoinGame;
 using Starlight.Bootstrap;
+using Starlight.Misc;
 
 namespace Starlight.Launch;
 
 public class LaunchParams
 {
-    JoinRequest _request;
+    public JoinRequest Request;
+
+    public string AuthStr;
+
+    public AuthType AuthType = AuthType.Ticket;
+
+    public CultureInfo RobloxLocale;
     
-    public long? TrackerId
+    public CultureInfo GameLocale;
+    
+    public DateTimeOffset? LaunchTime = DateTimeOffset.Now;
+
+    public async Task<string> GetCliParamsAsync()
     {
-        get => Request?.BrowserTrackerId;
-        set => Request.BrowserTrackerId = value;
-    }
-
-    public CultureInfo RobloxLocale { get; set; } = CultureInfo.CurrentCulture;
-
-    public CultureInfo GameLocale { get; set; } = CultureInfo.CurrentCulture;
-
-    public string Ticket { get; set; }
-
-    public DateTimeOffset LaunchTime { get; set; } = DateTime.Now;
-
-    public JoinRequest Request
-    {
-        get => _request;
-        set
+        // Runtime check
+        if (AuthStr is null || Request is null)
+            throw new InvalidOperationException("AuthStr and Request must be set before calling ToCliArguments.");
+        
+        // Log in if a token was provided
+        var authToken = AuthStr;
+        if (AuthType == AuthType.Token)
         {
-            if (TrackerId is not null)
-                value.BrowserTrackerId = TrackerId;
-            _request = value;
-        }
-    }
-
-    public override string ToString()
-    {
-        var sb = new StringBuilder();
-
-        if (!string.IsNullOrWhiteSpace(Ticket))
-            sb.Append("Ticket=\"REDACTED-FOR-PRIVACY\";"); // you're welcome :)
-
-        foreach (var prop in GetType().GetProperties())
-        {
-            if (!prop.CanRead || prop.Name is "Ticket")
-                continue;
-
-            var defaultValue = prop.PropertyType.IsValueType ? Activator.CreateInstance(prop.PropertyType) : null;
-            var value = prop.GetValue(this);
-
-            if (value != defaultValue)
-                sb.Append(prop.Name + $"=\"{value}\";");
+            var session = await Session.LoginAsync(authToken, AuthType.Token);
+            authToken = await session.GetTicketAsync();
         }
 
-        return sb.ToString();
+        // Build the parameters
+        // AFTER VERSION-d780cbcde4ab4f52:
+        // OLD: --play -a https://auth.roblox.com/v1/authentication-ticket/redeem {args}
+        // NEW: "FullPathToRobloxPlayerBeta.exe" --app {args}
+        var str = new StringBuilder("--app");
+        str.Append(" -t " + authToken);
+        str.Append(" -j \"" + Request);
+        str.Append("\" -b " + Request.BrowserTrackerId);
+        str.Append(" --launchtime=" + DateTimeOffset.Now.ToUnixTimeSeconds());
+        str.Append(" --rloc " + (RobloxLocale ?? CultureInfo.CurrentCulture).Name.Replace('-', '_').ToLowerInvariant());
+        str.Append(" --gloc " + (GameLocale ?? CultureInfo.CurrentCulture).Name.Replace('-', '_').ToLowerInvariant());
+
+        // Return the parameters
+        return str.ToString();
+    }
+
+    public string GetCliParams()
+    {
+        var value = AsyncHelpers.RunSync(GetCliParamsAsync);
+        return value;
     }
 }

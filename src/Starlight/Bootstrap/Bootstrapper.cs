@@ -4,8 +4,14 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Net.Http;
+using System.Security.Cryptography;
+using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Microsoft.Win32;
+using RestSharp;
 using Starlight.Misc;
+using Starlight.Misc.Extensions;
+using Starlight.Misc.Profiling;
 using static Starlight.Misc.Shared;
 
 namespace Starlight.Bootstrap;
@@ -36,7 +42,7 @@ public class Bootstrapper
 
     static string _latestVersionHash; // Cache for a micro-optimization
 
-    internal static string GetScopeDirectory(ClientScope scope)
+    public static string GetScopeDirectory(ClientScope scope)
     {
         return scope switch
         {
@@ -46,18 +52,22 @@ public class Bootstrapper
             _ => null
         };
     }
+    
+    public static async Task<string> GetLatestVersionHashAsync(bool bypassCache = false)
+    {
+        if (!bypassCache && _latestVersionHash is not null)
+            return await Task.FromResult(_latestVersionHash);
+        
+        var version = await Web.DownloadStringAsync("http://setup.rbxcdn.com/version.txt");
+        return _latestVersionHash = version.Split("version-")[1];
+    }
 
     public static string GetLatestVersionHash(bool bypassCache = false)
     {
         if (!bypassCache && _latestVersionHash is not null)
             return _latestVersionHash;
 
-        string version;
-        lock (Web)
-        {
-            version = Web.DownloadString("http://setup.rbxcdn.com/version.txt");
-        }
-
+        var version = Web.DownloadString("http://setup.rbxcdn.com/version.txt");
         return _latestVersionHash = version.Split("version-")[1];
     }
 
@@ -79,20 +89,27 @@ public class Bootstrapper
         return clients;
     }
 
-    public static Client QueryClientDesperate(ClientScope scope = ClientScope.Global)
-    {
-        return GetClients().FirstOrDefault();
-    }
-
     public static Client QueryClient(string versionHash, ClientScope scope = ClientScope.Global)
     {
         var client = GetClients(scope).FirstOrDefault(x => x.VersionHash == versionHash);
         return client;
     }
 
+    public static Client QueryClientDesperate(ClientScope scope = ClientScope.Global)
+    {
+        return GetClients(scope).FirstOrDefault();
+    }
+    
     public static Client GetLatestClient(ClientScope scope = ClientScope.Global)
     {
-        return new Client(GetLatestVersionHash(), scope);
+        var versionHash = GetLatestVersionHash();
+        return new Client(versionHash, scope);
+    }
+
+    public static async Task<Client> GetLatestClientAsync(ClientScope scope = ClientScope.Global)
+    {
+        var versionHash = await GetLatestVersionHashAsync();
+        return new Client(versionHash, scope);
     }
 
     public static bool IsRobloxRegistered()
@@ -101,7 +118,7 @@ public class Bootstrapper
         using var softKey = hkcu.OpenSubKey(@"Software\ROBLOX Corporation");
         return softKey is null;
     }
-
+    
     public static void RegisterClass(Client client)
     {
         using var hkcu = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
@@ -117,7 +134,7 @@ public class Bootstrapper
         schemeKey?.SetValue(null, '"' + client.Launcher + "\" %1", RegistryValueKind.String);
     }
 
-    internal static void UnregisterClass()
+    public static void UnregisterClass()
     {
         using var hkcu = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
         hkcu.DeleteSubKeyTree(@"Software\Classes\roblox-player", false);
@@ -148,15 +165,14 @@ public class Bootstrapper
         urlAssocKey?.SetValue("roblox-player", "roblox-player");
     }
 
-    internal static void UnregisterClient()
+    public static void UnregisterClient()
     {
         using var hkcu = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
         hkcu.DeleteSubKeyTree(@"Software\ROBLOX Corporation", false);
     }
 
-    public static void Install(Client client, InstallConfig cfg = null)
+    public static async Task InstallAsync(Client client, ProgressTracker tracker = null, InstallConfig cfg = null)
     {
-        // Default parameters
         cfg ??= InstallConfig.Default;
 
         // Create directory (do an uninstallation if needed)
@@ -164,26 +180,42 @@ public class Bootstrapper
             Directory.Delete(client.Location, true);
         Directory.CreateDirectory(client.Location);
 
-        // Get files, download, and unzip
-        var files = client.GetFiles();
+        // Get files
+        tracker?.Start(2, "Getting files");
+        var files = await client.GetFiles();
 
-        Utility.DisperseActions(files, file => file.Download(client.Location), cfg.DownloadConcurrency);
+        // Download files
+        var downloadTracker = tracker?.SubStep(files.Count);
+        void Download(Downloadable file)
+        {
+            downloadTracker?.Step($"Downloading {file.Name}");
+            file.Download(client.Location);
+        }
+        await Utility.DisperseActionsAsync(files, Download, cfg.DownloadConcurrency);
 
-        Utility.DisperseActions(files, file =>
+        // Post-download (extract and delete)
+        var postDownloadTracker = tracker?.SubStep(files.Count);
+        void Extract(Downloadable file)
         {
             var filePath = Path.Combine(client.Location, file.Name);
+            var fileExt = Path.GetExtension(file.Name);
 
-            if (Path.GetExtension(filePath) != ".zip")
-                return;
+            if (fileExt != ".zip" || !ZipMap.TryGetValue(file.Name, out var extractPath))
+            {
+                if (fileExt == ".exe")
+                {
+                    postDownloadTracker?.Step($"Skipping {file.Name}");
+                    return;
+                }
 
-            // No clue where to extract it so just delete it.
-            if (!ZipMap.TryGetValue(file.Name, out var extractPath))
+                postDownloadTracker?.Step($"Deleting {file.Name}");
                 goto ExtractFin;
+            }
 
             var extractTo = Path.Combine(client.Location, extractPath);
-            if (!Directory.Exists(extractTo))
-                Directory.CreateDirectory(extractTo);
+            if (!Directory.Exists(extractTo)) Directory.CreateDirectory(extractTo);
 
+            postDownloadTracker?.Step($"Extracting {file.Name}");
             using (var archive = ZipFile.OpenRead(filePath))
             {
                 archive.ExtractToDirectory(extractTo, true);
@@ -191,20 +223,23 @@ public class Bootstrapper
 
             ExtractFin:
             File.Delete(filePath);
-
-            // Weird file, ignore it.
-            // TODO: Log this, ignore resharper its stupid
-        }, cfg.UnzipConcurrency);
-
-        // No clue where the client got this. I just copied it and called it a day.
+        }
+        await Utility.DisperseActionsAsync(files, Extract, cfg.UnzipConcurrency);
+        
         File.WriteAllText(Path.Combine(client.Location, "AppSettings.xml"),
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<Settings>\r\n    <ContentFolder>content</ContentFolder>\r\n    <BaseUrl>http://www.roblox.com</BaseUrl>\r\n</Settings>");
-        
+
+        // Register class and client
         if (cfg.RegisterClass)
             RegisterClass(client);
 
         if (cfg.RegisterClient)
             RegisterClient(client);
+    }
+
+    public static void Install(Client client, InstallConfig cfg = null)
+    {
+        AsyncHelpers.RunSync(() => InstallAsync(client, null, cfg));
     }
 
     public static void Uninstall(Client client, InstallConfig cfg = null)
@@ -246,6 +281,7 @@ public class Bootstrapper
             Utility.CreateShortcut(menuShortcut, client.Launcher, client.Location);
         }
 
+        // ReSharper disable once InvertIf
         if (cfg.CreateDesktopShortcut)
         {
             var desktopShorctut = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),

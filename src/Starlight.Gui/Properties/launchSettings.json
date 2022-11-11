@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Starlight.Gui": {
+      "commandName": "Project",
+      "commandLineArgs": "roblox-player:1+launchmode:play+gameinfo:hahayes+launchtime:1234+placelauncherurl:https%3A%2F%2Fassetgame.roblox.com%2Fgame%2FPlaceLauncher.ashx%3Frequest%3DRequestGame%26browserTrackerId%3D5678%26placeId%3D4483381587%26isPlayTogetherGame%3Dfalse+browsertrackerid:5678+robloxLocale:en_us+gameLocale:en_us+channel:+LaunchExp:InApp"
+    }
+  }
+}

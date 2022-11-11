@@ -4,7 +4,7 @@ namespace Starlight.Apis.Pages;
 
 public class PageOptions
 {
-    internal readonly Dictionary<string, string> Other = new();
+    internal Dictionary<string, string> Other = new();
 
     public PageOptions()
     {

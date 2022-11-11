@@ -2,8 +2,10 @@
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using RestSharp;
+using RestSharp.Serializers.NewtonsoftJson;
 
 namespace Starlight.Apis;
 
@@ -13,60 +15,53 @@ public enum AuthType
     Ticket
 }
 
-public class Session
+public class Session : RbxUser
 {
-    internal readonly RestClient AuthClient = new("https://auth.roblox.com/");
-
-    internal readonly RestClient GameClient = new("https://gamejoin.roblox.com/");
     /* Clients */
 
-    internal readonly RestClient GeneralClient = new("https://www.roblox.com/");
+    internal readonly RestClient AuthClient = new RestClient("https://auth.roblox.com/").UseNewtonsoftJson();
+
+    internal readonly RestClient GameClient = new RestClient("https://gamejoin.roblox.com/").UseNewtonsoftJson();
+    
+    internal readonly RestClient GeneralClient = new RestClient("https://www.roblox.com/").UseNewtonsoftJson();
 
     /* Tokens */
 
     string _authToken;
+    
     DateTime _xsrfLastGrabbed;
-
     string _xsrfToken;
 
     Session()
     {
     }
 
-    protected string AuthToken
+    public string AuthToken
     {
         get => _authToken;
         set
         {
             GeneralClient.AddCookie(".ROBLOSECURITY", value, "/", ".roblox.com");
-
             AuthClient.AddCookie(".ROBLOSECURITY", value, "/", ".roblox.com");
-
             GameClient.AddCookie(".ROBLOSECURITY", value, "/", ".roblox.com");
-
             _authToken = value;
         }
     }
 
     /* Session Info */
 
-    public string UserId { get; protected set; }
+    public override string UserId { get; protected set; }
 
-    public string Username { get; protected set; }
+    public override string Username { get; protected set; }
 
-    public async Task<bool> ValidateAsync()
+    public bool Validate()
     {
         var req = new RestRequest("/v2/logout", Method.Post);
-        var res = await AuthClient.ExecuteAsync(req);
+        var res = AuthClient.Execute(req);
 
         return
             res.StatusCode !=
             HttpStatusCode.Unauthorized; // Forbidden means no xsrf token, unauthorized means no authentication token
-    }
-
-    public bool Validate()
-    {
-        return ValidateAsync().Result;
     }
 
     public string GetXsrfToken(bool ignoreAliveCheck = false)
@@ -93,20 +88,23 @@ public class Session
         return await Task.Run(() => GetXsrfToken(ignoreAliveCheck));
     }
 
+    class SessionInfo
+    {
+        [JsonProperty("UserId")] public string UserId;
+
+        [JsonProperty("Name")] public string Username;
+    }
+
     void RetrieveInfo()
     {
-        var req = new RestRequest("/my/settings/json");
-        var res = GeneralClient.Execute(req);
-
-        if (res.Content == null)
-            return;
-
-        var body = JObject.Parse(res.Content);
-        UserId = body["UserId"]?.ToString();
-        Username = body["Name"]?.ToString();
+        var res = GeneralClient.GetJson<SessionInfo>("/my/settings/json");
+        UserId = res?.UserId;
+        Username = res?.Username;
     }
 
     /* Session Management */
+
+    public static readonly Session Guest = new();
 
     public static Session Login(string authString, AuthType type)
     {
@@ -128,7 +126,6 @@ public class Session
             return null;
 
         session.RetrieveInfo();
-
         return session;
     }
 

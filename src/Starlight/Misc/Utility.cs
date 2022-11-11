@@ -9,16 +9,11 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using IWshRuntimeLibrary;
-using log4net;
-using static Starlight.Misc.Native;
 
 namespace Starlight.Misc;
 
 internal class Utility
 {
-    // ReSharper disable once PossibleNullReferenceException
-    internal static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
     public static string GetTempDir()
     {
         var dir = Path.Combine(Path.GetTempPath(), Path.GetRandomFileName());
@@ -36,14 +31,6 @@ internal class Utility
         shortcut.Save();
     }
 
-    public static int SecureRandomInteger()
-    {
-        using RNGCryptoServiceProvider rng = new();
-        var seed = new byte[4];
-        rng.GetBytes(seed);
-        return new Random(BitConverter.ToInt32(seed, 0)).Next();
-    }
-
     public static bool TryGetCultureInfo(string name, out CultureInfo ci)
     {
         try
@@ -56,33 +43,6 @@ internal class Utility
             ci = null;
             return false;
         }
-    }
-
-    public static Resolution? ParseResolution(string res)
-    {
-        var parts = res.Split('x');
-        if (parts.Length != 2)
-            return null;
-
-        var b = true;
-        b &= int.TryParse(parts[0], out var p1);
-        b &= int.TryParse(parts[1], out var p2);
-
-        return new Resolution(p1, p2);
-    }
-
-    public static Rectangle GetWindowBounds(IntPtr hWnd)
-    {
-        if (!GetWindowRect(hWnd, out var nRect))
-            return Rectangle.Empty;
-
-        return new Rectangle
-        {
-            X = nRect.Left,
-            Y = nRect.Top,
-            Width = nRect.Right - nRect.Left,
-            Height = nRect.Bottom - nRect.Top
-        };
     }
 
     public static void DisperseActions(IReadOnlyList<Action> actions, int maxConcurrency)
@@ -103,7 +63,6 @@ internal class Utility
 
             while (curConcurrency >= maxConcurrency)
             {
-                Log.Debug("DisperseActions: Waiting for available thread slot...");
                 threadFinishedEvent.WaitOne();
                 curConcurrency--;
             }
@@ -111,15 +70,9 @@ internal class Utility
 
         while (curConcurrency > 0)
         {
-            Log.Debug($"DisperseActions: {curConcurrency} threads left");
             threadFinishedEvent.WaitOne();
             curConcurrency--;
         }
-    }
-
-    public static async Task DisperseActionsAsync(IReadOnlyList<Action> actions, int maxConcurrency)
-    {
-        await Task.Run(() => DisperseActions(actions, maxConcurrency));
     }
 
     public static void DisperseActions<T>(IReadOnlyList<T> list, Action<T> action, int maxConcurrency)
@@ -129,7 +82,7 @@ internal class Utility
 
     public static async Task DisperseActionsAsync<T>(IReadOnlyList<T> list, Action<T> action, int maxConcurrency)
     {
-        await Task.Run(() => DisperseActions(list, action, maxConcurrency));
+        await Task.Run(() => DisperseActions(list.Select(x => new Action(() => action(x))).ToList(), maxConcurrency));
     }
 
     public static bool CanShare(string path, FileShare flags)
@@ -153,19 +106,6 @@ internal class Utility
                 return;
 
             Thread.Sleep(100);
-        }
-    }
-
-    public struct Resolution
-    {
-        public int X;
-
-        public int Y;
-
-        public Resolution(int x, int y)
-        {
-            X = x;
-            Y = y;
         }
     }
 }

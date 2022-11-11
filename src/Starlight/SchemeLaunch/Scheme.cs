@@ -4,11 +4,10 @@ using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using System.Web;
-using log4net;
 using Microsoft.Win32;
+using Starlight.Apis;
 using Starlight.Apis.JoinGame;
 using Starlight.Bootstrap;
-using Starlight.Except;
 using Starlight.Launch;
 using Starlight.Misc;
 using Starlight.PostLaunch;
@@ -17,39 +16,37 @@ namespace Starlight.SchemeLaunch;
 
 public class Scheme
 {
-    // ReSharper disable once PossibleNullReferenceException
-    internal static readonly ILog Log = LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);
-
-    internal static IReadOnlyDictionary<string, string> ParseRaw(string payload)
-    {
-        try
-        {
-            var split = HttpUtility.UrlDecode(payload).Split(' ');
-            return split.Select(t => t.Split(':'))
-                .ToDictionary(pair => pair[0], pair => string.Join(":", pair.Skip(1)));
-        }
-        catch
-        {
-            Log.Error("Failed to parse raw payload data.");
-            return null;
-        }
-    }
-
     /// <summary>
     ///     Parse a Roblox launch scheme payload into <see cref="LaunchParams" />
     /// </summary>
-    /// <param name="rawArgs">The raw payload to use.</param>
+    /// <param name="payload">The raw payload to use.</param>
     /// <returns>A <see cref="LaunchParams" /> class representing the deserialized payload.</returns>
-    public static LaunchParams Parse(string rawArgs)
+    public static LaunchParams Parse(string payload)
     {
         LaunchParams info = new();
-        var args = ParseRaw(rawArgs);
-        ParseResultFlags result = 0;
+        var result = ParseResultFlags.PayloadExists;
+
+        Dictionary<string, string> args;
+        try
+        {
+            var split = HttpUtility.UrlDecode(payload).Split(' ');
+            args = split.Select(t => t.Split(':')).ToDictionary(pair => pair[0], pair => string.Join(":", pair.Skip(1)));
+        }
+        catch (Exception ex)
+        {
+            //Logger.Out("Failed to parse payload", Level.Warn, ex);
+            return null;
+        }
 
         if (args.TryGetValue("gameinfo", out var ticket))
         {
             result |= ParseResultFlags.TicketExists;
-            info.Ticket = ticket;
+            info.AuthStr = ticket;
+            info.AuthType = AuthType.Ticket;
+        }
+        else
+        {
+            //Logger.Out("'gameinfo' doesn't exist", Level.Warn);
         }
 
         if (args.TryGetValue("placelauncherurl", out var launchUrl))
@@ -60,6 +57,14 @@ public class Scheme
                 result |= ParseResultFlags.RequestParsed;
                 info.Request = new JoinRequest(launchUri);
             }
+            else
+            {
+                //Logger.Out("'placelauncherurl' couldn't be parsed", Level.Warn);
+            }
+        }
+        else
+        {
+            //Logger.Out("'placelauncherurl' doesn't exist", Level.Warn);
         }
 
         if (args.TryGetValue("launchtime", out var launchTimeStr))
@@ -70,6 +75,14 @@ public class Scheme
                 result |= ParseResultFlags.LaunchTimeParsed;
                 info.LaunchTime = DateTimeOffset.FromUnixTimeMilliseconds(launchTime);
             }
+            else
+            {
+                //Logger.Out("'launchtime' couldn't be parsed", Level.Warn);
+            }
+        }
+        else
+        {
+            //Logger.Out("'launchtime' doesn't exist", Level.Warn);
         }
 
         if (args.TryGetValue("browsertrackerid", out var trackerIdStr))
@@ -78,8 +91,16 @@ public class Scheme
             if (long.TryParse(trackerIdStr, out var trackerId))
             {
                 result |= ParseResultFlags.TrackerIdParsed;
-                info.TrackerId = trackerId;
+                info.Request.BrowserTrackerId = trackerId;
             }
+            else
+            {
+                //Logger.Out("'browsertrackerid' couldn't be parsed", Level.Warn);
+            }
+        }
+        else
+        {
+            //Logger.Out("'browsertrackerid' doesn't exist", Level.Warn);
         }
 
         if (args.TryGetValue("robloxLocale", out var rbxLocaleStr))
@@ -90,6 +111,14 @@ public class Scheme
                 result |= ParseResultFlags.RobloxLocaleParsed;
                 info.RobloxLocale = rbxLocale;
             }
+            else
+            {
+                //Logger.Out("'robloxLocale' couldn't be parsed", Level.Warn);
+            }
+        }
+        else
+        {
+            //Logger.Out("'browsertrackerid' doesn't exist", Level.Warn);
         }
 
         if (args.TryGetValue("gameLocale", out var gameLocaleStr))
@@ -100,60 +129,39 @@ public class Scheme
                 result |= ParseResultFlags.GameLocaleParsed;
                 info.GameLocale = gameLocale;
             }
+            else
+            {
+                //Logger.Out("'gameLocale' couldn't be parsed", Level.Warn);
+            }
+        }
+        else
+        {
+            //Logger.Out("'gameLocale' doesn't exist", Level.Warn);
         }
 
-        if (result.HasFlag(ParseResultFlags.Success))
-            return info;
-
-        Log.Error($"Failed to parse scheme payload. Parse result: {result}");
-        return null;
+        return result.HasFlag(ParseResultFlags.Success) ? info : null;
     }
-
-    /// <summary>
-    ///     Registers the Starlight scheme handler.
-    /// </summary>
-    /// <param name="launcherBin">The binary path to launch.</param>
-    /// <param name="options">Any command line options to provide.</param>
-    /// <returns>A boolean determining whether or not the function succeeded.</returns>
-    public static bool Hook(string launcherBin, string options = "")
+    
+    public static void Hook()
     {
-        try
-        {
-            using var registryKey =
-                Registry.CurrentUser.CreateSubKey("Software\\Classes\\roblox-player\\shell\\open\\command");
-            registryKey?.SetValue(string.Empty, $"\"{launcherBin}\" {options}%1", RegistryValueKind.String);
-            return true;
-        }
-        catch
-        {
-            Log.Error("Failed to hook scheme.");
-            return false;
-        }
+        //var latestClient = 
+        //Bootstrapper.RegisterClass();
     }
-
-    /// <summary>
-    ///     Unhook the scheme that Roblox uses to launch.
-    /// </summary>
-    /// <returns>A boolean determining whether or not the function succeeded.</returns>
-    public static bool Unhook()
+    
+    public static void Unhook()
     {
-        try
+        var client = Bootstrapper.QueryClientDesperate();
+        if (client is not null)
         {
-            var rbxBin = Bootstrapper.GetClients()[0].Player;
-            using var registryKey =
-                Registry.CurrentUser.CreateSubKey("Software\\Classes\\roblox-player\\shell\\open\\command");
-            registryKey?.SetValue(string.Empty, $"\"{rbxBin}\" %1", RegistryValueKind.String);
-            return true;
+            //Logger.Out($"Registering client version{client.VersionHash}", Level.Info);
+            Bootstrapper.RegisterClass(client);
+            Bootstrapper.RegisterClient(client);
         }
-        catch (ClientNotFoundException)
+        else
         {
-            Registry.CurrentUser.DeleteSubKeyTree("Software\\Classes\\roblox-player\\shell");
-            return true;
-        }
-        catch
-        {
-            Log.Error("Failed to unhook scheme.");
-            return false;
+            //Logger.Out("Unregistering client", Level.Info);
+            Bootstrapper.UnregisterClass();
+            Bootstrapper.UnregisterClient();
         }
     }
 }
