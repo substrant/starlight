@@ -48,19 +48,28 @@ namespace Starlight.RbxApp
             if (_taskScheduler is not null)
                 return _taskScheduler;
             
-            var results = Rbx.FindPattern(RobloxData.TaskSchedulerSignature);
+            var results = Rbx.FindPattern(RobloxData.TssCallRefSignature);
             if (results.Count is 0 or > 1)
             {
-                var ex = new AppModException("Failed to find TaskScheduler.");
-                Log.Fatal("TaskScheduler signature scan failed. Signature update required.", ex);
+                var ex = new AppModException("Failed to find TaskScheduler reference.");
+                Log.Fatal("TaskScheduler reference signature scan failed. Signature update required.", ex);
                 throw ex;
             }
+            var tssFunction = Rbx.CallAt(results[0] + RobloxData.TssCallOffset);
+
+            results = Rbx.FindPattern(RobloxData.TssPtrRefSignature, new VirtualRange<uint>(tssFunction, tssFunction + 0x100));
+            if (results.Count == 0)
+            {
+                var ex = new AppModException("Failed to find TaskScheduler pointer.");
+                Log.Fatal("TaskScheduler pointer reference signature scan failed. Signature update required.", ex);
+                throw ex;
+            }
+            var singletonPtr = Rbx.ReadPointer(results[0] + 1); // A1 ?? ?? ?? ??
 
             var sched = new TaskScheduler { Instance = this };
-            var singletonPtr = Rbx.ReadPointer(results[0] + RobloxData.TaskSchedulerOffset);
             while ((sched.BaseAddress = Rbx.ReadPointer(singletonPtr)) == 0)
                 Thread.Sleep(100);
-
+            
             _taskScheduler = sched;
             return sched;
         }
