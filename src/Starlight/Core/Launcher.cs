@@ -152,7 +152,8 @@ namespace Starlight.Core
             STARTUPINFO startInfo = new();
             return CreateProcess(
                 Path.GetFullPath(robloxPath),
-                $"--play -a https://auth.roblox.com/v1/authentication-ticket/redeem -t {info.Ticket} -j {info.Request.Serialize()} -b {info.TrackerId} " + // Updated to another endpoint.
+                $"\"{Path.GetFullPath(robloxPath)}\" --app " +
+                $"-t {info.Ticket} -j {info.Request.Serialize()} -b {info.TrackerId} " +
                 $"--launchtime={info.LaunchTime.ToUnixTimeMilliseconds()} --rloc {info.RobloxLocale.Name} --gloc {info.GameLocale.Name}",
                 0,
                 0,
