@@ -10,9 +10,9 @@ namespace Starlight.RbxApp
     {
         // TaskScheduler::singleton
         // string: "Load ClientAppSettings", last four calls
-        // todo: Maybe find a less retarded signature
-        public static readonly Pattern TaskSchedulerSignature = new("55 8B EC 64 A1 00 00 00 00 6A FF 68 ?? ?? ?? ?? 50 64 89 25 00 00 00 00 83 EC 14 64 A1 2C 00 00 00 8B 08 A1 ?? ?? ?? ?? 3B 81 08 00 00 00 7F 29 A1 ?? ?? ?? ?? 8B 4D F4 64 89 0D 00 00 00 00 8B E5 5D C3 8D 4D E4 E8 ?? ?? ?? ?? 68 ?? ?? ?? ?? 8D 45 E4 50 E8 ?? ?? ?? ?? 68 ?? ?? ?? ?? E8 ?? ?? ?? ?? 83 C4 04 83 3D ?? ?? ?? ?? ?? 75 C1 68");
-        public const uint TaskSchedulerOffset = 49; // mov eax, dword_xxxxxxxx, instruction should appear twice for same func
+        public static readonly Pattern TssCallRefSignature = new("55 8B EC 83 EC 10 56 E8 ?? ?? ?? ?? 8B F0 8D 45 F0");
+        public static readonly Pattern TssPtrRefSignature = new("A1 ?? ?? ?? ?? 8B 4D F4"); // push eax, dword ptr [tssObjectPtr]
+        public const uint TssCallOffset = 7;
 
         // UserId static global variable
         // string: "PlayerId=%llu\n", last instruction
