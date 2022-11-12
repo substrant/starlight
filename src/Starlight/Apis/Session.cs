@@ -48,15 +48,9 @@ public class Session : RbxUser, IDisposable
     string _xsrfToken;
 
     /* Session Info */
-
-    /// <summary>
-    ///     The session's Roblox user ID.
-    /// </summary>
+    
     public override string UserId { get; protected set; }
-
-    /// <summary>
-    ///     The session's Roblox username.
-    /// </summary>
+    
     public override string Username { get; protected set; }
 
     async Task RetrieveInfoAsync()
