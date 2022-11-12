@@ -2,7 +2,7 @@
 
 namespace Starlight.Apis.JoinGame;
 
-public class UdmuxEndpoint
+internal class UdmuxEndpoint
 {
     [JsonProperty("Address")] public string Address;
     [JsonProperty("Port")] public int? Port;
