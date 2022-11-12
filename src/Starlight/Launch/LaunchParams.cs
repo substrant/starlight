@@ -4,31 +4,29 @@ using System.Text;
 using System.Threading.Tasks;
 using Starlight.Apis;
 using Starlight.Apis.JoinGame;
-using Starlight.Bootstrap;
 using Starlight.Misc;
 
 namespace Starlight.Launch;
 
 public class LaunchParams
 {
-    public JoinRequest Request;
-
     public string AuthStr;
 
     public AuthType AuthType = AuthType.Ticket;
 
-    public CultureInfo RobloxLocale;
-    
     public CultureInfo GameLocale;
-    
+
     public DateTimeOffset? LaunchTime = DateTimeOffset.Now;
+    public JoinRequest Request;
+
+    public CultureInfo RobloxLocale;
 
     public async Task<string> GetCliParamsAsync()
     {
         // Runtime check
         if (AuthStr is null || Request is null)
             throw new InvalidOperationException("AuthStr and Request must be set before calling ToCliArguments.");
-        
+
         // Log in if a token was provided
         var authToken = AuthStr;
         if (AuthType == AuthType.Token)

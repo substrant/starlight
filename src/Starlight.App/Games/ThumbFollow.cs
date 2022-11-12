@@ -18,7 +18,6 @@ public class ThumbFollow
     class GameInfo
     {
         [JsonProperty("id")] public Guid? JobId;
-
         [JsonProperty("playerTokens")] public string[] PlayerTokens;
     }
 
@@ -71,11 +70,8 @@ public class ThumbFollow
                 if (batchRes.Data?.Data == null)
                     continue;
                 
-                foreach (var thumbRes in batchRes.Data.Data)
-                {
-                    if (thumbRes.ImageUrl == lookFor)
-                        return info.JobId;
-                }
+                if (batchRes.Data.Data.Any(thumbRes => thumbRes.ImageUrl == lookFor))
+                    return info.JobId;
             }
             pageClient = await pageClient.NextAsync();
         }

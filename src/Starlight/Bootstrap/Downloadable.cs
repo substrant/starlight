@@ -10,15 +10,14 @@ namespace Starlight.Bootstrap;
 
 public class Downloadable
 {
-    public readonly string VersionHash;
+    public readonly string Checksum;
 
     public readonly string Name;
-
-    public readonly string Checksum;
 
     public readonly long Size;
 
     public readonly long TrueSize;
+    public readonly string VersionHash;
 
     internal Downloadable(string versionHash, string name, string checksum, long size, long trueSize)
     {
@@ -43,7 +42,7 @@ public class Downloadable
 
         // yuck delete it
         File.Delete(filePath);
-        
+
         var ex = new BadIntegrityException(this);
         // TODO: Add logging
         throw ex;

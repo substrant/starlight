@@ -34,7 +34,7 @@ public class PluginArbiter
                          .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(PluginBase))))
             {
                 //Logger.Out($"Loading plugin '{type.FullName}' in '{asmName}'", Level.Debug);
-                
+
                 var plugin = (PluginBase)Activator.CreateInstance(type);
                 plugin.Enabled = true;
             }
@@ -48,17 +48,13 @@ public class PluginArbiter
     public static void LoadPlugins()
     {
         if (_loaded)
-        {
             //Logger.Out("Plugins are already loaded", Level.Trace);
             return;
-        }
         _loaded = true;
 
         if (!Directory.Exists(Shared.PluginDir))
-        {
             //Logger.Out($"Plugin directory at '{Shared.PluginDir}' doesn't exist", Level.Debug);
             Directory.CreateDirectory(Shared.PluginDir);
-        }
 
         //Logger.Out("Enumerating plugins", Level.Trace);
         foreach (var file in Directory.GetFiles(Shared.PluginDir, "*.dll"))
@@ -69,7 +65,7 @@ public class PluginArbiter
             }
             catch (BadImageFormatException)
             {
-               // Logger.Out($"Plugin '{file}' is not a .NET DLL", Level.Warn);
+                // Logger.Out($"Plugin '{file}' is not a .NET DLL", Level.Warn);
             }
     }
 }

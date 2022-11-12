@@ -1,13 +1,13 @@
 ﻿using System;
-using System.Diagnostics;
-using System.IO.Compression;
 using System.IO;
+using System.IO.Compression;
 
 namespace Starlight.Misc.Extensions;
 
 internal static class ZipArchiveExtensions
 {
-    public static void ExtractToDirectory(this ZipArchive archive, string destinationDirectoryName, bool overwrite = false)
+    public static void ExtractToDirectory(this ZipArchive archive, string destinationDirectoryName,
+        bool overwrite = false)
     {
         destinationDirectoryName = Directory.CreateDirectory(destinationDirectoryName).FullName;
         foreach (var file in archive.Entries)
@@ -35,7 +35,7 @@ internal static class ZipArchiveExtensions
                 continue;
             }
             // ReSharper enable AssignNullToNotNullAttribute
-            
+
             file.ExtractToFile(completeFileName, true);
         }
     }

@@ -71,4 +71,7 @@
 		<ProjectReference Include="..\..\submodules\HackerFramework\src\HackerFramework\HackerFramework.csproj" />
 		<ProjectReference Include="..\..\submodules\Substrant.Registry\src\Substrant.Registry\Substrant.Registry.csproj" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Sync\" />
+	</ItemGroup>
 </Project>

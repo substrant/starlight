@@ -1,15 +1,12 @@
 ﻿using System;
 using System.Diagnostics;
 using System.IO;
-using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
 using Starlight.Bootstrap;
-using Starlight.Misc;
 using Starlight.Plugins;
 using Starlight.PostLaunch;
-using static HackerFramework.Native;
 
 namespace Starlight.Launch;
 
@@ -88,7 +85,7 @@ public class Launcher
             inst.Proc.Kill();
             throw;
         }
-        
+
         // Wait for Roblox's window to open
         // todo: better method for this garbage
         var hWnd = IntPtr.Zero;
@@ -103,10 +100,8 @@ public class Launcher
         windowTask.Wait();
 
         if (cancelSrc.IsCancellationRequested)
-        {
             // todo: logs n' pieces o' crap
             throw new PrematureCloseException(client, proc.Id);
-        }
 
         try
         {

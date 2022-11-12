@@ -7,28 +7,25 @@ namespace Starlight.Plugins;
 
 public class PluginSdk
 {
-    readonly PluginBase _plugin;
-
-    readonly string _configPath;
-
     readonly JObject _config;
 
-    public bool UnsavedConfig { get; private set; }
+    readonly string _configPath;
+    readonly PluginBase _plugin;
 
     internal PluginSdk(Assembly pluginAssembly, PluginBase plugin)
     {
         string pluginDir;
-        if (!File.Exists(pluginAssembly.Location) || (pluginDir = Path.GetDirectoryName(pluginAssembly.Location)) is null)
-        {
-            throw new NotImplementedException();
-        }
+        if (!File.Exists(pluginAssembly.Location) ||
+            (pluginDir = Path.GetDirectoryName(pluginAssembly.Location)) is null) throw new NotImplementedException();
 
         _plugin = plugin;
-        
+
         _configPath = Path.Combine(pluginDir, Path.GetFileNameWithoutExtension(pluginAssembly.Location) + ".json");
 
         if (File.Exists(_configPath))
+        {
             _config = JObject.Parse(File.ReadAllText(_configPath));
+        }
         else
         {
             File.WriteAllText(_configPath, "{}");
@@ -36,30 +33,7 @@ public class PluginSdk
         }
     }
 
-#nullable enable
-    public void SetValue<T>(string name, T? value)
-    {
-        _config[name] = value is null ? JValue.CreateNull() : JToken.FromObject(value);
-    }
-
-    public bool GetValue<T>(string name, out T? value)
-    {
-        if (_config[name] is { } tokenValue)
-        {
-            try
-            {
-                value = tokenValue.ToObject<T>();
-                return true;
-            }
-            catch (InvalidCastException)
-            {
-            }
-        }
-        
-        value = default;
-        return false;
-    }
-#nullable disable
+    public bool UnsavedConfig { get; private set; }
 
     public void SetDefaultValue<T>(string name, T value)
     {
@@ -87,4 +61,27 @@ public class PluginSdk
             PropertyNameComparison = StringComparison.Ordinal
         });
     }
+
+#nullable enable
+    public void SetValue<T>(string name, T? value)
+    {
+        _config[name] = value is null ? JValue.CreateNull() : JToken.FromObject(value);
+    }
+
+    public bool GetValue<T>(string name, out T? value)
+    {
+        if (_config[name] is { } tokenValue)
+            try
+            {
+                value = tokenValue.ToObject<T>();
+                return true;
+            }
+            catch (InvalidCastException)
+            {
+            }
+
+        value = default;
+        return false;
+    }
+#nullable disable
 }

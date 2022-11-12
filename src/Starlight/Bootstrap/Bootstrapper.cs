@@ -3,12 +3,8 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
-using System.Net.Http;
-using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Microsoft.Win32;
-using RestSharp;
 using Starlight.Misc;
 using Starlight.Misc.Extensions;
 using Starlight.Misc.Profiling;
@@ -52,12 +48,12 @@ public class Bootstrapper
             _ => null
         };
     }
-    
+
     public static async Task<string> GetLatestVersionHashAsync(bool bypassCache = false)
     {
         if (!bypassCache && _latestVersionHash is not null)
             return await Task.FromResult(_latestVersionHash);
-        
+
         var version = await Web.DownloadStringAsync("http://setup.rbxcdn.com/version.txt");
         return _latestVersionHash = version.Split("version-")[1];
     }
@@ -99,7 +95,7 @@ public class Bootstrapper
     {
         return GetClients(scope).FirstOrDefault();
     }
-    
+
     public static Client GetLatestClient(ClientScope scope = ClientScope.Global)
     {
         var versionHash = GetLatestVersionHash();
@@ -118,7 +114,7 @@ public class Bootstrapper
         using var softKey = hkcu.OpenSubKey(@"Software\ROBLOX Corporation");
         return softKey is null;
     }
-    
+
     public static void RegisterClass(Client client)
     {
         using var hkcu = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
@@ -186,15 +182,18 @@ public class Bootstrapper
 
         // Download files
         var downloadTracker = tracker?.SubStep(files.Count);
+
         void Download(Downloadable file)
         {
             downloadTracker?.Step($"Downloading {file.Name}");
             file.Download(client.Location);
         }
+
         await Utility.DisperseActionsAsync(files, Download, cfg.DownloadConcurrency);
 
         // Post-download (extract and delete)
         var postDownloadTracker = tracker?.SubStep(files.Count);
+
         void Extract(Downloadable file)
         {
             var filePath = Path.Combine(client.Location, file.Name);
@@ -224,8 +223,9 @@ public class Bootstrapper
             ExtractFin:
             File.Delete(filePath);
         }
+
         await Utility.DisperseActionsAsync(files, Extract, cfg.UnzipConcurrency);
-        
+
         File.WriteAllText(Path.Combine(client.Location, "AppSettings.xml"),
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<Settings>\r\n    <ContentFolder>content</ContentFolder>\r\n    <BaseUrl>http://www.roblox.com</BaseUrl>\r\n</Settings>");
 

@@ -7,9 +7,7 @@ namespace Starlight.Apis.JoinGame;
 public class JoinScript
 {
     [JsonProperty("MachineAddress")] internal string Address;
-
     [JsonProperty("ServerPort")] internal int? Port;
-
     [JsonProperty("UdmuxEndpoints")] internal UdmuxEndpoint[] UdmuxEndpoints;
 
     public IPEndPoint GetEndpoint()

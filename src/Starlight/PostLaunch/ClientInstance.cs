@@ -9,8 +9,6 @@ namespace Starlight.PostLaunch;
 
 public class ClientInstance
 {
-    public Client Client;
-
     public readonly Process Proc;
 
     public readonly Target Target;
@@ -20,6 +18,7 @@ public class ClientInstance
     TaskScheduler _taskScheduler;
 
     long _userId;
+    public Client Client;
 
     internal ClientInstance(Client client, Process proc)
     {

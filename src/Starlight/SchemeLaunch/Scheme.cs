@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Threading.Tasks;
 using System.Web;
-using Microsoft.Win32;
 using Starlight.Apis;
 using Starlight.Apis.JoinGame;
 using Starlight.Bootstrap;
 using Starlight.Launch;
 using Starlight.Misc;
-using Starlight.PostLaunch;
 
 namespace Starlight.SchemeLaunch;
 
@@ -30,7 +26,8 @@ public class Scheme
         try
         {
             var split = HttpUtility.UrlDecode(payload).Split(' ');
-            args = split.Select(t => t.Split(':')).ToDictionary(pair => pair[0], pair => string.Join(":", pair.Skip(1)));
+            args = split.Select(t => t.Split(':'))
+                .ToDictionary(pair => pair[0], pair => string.Join(":", pair.Skip(1)));
         }
         catch (Exception ex)
         {
@@ -44,11 +41,8 @@ public class Scheme
             info.AuthStr = ticket;
             info.AuthType = AuthType.Ticket;
         }
-        else
-        {
-            //Logger.Out("'gameinfo' doesn't exist", Level.Warn);
-        }
 
+        //Logger.Out("'gameinfo' doesn't exist", Level.Warn);
         if (args.TryGetValue("placelauncherurl", out var launchUrl))
         {
             result |= ParseResultFlags.RequestExists;
@@ -57,16 +51,10 @@ public class Scheme
                 result |= ParseResultFlags.RequestParsed;
                 info.Request = new JoinRequest(launchUri);
             }
-            else
-            {
-                //Logger.Out("'placelauncherurl' couldn't be parsed", Level.Warn);
-            }
-        }
-        else
-        {
-            //Logger.Out("'placelauncherurl' doesn't exist", Level.Warn);
+            //Logger.Out("'placelauncherurl' couldn't be parsed", Level.Warn);
         }
 
+        //Logger.Out("'placelauncherurl' doesn't exist", Level.Warn);
         if (args.TryGetValue("launchtime", out var launchTimeStr))
         {
             result |= ParseResultFlags.LaunchTimeExists;
@@ -75,16 +63,10 @@ public class Scheme
                 result |= ParseResultFlags.LaunchTimeParsed;
                 info.LaunchTime = DateTimeOffset.FromUnixTimeMilliseconds(launchTime);
             }
-            else
-            {
-                //Logger.Out("'launchtime' couldn't be parsed", Level.Warn);
-            }
-        }
-        else
-        {
-            //Logger.Out("'launchtime' doesn't exist", Level.Warn);
+            //Logger.Out("'launchtime' couldn't be parsed", Level.Warn);
         }
 
+        //Logger.Out("'launchtime' doesn't exist", Level.Warn);
         if (args.TryGetValue("browsertrackerid", out var trackerIdStr))
         {
             result |= ParseResultFlags.TrackerIdExists;
@@ -93,16 +75,10 @@ public class Scheme
                 result |= ParseResultFlags.TrackerIdParsed;
                 info.Request.BrowserTrackerId = trackerId;
             }
-            else
-            {
-                //Logger.Out("'browsertrackerid' couldn't be parsed", Level.Warn);
-            }
-        }
-        else
-        {
-            //Logger.Out("'browsertrackerid' doesn't exist", Level.Warn);
+            //Logger.Out("'browsertrackerid' couldn't be parsed", Level.Warn);
         }
 
+        //Logger.Out("'browsertrackerid' doesn't exist", Level.Warn);
         if (args.TryGetValue("robloxLocale", out var rbxLocaleStr))
         {
             result |= ParseResultFlags.RobloxLocaleExists;
@@ -111,16 +87,10 @@ public class Scheme
                 result |= ParseResultFlags.RobloxLocaleParsed;
                 info.RobloxLocale = rbxLocale;
             }
-            else
-            {
-                //Logger.Out("'robloxLocale' couldn't be parsed", Level.Warn);
-            }
-        }
-        else
-        {
-            //Logger.Out("'browsertrackerid' doesn't exist", Level.Warn);
+            //Logger.Out("'robloxLocale' couldn't be parsed", Level.Warn);
         }
 
+        //Logger.Out("'browsertrackerid' doesn't exist", Level.Warn);
         if (args.TryGetValue("gameLocale", out var gameLocaleStr))
         {
             result |= ParseResultFlags.GameLocaleExists;
@@ -129,25 +99,19 @@ public class Scheme
                 result |= ParseResultFlags.GameLocaleParsed;
                 info.GameLocale = gameLocale;
             }
-            else
-            {
-                //Logger.Out("'gameLocale' couldn't be parsed", Level.Warn);
-            }
-        }
-        else
-        {
-            //Logger.Out("'gameLocale' doesn't exist", Level.Warn);
+            //Logger.Out("'gameLocale' couldn't be parsed", Level.Warn);
         }
 
+        //Logger.Out("'gameLocale' doesn't exist", Level.Warn);
         return result.HasFlag(ParseResultFlags.Success) ? info : null;
     }
-    
+
     public static void Hook()
     {
         //var latestClient = 
         //Bootstrapper.RegisterClass();
     }
-    
+
     public static void Unhook()
     {
         var client = Bootstrapper.QueryClientDesperate();
