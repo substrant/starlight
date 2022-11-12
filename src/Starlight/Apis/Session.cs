@@ -1,8 +1,10 @@
 ﻿using Newtonsoft.Json;
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
+using Starlight.Apis.JoinGame;
 using System;
 using System.Linq;
+using System.Net;
 using System.Threading.Tasks;
 
 namespace Starlight.Apis;
@@ -156,6 +158,47 @@ public class Session : RbxUser, IDisposable
         _xsrfLastGrabbed = DateTime.Now;
 
         return _xsrfToken;
+    }
+
+    /* Game joining */
+
+    /// <summary>
+    ///     Attempt to get a <see cref="JoinResponse"/> from a <see cref="JoinRequest"/>.
+    /// </summary>
+    /// <param name="joinReq">The join request to send to the server.</param>
+    /// <param name="maxTries">The maximum amount of retries. Using zero here means infinite tries.</param>
+    /// <returns>The response from the game join API.</returns>
+    public async Task<JoinResponse> RequestJoinAsync(JoinRequest joinReq, int maxTries = 0)
+    {
+        var tries = -1;
+        for (; ; )
+        {
+            var reqBody = JsonConvert.SerializeObject(this, Formatting.None,
+                new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+            var req = new RestRequest(joinReq.Endpoint, Method.Post)
+                .AddHeader("User-Agent", "Roblox/WinInet")
+                .AddJsonBody(reqBody);
+            var res = await GameClient.ExecuteAsync<JoinResponse>(req);
+
+            if (res.Data is null)
+                return new JoinResponse { Success = false };
+
+            if (res.StatusCode != HttpStatusCode.OK || res.Data.Status == JoinStatus.Fail)
+            {
+                res.Data.Success = false;
+                return res.Data;
+            }
+
+            if (res.Data.Status == JoinStatus.Retry && tries != maxTries)
+            {
+                await Task.Delay(2000); // Wait a bit.
+                tries++;
+                continue;
+            }
+
+            res.Data.Success = true;
+            return res.Data;
+        }
     }
 
     /* IDisposable implementation */
