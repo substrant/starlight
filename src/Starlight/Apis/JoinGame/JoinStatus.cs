@@ -1,10 +1,33 @@
 ﻿namespace Starlight.Apis.JoinGame;
 
+/// <summary>
+///     The status of a <see cref="JoinResponse" />.
+/// </summary>
 public enum JoinStatus
 {
-    Fail, // Request failed/rejected.
-    Retry, // Request acknowledged, either standby for a server to be available or just retry.
-    Success, // Request accepted.
-    FullGame, // Request acknowledged, but the game is full.
-    UserLeft // When joining another user: the user left the game before you could join. I dislike this.
+    /// <summary>
+    ///     Request failed/rejected.
+    /// </summary>
+    Fail,
+
+    /// <summary>
+    ///     Request acknowledged, you should standby for a server to be available or retry.
+    /// </summary>
+    Retry,
+
+    /// <summary>
+    ///     Request accepted.
+    /// </summary>
+    Success,
+
+    /// <summary>
+    ///     Request acknowledged, but the game is full.
+    /// </summary>
+    FullGame,
+
+    /// <summary>
+    ///     <para>The user left the game before you could join them.</para>
+    ///     <strong>Note:</strong> Applies when following a user.
+    /// </summary>
+    UserLeft
 }
