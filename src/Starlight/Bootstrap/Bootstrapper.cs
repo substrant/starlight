@@ -1,18 +1,21 @@
-﻿using System;
+﻿using Microsoft.Win32;
+using Starlight.Misc;
+using Starlight.Misc.Extensions;
+using Starlight.Misc.Profiling;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading.Tasks;
-using Microsoft.Win32;
-using Starlight.Misc;
-using Starlight.Misc.Extensions;
-using Starlight.Misc.Profiling;
 using static Starlight.Misc.Shared;
 
 namespace Starlight.Bootstrap;
 
-public class Bootstrapper
+/// <summary>
+///     Contains methods for installing, and uninstalling Roblox, as well as auxliary functions for installation.
+/// </summary>
+public static class Bootstrapper
 {
     static readonly IReadOnlyDictionary<string, string> ZipMap = new Dictionary<string, string>
     {
@@ -36,8 +39,16 @@ public class Bootstrapper
         { "ssl.zip", "ssl" }
     };
 
-    static string _latestVersionHash; // Cache for a micro-optimization
+    static DateTime _lastVersionHashFetch = DateTime.MinValue;
+    static string _latestVersionHash;
 
+    /* Versions */
+
+    /// <summary>
+    ///    Get the directory of a client at the given scope.
+    /// </summary>
+    /// <param name="scope">The scope to use.</param>
+    /// <returns>The directory that corresponds to the given scope.</returns>
     public static string GetScopeDirectory(ClientScope scope)
     {
         return scope switch
@@ -49,25 +60,30 @@ public class Bootstrapper
         };
     }
 
+    /// <summary>
+    ///     Get the latest version hash of Roblox.
+    /// </summary>
+    /// <param name="bypassCache">As an optimization opportunity, Starlight will cache the version hash to avoid making unnecessary web requests. Set this to <c>true</c> to bypass caching the hash.</param>
+    /// <returns>The latest version hash of Roblox.</returns>
     public static async Task<string> GetLatestVersionHashAsync(bool bypassCache = false)
     {
-        if (!bypassCache && _latestVersionHash is not null)
+        if (!bypassCache && (_latestVersionHash is not null || DateTime.Now - _lastVersionHashFetch > TimeSpan.FromDays(1)))
             return await Task.FromResult(_latestVersionHash);
-
+        
         var version = await Web.DownloadStringAsync("http://setup.rbxcdn.com/version.txt");
+
+        _lastVersionHashFetch = DateTime.Now;
         return _latestVersionHash = version.Split("version-")[1];
     }
 
-    public static string GetLatestVersionHash(bool bypassCache = false)
-    {
-        if (!bypassCache && _latestVersionHash is not null)
-            return _latestVersionHash;
+    /* Clients */
 
-        var version = Web.DownloadString("http://setup.rbxcdn.com/version.txt");
-        return _latestVersionHash = version.Split("version-")[1];
-    }
-
-    public static IReadOnlyList<Client> GetClients(ClientScope scope = ClientScope.Global)
+    /// <summary>
+    ///    Get a list of installed clients.
+    /// </summary>
+    /// <param name="scope">The scope to search.</param>
+    /// <returns></returns>
+    public static IList<Client> GetClients(ClientScope scope = ClientScope.Global)
     {
         List<Client> clients = new();
         var installPath = GetScopeDirectory(scope);
@@ -85,29 +101,49 @@ public class Bootstrapper
         return clients;
     }
 
+    /// <summary>
+    ///     Get a client by its version hash.
+    /// </summary>
+    /// <param name="versionHash">The version hash to search for.</param>
+    /// <param name="scope">The scope to search in.</param>
+    /// <returns>The client that was found, or <see cref="null"/> if it doesn't exist.</returns>
     public static Client QueryClient(string versionHash, ClientScope scope = ClientScope.Global)
     {
         var client = GetClients(scope).FirstOrDefault(x => x.VersionHash == versionHash);
         return client;
     }
 
-    public static Client QueryClientDesperate(ClientScope scope = ClientScope.Global)
+    /// <summary>
+    ///     Get the first client that matches the given predicate in the given scope.
+    /// </summary>
+    /// <param name="scope">The scope to search in.</param>
+    /// /// <param name="predicate">The scope to search in.</param>
+    /// <returns>The first client that matches the given predicate,  or null if not found.</returns>
+    public static Client GetFirstClient(ClientScope scope = ClientScope.Global, Func<Client, bool> predicate = null)
     {
-        return GetClients(scope).FirstOrDefault();
+        return GetClients(scope).FirstOrDefault(predicate ?? (_ => true));
     }
 
-    public static Client GetLatestClient(ClientScope scope = ClientScope.Global)
-    {
-        var versionHash = GetLatestVersionHash();
-        return new Client(versionHash, scope);
-    }
-
+    /// <summary>
+    ///    Get the latest client in the given scope.
+    /// </summary>
+    /// <param name="scope">The scope to set the client's location in.</param>
+    /// <returns>The latest client. If the client doesn't exist, it will still return a client. Use <see cref="Client.Exists"/> to check if it exists.</returns>
     public static async Task<Client> GetLatestClientAsync(ClientScope scope = ClientScope.Global)
     {
         var versionHash = await GetLatestVersionHashAsync();
         return new Client(versionHash, scope);
     }
 
+    /* Registry */
+
+    /// <summary>
+    ///     Checks if Roblox is registered in the registry.
+    /// </summary>
+    /// <returns>
+    ///     A boolean variable that determines if Roblox has been registered in the past.<br/>
+    ///     <strong>Note:</strong> This does not check if Roblox is currently registered. If Roblox has been installed prior to uninstallation, this method will return <c>true</c>.
+    /// </returns>
     public static bool IsRobloxRegistered()
     {
         using var hkcu = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
@@ -115,6 +151,10 @@ public class Bootstrapper
         return softKey is null;
     }
 
+    /// <summary>
+    ///     Adds Roblox's <c>roblox-player</c> scheme class to the registry.
+    /// </summary>
+    /// <param name="client">The client to use for registration.</param>
     public static void RegisterClass(Client client)
     {
         using var hkcu = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
@@ -130,12 +170,20 @@ public class Bootstrapper
         schemeKey?.SetValue(null, '"' + client.Launcher + "\" %1", RegistryValueKind.String);
     }
 
+    /// <summary>
+    ///     Removes Roblox's scheme class from the registry.
+    /// </summary>
     public static void UnregisterClass()
     {
         using var hkcu = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
         hkcu.DeleteSubKeyTree(@"Software\Classes\roblox-player", false);
     }
 
+    /// <summary>
+    ///     Adds Roblox's environment to the registry.<br/>
+    ///     Registry envirionment keys are required for Roblox's player to function properly.
+    /// </summary>
+    /// <param name="client"></param>
     public static void RegisterClient(Client client)
     {
         // Roblox's player takes care of this for us, but we might as well add it.
@@ -161,12 +209,24 @@ public class Bootstrapper
         urlAssocKey?.SetValue("roblox-player", "roblox-player");
     }
 
+    /// <summary>
+    ///    Removes Roblox's environment from the registry.
+    /// </summary>
     public static void UnregisterClient()
     {
         using var hkcu = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
         hkcu.DeleteSubKeyTree(@"Software\ROBLOX Corporation", false);
     }
 
+    /* Installation */
+
+    /// <summary>
+    ///     Installs a <see cref="Client"/> to the computer.<br/>
+    ///     This method will download the client, extract it, and register it.
+    /// </summary>
+    /// <param name="client">The client object to install.</param>
+    /// <param name="tracker">The progress tracker to use when installing.</param>
+    /// <param name="cfg">The installation configuration to use when installing.</param>
     public static async Task InstallAsync(Client client, ProgressTracker tracker = null, InstallConfig cfg = null)
     {
         cfg ??= InstallConfig.Default;
@@ -237,21 +297,19 @@ public class Bootstrapper
             RegisterClient(client);
     }
 
-    public static void Install(Client client, InstallConfig cfg = null)
-    {
-        AsyncHelpers.RunSync(() => InstallAsync(client, null, cfg));
-    }
-
+    /// <summary>
+    ///     Uninstalls a <see cref="Client"/>.<br/>
+    ///     This method will unregister the client and delete the client's directory.
+    /// </summary>
+    /// <param name="client">The client object to uninstall.</param>
+    /// <param name="cfg">The installation configuration to use when uninstalling.</param>
     public static void Uninstall(Client client, InstallConfig cfg = null)
     {
-        if (client is null)
-            return;
-
         cfg ??= InstallConfig.Default;
 
         Directory.Delete(client.Location, true);
 
-        client = QueryClientDesperate();
+        client = GetFirstClient();
         if (client is not null)
         {
             if (cfg.RegisterClass)
@@ -269,6 +327,8 @@ public class Bootstrapper
             RemoveShortcuts();
         }
     }
+
+    /* Shortcuts */
 
     internal static void AddShortcuts(Client client, InstallConfig cfg)
     {
