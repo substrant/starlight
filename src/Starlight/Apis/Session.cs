@@ -106,6 +106,22 @@ public class Session : RbxUser, IDisposable
     }
 
     /// <summary>
+    ///     Login to Roblox using the given authentication type.
+    /// </summary>
+    /// <param name="authToken">The authentication token to log in with.</param>
+    /// <param name="authType">The method of authentication to use.</param>
+    /// <returns>The <see cref="Session"/> authenticated with the given parameters.</returns>
+    public static async Task<Session> AuthenticateAsync(string authToken, AuthType authType)
+    {
+        return authType switch
+        {
+            AuthType.Token => await LoginAsync(authToken),
+            AuthType.Ticket => await RedeemAsync(authToken),
+            _ => throw new NotImplementedException()
+        };
+    }
+
+    /// <summary>
     ///     Create an authentication ticket for a one-time login.
     /// </summary>
     /// <returns>The authentication ticket that was created.</returns>
