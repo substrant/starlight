@@ -13,7 +13,7 @@ namespace Starlight.Apis;
 /// <summary>
 ///     Represents a Roblox web session.
 /// </summary>
-public class Session : RbxUser, IDisposable
+public partial class Session : RbxUser, IDisposable
 {
     Session()
     {

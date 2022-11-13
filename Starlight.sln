@@ -151,4 +151,7 @@ Global
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {A7751802-11AB-4C48-AEFB-F97F28984E2E}
 	EndGlobalSection
+	GlobalSection(NDepend) = preSolution
+		Project = ".\Starlight.ndproj"
+	EndGlobalSection
 EndGlobal
