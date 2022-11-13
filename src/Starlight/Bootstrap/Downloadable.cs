@@ -10,15 +10,6 @@ namespace Starlight.Bootstrap;
 
 public class Downloadable
 {
-    public readonly string Checksum;
-
-    public readonly string Name;
-
-    public readonly long Size;
-
-    public readonly long TrueSize;
-    public readonly string VersionHash;
-
     internal Downloadable(string versionHash, string name, string checksum, long size, long trueSize)
     {
         VersionHash = versionHash;
@@ -28,31 +19,53 @@ public class Downloadable
         Size = size;
     }
 
-    internal async Task<string> DownloadAsync(string dir)
+    /// <summary>
+    ///     <para>The MD5 checksum of the file.</para>
+    ///     For more information on MD5:<br/>
+    ///     <see href="https://en.wikipedia.org/wiki/MD5"/>
+    /// </summary>
+    public readonly string Checksum;
+
+    /// <summary>
+    ///     The name of the file.
+    /// </summary>
+    public readonly string Name;
+
+    /// <summary>
+    ///     The compressed size of the file.
+    /// </summary>
+    public readonly long Size;
+
+    /// <summary>
+    ///     The uncompressed size of the file.
+    /// </summary>
+    public readonly long TrueSize;
+
+    /// <summary>
+    ///     The version hash the file is categorized under.
+    /// </summary>
+    public readonly string VersionHash;
+
+    /// <summary>
+    ///    Download the file to the specified directory.
+    /// </summary>
+    /// <param name="dir">The directory to download the file under.</param>
+    public async Task DownloadAsync(string dir)
     {
         var filePath = Path.Combine(dir, Name);
 
-        using (var web = new HttpClient()) // Multithreading requires a separate client for each thread.
+        using (var web = new HttpClient())
         {
             await web.DownloadFileAsync($"http://setup.rbxcdn.com/version-{VersionHash}-{Name}", filePath);
         }
 
-        if (Validate(filePath))
-            return filePath;
-
-        // yuck delete it
-        File.Delete(filePath);
-
-        var ex = new BadIntegrityException(this);
-        // TODO: Add logging
-        throw ex;
+        if (!Validate(filePath))
+        {
+            File.Delete(filePath);
+            throw new NotImplementedException();
+        }
     }
-
-    internal string Download(string dir)
-    {
-        return AsyncHelpers.RunSync(() => DownloadAsync(dir));
-    }
-
+    
     internal bool Validate(string filePath)
     {
         if (!File.Exists(filePath) || new FileInfo(filePath).Length != Size)

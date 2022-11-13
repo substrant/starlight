@@ -238,7 +238,7 @@ public static class Bootstrapper
 
         // Get files
         tracker?.Start(2, "Getting files");
-        var files = await client.GetFiles();
+        var files = await client.GetFilesAsync();
 
         // Download files
         var downloadTracker = tracker?.SubStep(files.Count);
@@ -246,7 +246,7 @@ public static class Bootstrapper
         void Download(Downloadable file)
         {
             downloadTracker?.Step($"Downloading {file.Name}");
-            file.Download(client.Location);
+            AsyncHelpers.RunSync(() => file.DownloadAsync(client.Location));
         }
 
         await Utility.DisperseActionsAsync(files, Download, cfg.DownloadConcurrency);
