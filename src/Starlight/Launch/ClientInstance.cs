@@ -1,24 +1,19 @@
-﻿using System;
-using System.Diagnostics;
-using System.Threading;
-using System.Threading.Tasks;
-using HackerFramework;
+﻿using HackerFramework;
 using Starlight.Bootstrap;
+using System;
+using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace Starlight.Launch;
 
+/// <summary>
+///     Represents a running instance of Roblox.
+/// </summary>
 public class ClientInstance
 {
-    public readonly Process Proc;
-
-    public readonly Target Target;
-
     uint _frameDelayOff;
-
-    TaskScheduler _taskScheduler;
-
     long _userId;
-    public Client Client;
+    TaskScheduler _taskScheduler;
 
     internal ClientInstance(Client client, Process proc)
     {
@@ -27,61 +22,73 @@ public class ClientInstance
         Target = new Target(Proc);
     }
 
-    public long GetUserId()
+    /// <summary>
+    ///     The client of the instance.
+    /// </summary>
+    public Client Client;
+
+    /// <summary>
+    ///     The process of the running instance.
+    /// </summary>
+    public readonly Process Proc;
+
+    /// <summary>
+    ///     The target of the running instance (HackerFramework).
+    /// </summary>
+    public readonly Target Target;
+
+    /// <summary>
+    ///     Get the playing user's ID.
+    /// </summary>
+    /// <returns>The user's ID.</returns>
+    public async Task<long> GetUserIdAsync()
     {
         if (_userId != 0)
             return _userId;
 
         var results = Target.FindPattern(RobloxData.UserIdSignature);
         if (results.Count is 0 or > 1)
-        {
-            var ex = new PostLaunchException(this, "Failed to find UserId");
-            throw ex;
-        }
+            throw new NotImplementedException();
 
         var userIdAddr = Target.ReadPointer(results[0] + RobloxData.UserIdOffset);
         long userId;
         while ((userId = Target.ReadLong(userIdAddr)) == 0 || userId == -1)
-            Thread.Sleep(100);
+            await Task.Delay(100);
 
         _userId = userId;
         return userId;
     }
 
-    public async Task<long> GetUserIdAsync()
-    {
-        return await Task.Run(GetUserId);
-    }
-
-    public TaskScheduler GetTaskScheduler()
+    /// <summary>
+    ///     Get the TaskScheduler.
+    /// </summary>
+    /// <returns>An object containing the TaskScheduler base address.</returns>
+    public async Task<TaskScheduler> GetTaskSchedulerAsync()
     {
         if (_taskScheduler is not null)
             return _taskScheduler;
 
         var results = Target.FindPattern(RobloxData.TaskSchedulerSignature);
         if (results.Count is 0 or > 1)
-        {
-            var ex = new PostLaunchException(this, "Failed to find TaskScheduler");
-            throw ex;
-        }
+            throw new NotImplementedException();
 
         var sched = new TaskScheduler { Instance = this };
         var singletonPtr = Target.ReadPointer(results[0] + RobloxData.TaskSchedulerOffset);
         while ((sched.BaseAddress = Target.ReadPointer(singletonPtr)) == 0)
-            Thread.Sleep(100);
+            await Task.Delay(100);
 
         _taskScheduler = sched;
         return sched;
     }
 
-    public async Task<TaskScheduler> GetTaskSchedulerAsync()
+    /// <summary>
+    /// <para>Set the TaskScheduler frame delay.</para>
+    /// <strong>Note:</strong> The delay is in hertz, not frames per second.
+    /// </summary>
+    /// <param name="delay">The frame delay in hertz.</param>
+    public async Task SetFrameDelayAsync(double delay)
     {
-        return await Task.Run(GetTaskScheduler);
-    }
-
-    public void SetFrameDelay(double delay)
-    {
-        var sched = GetTaskScheduler();
+        var sched = await GetTaskSchedulerAsync();
         if (_frameDelayOff == 0)
         {
             const double defaultDelay = 1.0d / 60.0d; // 60hz
@@ -96,20 +103,12 @@ public class ClientInstance
             }
 
             if (_frameDelayOff == 0)
-            {
-                var ex = new PostLaunchException(this, "Failed to find FrameDelay");
-                throw ex;
-            }
+                throw new NotImplementedException();
         }
 
         sched.WriteDouble(_frameDelayOff, delay);
     }
-
-    public async Task SetFrameDelayAsync(double delay)
-    {
-        await Task.Run(() => SetFrameDelay(delay));
-    }
-
+    
     ~ClientInstance()
     {
         Target.Dispose();
