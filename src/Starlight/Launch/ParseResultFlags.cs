@@ -2,6 +2,9 @@
 
 namespace Starlight.Launch;
 
+/// <summary>
+///     Flags for scheme parsing.
+/// </summary>
 [Flags]
 internal enum ParseResultFlags
 {
