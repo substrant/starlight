@@ -15,10 +15,8 @@ namespace Starlight.Launch;
 public static class Scheme
 {
     /// <summary>
-    ///     Parse a Roblox launch scheme payload into <see cref="LaunchParams" />
+    ///     Parse a Roblox launch scheme payload into <see cref="LaunchParams" />.
     /// </summary>
-    /// <param name="payload">The raw payload to use.</param>
-    /// <returns>A <see cref="LaunchParams" /> class representing the deserialized payload.</returns>
     public static LaunchParams Parse(string payload)
     {
         LaunchParams info = new();
@@ -99,9 +97,8 @@ public static class Scheme
     }
 
     /// <summary>
-    ///     Hook the `roblox-player` scheme for the given client.
+    ///     Hook the `roblox-player` scheme for the given <see cref="Client"/>.
     /// </summary>
-    /// <param name="client">The client to hook.</param>
     public static void Hook(Client client)
     {
         Bootstrapper.RegisterClass(client);

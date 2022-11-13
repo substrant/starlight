@@ -76,8 +76,6 @@ public class PluginSdk
     ///    Set an entry in the configuration.
     /// </summary>
     /// <typeparam name="T">The type to serialize.</typeparam>
-    /// <param name="name">The name of the entry.</param>
-    /// <param name="value">The value of the entry.</param>
     public void SetValue<T>(string name, T? value)
     {
         _config[name] = value is null ? JValue.CreateNull() : JToken.FromObject(value);
@@ -87,8 +85,6 @@ public class PluginSdk
     ///     Retrieve an entry in the configuration.
     /// </summary>
     /// <typeparam name="T">The type to deserialize</typeparam>
-    /// <param name="name">The name of the entry.</param>
-    /// <param name="value">The value of the entry.</param>
     /// <returns>A boolean indicating whether or not retrieval succeeded.</returns>
     public bool GetValue<T>(string name, out T? value)
     {

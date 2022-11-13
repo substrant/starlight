@@ -53,10 +53,8 @@ public static class Bootstrapper
     /* Versions */
 
     /// <summary>
-    ///    Get the directory of a client at the given scope.
+    ///    Get the parent directory of all clients at the given scope.
     /// </summary>
-    /// <param name="scope">The scope to use.</param>
-    /// <returns>The directory that corresponds to the given scope.</returns>
     public static string GetScopeDirectory(ClientScope scope)
     {
         return scope switch
@@ -71,10 +69,7 @@ public static class Bootstrapper
     /// <summary>
     ///     Get the latest version hash of Roblox.
     /// </summary>
-    /// <param name="bypassCache">As an optimization opportunity, Starlight will cache the version hash to avoid making unnecessary web requests. Set this to <c>true</c> to bypass caching the hash.</param>
-    /// <param name="token">The cancellation token to use.</param>
-    /// <returns>The latest version hash of Roblox.</returns>
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     public static async Task<string> GetLatestVersionHashAsync(bool bypassCache = false, CancellationToken token = default)
     {
         if (!bypassCache && (_latestVersionHash is not null || DateTime.Now - _lastVersionHashFetch > TimeSpan.FromDays(1)))
@@ -91,8 +86,6 @@ public static class Bootstrapper
     /// <summary>
     ///    Get a list of installed clients.
     /// </summary>
-    /// <param name="scope">The scope to search.</param>
-    /// <returns></returns>
     public static IList<Client> GetClients(ClientScope scope = ClientScope.Global)
     {
         List<Client> clients = new();
@@ -112,11 +105,9 @@ public static class Bootstrapper
     }
 
     /// <summary>
-    ///     Get a client by its version hash.
+    ///     Get a <see cref="Client"/> by its version hash.
     /// </summary>
-    /// <param name="versionHash">The version hash to search for.</param>
-    /// <param name="scope">The scope to search in.</param>
-    /// <returns>The client that was found, or <see cref="null"/> if it doesn't exist.</returns>
+    /// <returns>The <see cref="Client"/> that was found, or null if it doesn't exist.</returns>
     public static Client QueryClient(string versionHash, ClientScope scope = ClientScope.Global)
     {
         var client = GetClients(scope).FirstOrDefault(x => x.VersionHash == versionHash);
@@ -124,23 +115,19 @@ public static class Bootstrapper
     }
 
     /// <summary>
-    ///     Get the first client that matches the given predicate in the given scope.
+    ///     Get the first <see cref="Client"/> that matches the given predicate in the given scope.
     /// </summary>
-    /// <param name="scope">The scope to search in.</param>
-    /// /// <param name="predicate">The scope to search in.</param>
-    /// <returns>The first client that matches the given predicate,  or null if not found.</returns>
+    /// <returns>The <see cref="Client"/> that matched the predicate, or null if not found.</returns>
     public static Client GetFirstClient(ClientScope scope = ClientScope.Global, Func<Client, bool> predicate = null)
     {
         return GetClients(scope).FirstOrDefault(predicate ?? (_ => true));
     }
 
     /// <summary>
-    ///    Get the latest client in the given scope.
+    ///    Get the latest <see cref="Client"/> in the given scope.
     /// </summary>
-    /// <param name="scope">The scope to set the client's location in.</param>
-    /// <param name="token">The cancellation token to use.</param>
-    /// <returns>The latest client. If the client doesn't exist, it will still return a client. Use <see cref="Client.Exists"/> to check if it exists.</returns>
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <returns>A <see cref="Client"/> object. The <see cref="Client"/> will be returned even if it isn't installed. Use <see cref="Client.Exists"/> to check if it exists.</returns>
+    /// <exception cref="TaskCanceledException"/>
     public static async Task<Client> GetLatestClientAsync(ClientScope scope = ClientScope.Global, CancellationToken token = default)
     {
         var versionHash = await GetLatestVersionHashAsync(false, token);
@@ -164,9 +151,8 @@ public static class Bootstrapper
     }
 
     /// <summary>
-    ///     Adds Roblox's <c>roblox-player</c> scheme class to the registry.
+    ///     Adds a <see cref="Client"/>'s <c>roblox-player</c> scheme class to the registry.
     /// </summary>
-    /// <param name="client">The client to use for registration.</param>
     public static void RegisterClass(Client client)
     {
         using var hkcu = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
@@ -183,7 +169,7 @@ public static class Bootstrapper
     }
 
     /// <summary>
-    ///     Removes Roblox's scheme class from the registry.
+    ///     Removes a <see cref="Client"/>'s scheme class from the registry.
     /// </summary>
     public static void UnregisterClass()
     {
@@ -192,10 +178,9 @@ public static class Bootstrapper
     }
 
     /// <summary>
-    ///     Adds Roblox's environment to the registry.<br/>
-    ///     Registry envirionment keys are required for Roblox's player to function properly.
+    ///     <para>Adds a <see cref="Client"/>'s environment to the registry.</para>
+    ///     <strong>Note:</strong> Registry envirionment keys are required for Roblox's player to function properly.
     /// </summary>
-    /// <param name="client"></param>
     public static void RegisterClient(Client client)
     {
         // Roblox's player takes care of this for us, but we might as well add it.
@@ -222,7 +207,7 @@ public static class Bootstrapper
     }
 
     /// <summary>
-    ///    Removes Roblox's environment from the registry.
+    ///    Removes a <see cref="Client"/>'s environment from the registry.
     /// </summary>
     public static void UnregisterClient()
     {
@@ -236,11 +221,7 @@ public static class Bootstrapper
     ///     Installs a <see cref="Client"/> to the computer.<br/>
     ///     This method will download the client, extract it, and register it.
     /// </summary>
-    /// <param name="client">The client object to install.</param>
-    /// <param name="tracker">The progress tracker to use when installing.</param>
-    /// <param name="cfg">The installation configuration to use when installing.</param>
-    /// <param name="token">The cancellation token to use.</param>
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     public static async Task InstallAsync(Client client, ProgressTracker tracker = null, InstallConfig cfg = null, CancellationToken token = default)
     {
         cfg ??= InstallConfig.Default;
@@ -252,7 +233,7 @@ public static class Bootstrapper
 
         // Get files
         tracker?.Start(2, "Getting files");
-        var files = await client.GetFilesAsync();
+        var files = await client.GetFilesAsync(token);
 
         // Download files
         var downloadTracker = tracker?.SubStep(files.Count);
@@ -260,10 +241,13 @@ public static class Bootstrapper
         void Download(Downloadable file)
         {
             downloadTracker?.Step($"Downloading {file.Name}");
-            AsyncHelpers.RunSync(() => file.DownloadAsync(client.Location));
+            AsyncHelpers.RunSync(() => file.DownloadAsync(client.Location, token));
         }
 
         await Utility.DisperseActionsAsync(files, Download, cfg.DownloadConcurrency, token);
+
+        if (token.IsCancellationRequested)
+            throw new TaskCanceledException();
 
         // Post-download (extract and delete)
         var postDownloadTracker = tracker?.SubStep(files.Count);
@@ -300,6 +284,9 @@ public static class Bootstrapper
 
         await Utility.DisperseActionsAsync(files, Extract, cfg.UnzipConcurrency, token);
 
+        if (token.IsCancellationRequested)
+            throw new TaskCanceledException();
+
         File.WriteAllText(Path.Combine(client.Location, "AppSettings.xml"),
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<Settings>\r\n    <ContentFolder>content</ContentFolder>\r\n    <BaseUrl>http://www.roblox.com</BaseUrl>\r\n</Settings>");
 
@@ -315,8 +302,6 @@ public static class Bootstrapper
     ///     Uninstalls a <see cref="Client"/>.<br/>
     ///     This method will unregister the client and delete the client's directory.
     /// </summary>
-    /// <param name="client">The client object to uninstall.</param>
-    /// <param name="cfg">The installation configuration to use when uninstalling.</param>
     public static void Uninstall(Client client, InstallConfig cfg = null)
     {
         cfg ??= InstallConfig.Default;

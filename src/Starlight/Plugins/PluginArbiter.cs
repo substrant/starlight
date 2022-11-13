@@ -17,10 +17,8 @@ public class PluginArbiter
     internal static List<PluginBase> Plugins = new();
 
     /// <summary>
-    ///     Get a plugin by its name.
+    ///     Get a plugin by its name, or return null if not found.
     /// </summary>
-    /// <param name="name">The plugin's name.</param>
-    /// <returns>The found plugin, or null if not found.</returns>
     public static PluginBase GetPlugin(string name)
     {
         return Plugins.FirstOrDefault(x => x.Name == name);
@@ -29,16 +27,14 @@ public class PluginArbiter
     /// <summary>
     ///     Get a list of all loaded plugins.
     /// </summary>
-    /// <returns></returns>
     public static IEnumerable<PluginBase> GetPlugins()
     {
         return Plugins.AsReadOnly();
     }
 
     /// <summary>
-    ///     Get all enabled plugins.
+    ///     Get a list of all enabled plugins.
     /// </summary>
-    /// <returns>A list of enabled plugins.</returns>
     public static IEnumerable<PluginBase> GetEnabledPlugins()
     {
         return Plugins.Where(x => x.Enabled);

@@ -20,9 +20,8 @@ public class JoinRequest
     }
 
     /// <summary>
-    ///     Instantiate a join request from a launch URI.
+    ///     Instantiate a join request from <paramref name="launchUri"/>.
     /// </summary>
-    /// <param name="launchUri">The launch URI to deserialize.</param>
     public static JoinRequest FromUri(Uri launchUri)
     {
         var query = HttpUtility.ParseQueryString(launchUri.Query);
@@ -104,7 +103,6 @@ public class JoinRequest
     /// <summary>
     ///     Serialize the current object into a launch URI.
     /// </summary>
-    /// <returns>The launch URI that can be used to join a game.</returns>
     public override string ToString()
     {
         var query = new StringBuilder();

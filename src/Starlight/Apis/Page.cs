@@ -31,11 +31,9 @@ public class Page<T> : IDisposable where T : class
     public int PageNumber;
 
     /// <summary>
-    ///     Creates a new page collection from a URI.
+    ///     <para>Creates a new page collection from <paramref name="resource"/>.</para>
+    ///     <strong>Note:</strong> The page limit should be either 10, 25, 50, or 100.
     /// </summary>
-    /// <param name="resource">The URI of the resource.</param>
-    /// <param name="limit">The page limit. This should be either 10, 25, 50, or 100.</param>
-    /// <param name="extras">The extra query parameters, if applicable.</param>
     public Page(Uri resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
     {
         if (limit != 10 && limit != 25 && limit != 50 && limit != 100)
@@ -48,12 +46,9 @@ public class Page<T> : IDisposable where T : class
     }
 
     /// <summary>
-    ///     Creates a new page collection from a session and a URI.
+    ///     <para>Creates a new page collection from <paramref name="resource"/> and authenticate with <paramref name="session"/>.</para>
+    ///     <strong>Note:</strong> The page limit should be either 10, 25, 50, or 100.
     /// </summary>
-    /// <param name="session">The session to login with.</param>
-    /// <param name="resource">The URI of the resource.</param>
-    /// <param name="limit">The page limit. This should be either 10, 25, 50, or 100.</param>
-    /// <param name="extras">The extra query parameters, if applicable.</param>
     public Page(Session session, Uri resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
     {
         if (limit != 10 && limit != 25 && limit != 50 && limit != 100)
@@ -67,11 +62,9 @@ public class Page<T> : IDisposable where T : class
     }
 
     /// <summary>
-    ///     Creates a new page collection from a URL.
+    ///     <para>Creates a new page collection from <paramref name="resource"/>.</para>
+    ///     <strong>Note:</strong> The page limit should be either 10, 25, 50, or 100.
     /// </summary>
-    /// <param name="resource">The URL of the resource.</param>
-    /// <param name="limit">The page limit. This should be either 10, 25, 50, or 100.</param>
-    /// <param name="extras">The extra query parameters, if applicable.</param>
     public Page(string resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
     {
         if (limit != 10 && limit != 25 && limit != 50 && limit != 100)
@@ -84,12 +77,9 @@ public class Page<T> : IDisposable where T : class
     }
 
     /// <summary>
-    ///     Creates a new page collection from a session and a URL.
+    ///     <para>Creates a new page collection from <paramref name="resource"/> and authenticate with <paramref name="session"/>.</para>
+    ///     <strong>Note:</strong> The page limit should be either 10, 25, 50, or 100.
     /// </summary>
-    /// <param name="session">The session to login with.</param>
-    /// <param name="resource">The URL of the resource.</param>
-    /// <param name="limit">The page limit. This should be either 10, 25, 50, or 100.</param>
-    /// <param name="extras">The extra query parameters, if applicable.</param>
     public Page(Session session, string resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
     {
         if (limit != 10 && limit != 25 && limit != 50 && limit != 100)
@@ -102,7 +92,7 @@ public class Page<T> : IDisposable where T : class
         _extras = extras;
     }
 
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     internal async Task<T[]> InternalFetchAsync(string cursor, CancellationToken token = default)
     {
         var req = new RestRequest(_resource.AbsolutePath)
@@ -126,10 +116,7 @@ public class Page<T> : IDisposable where T : class
     /// <summary>
     ///     Fetch the page contents for the new page number.
     /// </summary>
-    /// <param name="newPageNumber">The page number to fetch.</param>
-    /// <param name="token">The cancellation token to use.</param>
-    /// <returns>The contents of the fetched page.</returns>
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     public async Task<T[]> FetchAsync(int newPageNumber, CancellationToken token = default)
     {
         var delta = PageNumber - newPageNumber;
@@ -162,9 +149,7 @@ public class Page<T> : IDisposable where T : class
     /// <summary>
     ///     Fetch the page contents for the next page.
     /// </summary>
-    /// <param name="token">The cancellation token to use.</param>
-    /// <returns>The contents of the fetched page.</returns>
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     public async Task<T[]> FetchNextAsync(CancellationToken token = default)
     {
         PageNumber++;
@@ -174,9 +159,7 @@ public class Page<T> : IDisposable where T : class
     /// <summary>
     ///     Fetch the page contents for the previous page.
     /// </summary>
-    /// <param name="token">The cancellation token to use.</param>
-    /// <returns>The contents of the fetched page.</returns>
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     public async Task<T[]> FetchPreviousAsync(CancellationToken token = default)
     {
         if (PageNumber != 0)

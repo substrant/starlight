@@ -45,11 +45,8 @@ public class Client
     public readonly string VersionHash;
 
     /// <summary>
-    ///     Instantiates a new <see cref="Client"/> class.
+    ///     Instantiates a new <see cref="Client"/>.
     /// </summary>
-    /// <param name="versionHash">The version hash of the client.</param>
-    /// <param name="scope">The client's installation scope.</param>
-    /// <param name="launcherBin">The launcher binary.</param>
     public Client(string versionHash, ClientScope scope = ClientScope.Global, string launcherBin = null)
     {
         VersionHash = versionHash;
@@ -60,11 +57,9 @@ public class Client
     }
 
     /// <summary>
-    ///     Gets the list of installation files for the client.
+    ///     Gets a list of the <see cref="Client"/>'s <see cref="Downloadable"/> instances.
     /// </summary>
-    /// <param name="token">The cancellation token to use.</param>
-    /// <returns>A list of <see cref="Downloadable"/> instances.</returns>
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     public async Task<IList<Downloadable>> GetFilesAsync(CancellationToken token = default)
     {
         var files = new List<Downloadable>();

@@ -15,9 +15,8 @@ public class JoinScript
     [JsonProperty("UdmuxEndpoints")] internal UdmuxEndpoint[] UdmuxEndpoints;
 
     /// <summary>
-    ///     Get the address and port of the server to join.
+    ///     Get an <see cref="IPEndPoint"/> representing the endpoint of the server.
     /// </summary>
-    /// <returns>An <see cref="IPEndPoint"/> representing the endpoint of the server.</returns>
     public IPEndPoint GetEndpoint()
     {
         IPAddress ipAddr;

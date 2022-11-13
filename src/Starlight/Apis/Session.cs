@@ -54,7 +54,7 @@ public class Session : RbxUser, IDisposable
     
     public override string Username { get; protected set; }
 
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     async Task RetrieveInfoAsync(CancellationToken token = default)
     {
         try
@@ -78,12 +78,9 @@ public class Session : RbxUser, IDisposable
     /* Authentication */
 
     /// <summary>
-    ///     Login to Roblox using an authentication token (<c>.ROBLOSECURITY</c> cookie).
+    ///     Get a <see cref="Session"/> from a <c>.ROBLOSECURITY</c> cookie.
     /// </summary>
-    /// <param name="authToken">The authentication token to log in with.</param>
-    /// <param name="token">The cancellation token to use.</param>
-    /// <returns>The <see cref="Session"/> authenticated with the given parameters.</returns>
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     public static async Task<Session> LoginAsync(string authToken, CancellationToken token = default)
     {
         var session = new Session { AuthToken = authToken };
@@ -93,12 +90,9 @@ public class Session : RbxUser, IDisposable
     }
 
     /// <summary>
-    ///     Login to Roblox using an authentication ticket.
+    ///     Get a <see cref="Session"/> from a one-time authentication ticket.
     /// </summary>
-    /// <param name="authTicket">The authentication token to redeem.</param>
-    /// <param name="token">The cancellation token to use.</param>
-    /// <returns>The <see cref="Session"/> authenticated with the given parameters.</returns>
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     public static async Task<Session> RedeemAsync(string authTicket, CancellationToken token = default)
     {
         var session = new Session();
@@ -112,13 +106,9 @@ public class Session : RbxUser, IDisposable
     }
 
     /// <summary>
-    ///     Login to Roblox using the given authentication type.
+    ///     Get a <see cref="Session"/> using authentication type <paramref name="authType"/>.
     /// </summary>
-    /// <param name="authToken">The authentication token to log in with.</param>
-    /// <param name="authType">The method of authentication to use.</param>
-    /// <param name="token">The cancellation token to use.</param>
-    /// <returns>The <see cref="Session"/> authenticated with the given parameters.</returns>
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     public static async Task<Session> AuthenticateAsync(string authToken, AuthType authType, CancellationToken token = default)
     {
         return authType switch
@@ -132,9 +122,7 @@ public class Session : RbxUser, IDisposable
     /// <summary>
     ///     Create an authentication ticket for a one-time login.
     /// </summary>
-    /// <param name="token">The cancellation token to use.</param>
-    /// <returns>The authentication ticket that was created.</returns>
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     public async Task<string> GetTicketAsync(CancellationToken token = default)
     {
         // Get a new authentication ticket
@@ -156,10 +144,7 @@ public class Session : RbxUser, IDisposable
     ///     More information on XSRF and why there's tokens for it:<br/>
     ///     <see href="https://en.wikipedia.org/wiki/Cross-site_request_forgery" />.
     /// </summary>
-    /// <param name="bypassCache">Bypass the cache.</param>
-    /// <param name="token">The cancellation token to use.</param>
-    /// <returns>The cross-site request forgery token.</returns>
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     public async Task<string> GetXsrfTokenAsync(bool bypassCache = false, CancellationToken token = default)
     {
         // Return previous token if xsrf token is still alive
@@ -187,11 +172,7 @@ public class Session : RbxUser, IDisposable
     /// <summary>
     ///     Attempt to get a <see cref="JoinResponse"/> from a <see cref="JoinRequest"/>.
     /// </summary>
-    /// <param name="joinReq">The join request to send to the server.</param>
-    /// <param name="maxTries">The maximum amount of retries. Using zero here means infinite tries.</param>
-    /// <param name="token">The cancellation token to use.</param>
-    /// <returns>The response from the game join API.</returns>
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     public async Task<JoinResponse> RequestJoinAsync(JoinRequest joinReq, int maxTries = 0, CancellationToken token = default)
     {
         var tries = -1;

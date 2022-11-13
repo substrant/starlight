@@ -46,7 +46,6 @@ public class LaunchParams
     /// <summary>
     ///     Get the parameters used in the CLI to launch Roblox.
     /// </summary>
-    /// <returns>The parameters to launch Roblox.</returns>
     public async Task<string> GetCliParamsAsync()
     {
         // Runtime check

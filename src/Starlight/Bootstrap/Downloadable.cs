@@ -10,6 +10,9 @@ using Starlight.Misc.Extensions;
 
 namespace Starlight.Bootstrap;
 
+/// <summary>
+///     Represents a downloadable file.
+/// </summary>
 public class Downloadable
 {
     internal Downloadable(string versionHash, string name, string checksum, long size, long trueSize)
@@ -51,9 +54,7 @@ public class Downloadable
     /// <summary>
     ///    Download the file to the specified directory.
     /// </summary>
-    /// <param name="dir">The directory to download the file under.</param>
-    /// <param name="token">The cancellation token to use.</param>
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     public async Task DownloadAsync(string dir, CancellationToken token = default)
     {
         var filePath = Path.Combine(dir, Name);

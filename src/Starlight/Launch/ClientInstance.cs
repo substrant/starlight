@@ -40,7 +40,6 @@ public class ClientInstance
     /// <summary>
     ///     Get the playing user's ID.
     /// </summary>
-    /// <returns>The user's ID.</returns>
     public async Task<long> GetUserIdAsync()
     {
         if (_userId != 0)
@@ -62,7 +61,6 @@ public class ClientInstance
     /// <summary>
     ///     Get the TaskScheduler.
     /// </summary>
-    /// <returns>An object containing the TaskScheduler base address.</returns>
     public async Task<TaskScheduler> GetTaskSchedulerAsync()
     {
         if (_taskScheduler is not null)
@@ -85,7 +83,6 @@ public class ClientInstance
     /// <para>Set the TaskScheduler frame delay.</para>
     /// <strong>Note:</strong> The delay is in hertz, not frames per second.
     /// </summary>
-    /// <param name="delay">The frame delay in hertz.</param>
     public async Task SetFrameDelayAsync(double delay)
     {
         var sched = await GetTaskSchedulerAsync();

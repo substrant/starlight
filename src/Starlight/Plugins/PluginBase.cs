@@ -43,6 +43,7 @@ public abstract class PluginBase
     ///     Gets or sets whether this plugin is enabled.<br/>
     ///     If this is set to false, the plugin will be unloaded, and vice versa.
     /// </summary>
+#pragma warning disable CS0618
     public bool Enabled
     {
         get => _enabled;
@@ -61,11 +62,11 @@ public abstract class PluginBase
             }
         }
     }
+#pragma warning restore CS0618
 
     /// <summary>
     ///     Overload the configuration of this plugin.
     /// </summary>
-    /// <param name="obj"></param>
     public void OverloadConfig(IReadOnlyDictionary<string, dynamic> obj)
     {
         Sdk.MergeConfig(JObject.FromObject(obj));

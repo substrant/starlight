@@ -21,7 +21,7 @@ public static class Launcher
     /// <param name="info">The parameters to use.</param>
     /// <param name="token">The frame delay in hertz.</param>
     /// <returns>An instance of the client.</returns>
-    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    /// <exception cref="TaskCanceledException"/>
     public static async Task<ClientInstance> LaunchAsync(Client client, LaunchParams info, CancellationToken token = default)
     {
         // Run pre-launch methods
