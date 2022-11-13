@@ -1,26 +1,52 @@
-﻿using System;
+﻿using Starlight.Apis;
+using Starlight.Apis.JoinGame;
+using System;
 using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
-using Starlight.Apis;
-using Starlight.Apis.JoinGame;
-using Starlight.Misc;
 
 namespace Starlight.Launch;
 
+/// <summary>
+///     Represents parameters for launching Roblox.
+/// </summary>
 public class LaunchParams
 {
-    public string AuthStr;
-
+    /// <summary>
+    ///     The authentication method to use when launching.
+    /// </summary>
     public AuthType AuthType = AuthType.Ticket;
 
-    public CultureInfo GameLocale;
+    /// <summary>
+    ///     The authentication string to be used.<br/>
+    ///     Use <see cref="AuthType"/> to set the method of authentication.
+    /// </summary>
+    public string AuthStr;
 
-    public DateTimeOffset? LaunchTime = DateTimeOffset.Now;
-    public JoinRequest Request;
-
+    /// <summary>
+    ///     The locale to use in Roblox.
+    /// </summary>
     public CultureInfo RobloxLocale;
 
+    /// <summary>
+    ///     The locale to use in the game.
+    /// </summary>
+    public CultureInfo GameLocale;
+
+    /// <summary>
+    ///     The unix time when the launch was requested.
+    /// </summary>
+    public DateTimeOffset? LaunchTime = DateTimeOffset.Now;
+
+    /// <summary>
+    ///     The join request to use.
+    /// </summary>
+    public JoinRequest Request;
+
+    /// <summary>
+    ///     Get the parameters used in the CLI to launch Roblox.
+    /// </summary>
+    /// <returns>The parameters to launch Roblox.</returns>
     public async Task<string> GetCliParamsAsync()
     {
         // Runtime check
@@ -31,14 +57,11 @@ public class LaunchParams
         var authToken = AuthStr;
         if (AuthType == AuthType.Token)
         {
-            var session = await Session.LoginAsync(authToken, AuthType.Token);
+            var session = await Session.LoginAsync(authToken);
             authToken = await session.GetTicketAsync();
         }
 
         // Build the parameters
-        // AFTER VERSION-d780cbcde4ab4f52:
-        // OLD: --play -a https://auth.roblox.com/v1/authentication-ticket/redeem {args}
-        // NEW: "FullPathToRobloxPlayerBeta.exe" --app {args}
         var str = new StringBuilder("--app");
         str.Append(" -t " + authToken);
         str.Append(" -j \"" + Request);
