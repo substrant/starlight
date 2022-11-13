@@ -44,8 +44,8 @@ public class LaunchParams
         str.Append(" -j \"" + Request);
         str.Append("\" -b " + Request.BrowserTrackerId);
         str.Append(" --launchtime=" + DateTimeOffset.Now.ToUnixTimeSeconds());
-        str.Append(" --rloc " + (RobloxLocale ?? CultureInfo.CurrentCulture).Name.Replace('-', '_').ToLowerInvariant());
-        str.Append(" --gloc " + (GameLocale ?? CultureInfo.CurrentCulture).Name.Replace('-', '_').ToLowerInvariant());
+        str.Append(" --rloc " + (RobloxLocale ?? CultureInfo.CurrentCulture).Name.Replace('-', '_').Split('/')[0].ToLowerInvariant());
+        str.Append(" --gloc " + (GameLocale ?? CultureInfo.CurrentCulture).Name.Replace('-', '_').Split('/')[0].ToLowerInvariant());
 
         // Return the parameters
         return str.ToString();
