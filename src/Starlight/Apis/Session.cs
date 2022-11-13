@@ -5,6 +5,7 @@ using Starlight.Apis.JoinGame;
 using System;
 using System.Linq;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Starlight.Apis;
@@ -53,11 +54,12 @@ public class Session : RbxUser, IDisposable
     
     public override string Username { get; protected set; }
 
-    async Task RetrieveInfoAsync()
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    async Task RetrieveInfoAsync(CancellationToken token = default)
     {
         try
         {
-            var res = await GeneralClient.GetJsonAsync<SessionInfo>("/my/settings/json");
+            var res = await GeneralClient.GetJsonAsync<SessionInfo>("/my/settings/json", token);
             UserId = res?.UserId;
             Username = res?.Username;
 
@@ -79,12 +81,14 @@ public class Session : RbxUser, IDisposable
     ///     Login to Roblox using an authentication token (<c>.ROBLOSECURITY</c> cookie).
     /// </summary>
     /// <param name="authToken">The authentication token to log in with.</param>
+    /// <param name="token">The cancellation token to use.</param>
     /// <returns>The <see cref="Session"/> authenticated with the given parameters.</returns>
-    public static async Task<Session> LoginAsync(string authToken)
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    public static async Task<Session> LoginAsync(string authToken, CancellationToken token = default)
     {
         var session = new Session { AuthToken = authToken };
 
-        await session.RetrieveInfoAsync();
+        await session.RetrieveInfoAsync(token);
         return session;
     }
 
@@ -92,16 +96,18 @@ public class Session : RbxUser, IDisposable
     ///     Login to Roblox using an authentication ticket.
     /// </summary>
     /// <param name="authTicket">The authentication token to redeem.</param>
+    /// <param name="token">The cancellation token to use.</param>
     /// <returns>The <see cref="Session"/> authenticated with the given parameters.</returns>
-    public static async Task<Session> RedeemAsync(string authTicket)
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    public static async Task<Session> RedeemAsync(string authTicket, CancellationToken token = default)
     {
         var session = new Session();
         var req = new RestRequest("/v1/authentication-ticket/redeem", Method.Post)
             .AddHeader("RBXAuthenticationNegotiation", "1")
             .AddJsonBody(new { authenticationTicket = authTicket });
-        await session.AuthClient.ExecuteAsync(req);
+        await session.AuthClient.ExecuteAsync(req, token);
         
-        await session.RetrieveInfoAsync();
+        await session.RetrieveInfoAsync(token);
         return session;
     }
 
@@ -110,13 +116,15 @@ public class Session : RbxUser, IDisposable
     /// </summary>
     /// <param name="authToken">The authentication token to log in with.</param>
     /// <param name="authType">The method of authentication to use.</param>
+    /// <param name="token">The cancellation token to use.</param>
     /// <returns>The <see cref="Session"/> authenticated with the given parameters.</returns>
-    public static async Task<Session> AuthenticateAsync(string authToken, AuthType authType)
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    public static async Task<Session> AuthenticateAsync(string authToken, AuthType authType, CancellationToken token = default)
     {
         return authType switch
         {
-            AuthType.Token => await LoginAsync(authToken),
-            AuthType.Ticket => await RedeemAsync(authToken),
+            AuthType.Token => await LoginAsync(authToken, token),
+            AuthType.Ticket => await RedeemAsync(authToken, token),
             _ => throw new NotImplementedException()
         };
     }
@@ -124,14 +132,16 @@ public class Session : RbxUser, IDisposable
     /// <summary>
     ///     Create an authentication ticket for a one-time login.
     /// </summary>
+    /// <param name="token">The cancellation token to use.</param>
     /// <returns>The authentication ticket that was created.</returns>
-    public async Task<string> GetTicketAsync()
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    public async Task<string> GetTicketAsync(CancellationToken token = default)
     {
         // Get a new authentication ticket
         var req = new RestRequest("/v1/authentication-ticket", Method.Post)
-            .AddHeader("X-CSRF-TOKEN", await GetXsrfTokenAsync())
+            .AddHeader("X-CSRF-TOKEN", await GetXsrfTokenAsync(false, token))
             .AddHeader("Referer", "https://www.roblox.com/");
-        var res = await AuthClient.ExecuteAsync(req);
+        var res = await AuthClient.ExecuteAsync(req, token);
 
         // Get the ticket header
         var ticketHeader = res.Headers?.FirstOrDefault(x => x.Name == "rbx-authentication-ticket");
@@ -147,8 +157,10 @@ public class Session : RbxUser, IDisposable
     ///     <see href="https://en.wikipedia.org/wiki/Cross-site_request_forgery" />.
     /// </summary>
     /// <param name="bypassCache">Bypass the cache.</param>
+    /// <param name="token">The cancellation token to use.</param>
     /// <returns>The cross-site request forgery token.</returns>
-    public async Task<string> GetXsrfTokenAsync(bool bypassCache = false)
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    public async Task<string> GetXsrfTokenAsync(bool bypassCache = false, CancellationToken token = default)
     {
         // Return previous token if xsrf token is still alive
         if (!bypassCache && (string.IsNullOrEmpty(_xsrfToken) || (DateTime.Now - _xsrfLastGrabbed).TotalMinutes > 2))
@@ -156,7 +168,7 @@ public class Session : RbxUser, IDisposable
 
         // This won't log you out without a xsrf token
         var req = new RestRequest("/v2/logout", Method.Post);
-        var res = await AuthClient.ExecuteAsync(req);
+        var res = await AuthClient.ExecuteAsync(req, token);
 
         // Get xsrf token header
         var xsrfHeader = res.Headers?.FirstOrDefault(x => x.Name?.ToLowerInvariant() == "x-csrf-token");
@@ -177,18 +189,20 @@ public class Session : RbxUser, IDisposable
     /// </summary>
     /// <param name="joinReq">The join request to send to the server.</param>
     /// <param name="maxTries">The maximum amount of retries. Using zero here means infinite tries.</param>
+    /// <param name="token">The cancellation token to use.</param>
     /// <returns>The response from the game join API.</returns>
-    public async Task<JoinResponse> RequestJoinAsync(JoinRequest joinReq, int maxTries = 0)
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    public async Task<JoinResponse> RequestJoinAsync(JoinRequest joinReq, int maxTries = 0, CancellationToken token = default)
     {
         var tries = -1;
-        for (; ; )
+        for (; !token.IsCancellationRequested; )
         {
             var reqBody = JsonConvert.SerializeObject(this, Formatting.None,
                 new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
             var req = new RestRequest(joinReq.Endpoint, Method.Post)
                 .AddHeader("User-Agent", "Roblox/WinInet")
                 .AddJsonBody(reqBody);
-            var res = await GameClient.ExecuteAsync<JoinResponse>(req);
+            var res = await GameClient.ExecuteAsync<JoinResponse>(req, token);
 
             if (res.Data is null)
                 return new JoinResponse { Success = false };
@@ -201,7 +215,7 @@ public class Session : RbxUser, IDisposable
 
             if (res.Data.Status == JoinStatus.Retry && tries != maxTries)
             {
-                await Task.Delay(2000); // Wait a bit.
+                await Task.Delay(2000, token); // Wait a bit.
                 tries++;
                 continue;
             }
@@ -209,6 +223,8 @@ public class Session : RbxUser, IDisposable
             res.Data.Success = true;
             return res.Data;
         }
+
+        throw new TaskCanceledException();
     }
 
     /* IDisposable implementation */
