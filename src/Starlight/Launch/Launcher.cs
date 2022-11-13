@@ -9,6 +9,9 @@ using System.Threading.Tasks;
 
 namespace Starlight.Launch;
 
+/// <summary>
+///     Contains methods for launching Roblox.
+/// </summary>
 public static class Launcher
 {
     /// <summary>
