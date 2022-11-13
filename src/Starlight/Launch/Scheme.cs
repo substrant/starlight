@@ -5,10 +5,9 @@ using System.Web;
 using Starlight.Apis;
 using Starlight.Apis.JoinGame;
 using Starlight.Bootstrap;
-using Starlight.Launch;
 using Starlight.Misc;
 
-namespace Starlight.SchemeLaunch;
+namespace Starlight.Launch;
 
 public class Scheme
 {

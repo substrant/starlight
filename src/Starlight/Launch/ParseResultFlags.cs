@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Starlight.SchemeLaunch;
+namespace Starlight.Launch;
 
 [Flags]
 internal enum ParseResultFlags

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 using HackerFramework;
 using Starlight.Bootstrap;
 
-namespace Starlight.PostLaunch;
+namespace Starlight.Launch;
 
 public class ClientInstance
 {

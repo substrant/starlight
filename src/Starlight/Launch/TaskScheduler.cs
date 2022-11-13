@@ -1,6 +1,6 @@
 ﻿using HackerFramework;
 
-namespace Starlight.PostLaunch;
+namespace Starlight.Launch;
 
 public class TaskScheduler
 {

@@ -50,10 +50,4 @@ public class LaunchParams
         // Return the parameters
         return str.ToString();
     }
-
-    public string GetCliParams()
-    {
-        var value = AsyncHelpers.RunSync(GetCliParamsAsync);
-        return value;
-    }
 }

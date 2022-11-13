@@ -4,7 +4,6 @@ using System.Reflection;
 using Newtonsoft.Json.Linq;
 using Starlight.Bootstrap;
 using Starlight.Launch;
-using Starlight.PostLaunch;
 
 namespace Starlight.Plugins;
 

@@ -1,6 +1,6 @@
 ﻿using HackerFramework;
 
-namespace Starlight.PostLaunch;
+namespace Starlight.Launch;
 // The signatures and offsets stored here may need to be
 // updated if Roblox chooses to change their code, which
 // is highly unlikely to happen.

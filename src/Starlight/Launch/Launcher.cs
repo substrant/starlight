@@ -1,80 +1,68 @@
-﻿using System;
+﻿using Starlight.Bootstrap;
+using Starlight.Misc;
+using Starlight.Plugins;
+using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.Win32.SafeHandles;
-using Starlight.Bootstrap;
-using Starlight.Plugins;
-using Starlight.PostLaunch;
 
 namespace Starlight.Launch;
 
-public class Launcher
+public static class Launcher
 {
-    static EventWaitHandle GetNativeEventWaitHandle(int handle)
+    public static async Task<ClientInstance> LaunchAsync(Client client, LaunchParams info)
     {
-        return new EventWaitHandle(false, EventResetMode.ManualReset)
-        {
-            SafeWaitHandle = new SafeWaitHandle((IntPtr)handle, false)
-        };
-    }
-
-    public static ClientInstance Launch(LaunchParams info, Client client)
-    {
+        // Run pre-launch methods
         foreach (var plugin in PluginArbiter.GetEnabledPlugins())
-            try
-            {
-                plugin.PreLaunch(info, ref client);
-            }
-            catch (Exception ex)
-            {
-                //Logger.Out($"Plugin {plugin.Name} threw an exception during PreLaunch.", Level.Error);
-            }
+            plugin.PreLaunch(info, ref client);
 
-        client ??= Bootstrapper.GetLatestClient();
+        // Ensure the client exists
         if (!client.Exists)
+            throw new NotImplementedException();
+        
+        // Start Roblox
+        Process proc = null;
+        try
         {
-            var ex = new ClientNotFoundException(client);
-            throw ex;
+            proc = Process.Start(new ProcessStartInfo
+            {
+                FileName = client.Player,
+                Arguments = "\"" + Path.GetFullPath(client.Player) + "\" " + await info.GetCliParamsAsync(),
+                WorkingDirectory = client.Location
+            });
+        }
+        finally
+        {
+            if (proc is null)
+                throw new NotImplementedException();
         }
 
-        // blah
-        var cancelSrc = new CancellationTokenSource();
-
-        // thanks roblox engineers for making my life harder
-        var proc = Process.Start(new ProcessStartInfo
-        {
-            FileName = client.Player,
-            Arguments = "\"" + Path.GetFullPath(client.Player) + "\" " + info.GetCliParams(),
-            WorkingDirectory = client.Location
-        });
-
-        if (proc is null)
-        {
-            var ex = new PrematureCloseException(client, null);
-            throw ex;
-        }
-
-        // Create an instance
-        ClientInstance inst;
+        // Get the instance
+        ClientInstance inst = null;
         try
         {
             inst = new ClientInstance(client, proc);
         }
-        catch
+        finally
         {
-            var ex = new PrematureCloseException(client, proc.Id);
-            throw ex;
+            if (inst is null)
+                throw new NotImplementedException();
         }
 
-        var exitEvent = GetNativeEventWaitHandle(inst.Target.Handle);
+        var cancelSrc = new CancellationTokenSource();
+
+#   pragma warning disable CS4014
+        // Add a failsafe if launch fails
+        var exitEvent = Utility.GetNativeEventWaitHandle(inst.Target.Handle);
         Task.Run(() =>
         {
             if (WaitHandle.WaitAny(new[] { exitEvent, cancelSrc.Token.WaitHandle }) == 0)
                 cancelSrc.Cancel();
         }, cancelSrc.Token);
+#   pragma warning restore CS4014
 
+        // Run post-launch methods
         try
         {
             foreach (var plugin in PluginArbiter.GetEnabledPlugins())
@@ -87,7 +75,7 @@ public class Launcher
         }
 
         // Wait for Roblox's window to open
-        // todo: better method for this garbage
+        // TODO: Use a better method for this garbage
         var hWnd = IntPtr.Zero;
         var windowTask = Task.Run(() =>
         {
@@ -98,11 +86,11 @@ public class Launcher
 
         // ReSharper disable once MethodSupportsCancellation
         windowTask.Wait();
-
+        
         if (cancelSrc.IsCancellationRequested)
-            // todo: logs n' pieces o' crap
-            throw new PrematureCloseException(client, proc.Id);
+            throw new NotImplementedException();
 
+        // Run post-window methods
         try
         {
             foreach (var plugin in PluginArbiter.GetEnabledPlugins())

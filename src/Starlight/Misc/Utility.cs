@@ -1,4 +1,5 @@
 ﻿using IWshRuntimeLibrary;
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -66,6 +67,14 @@ internal class Utility
 
     public static async Task DisperseActionsAsync<T>(IList<T> list, Action<T> action, int maxConcurrency)
     {
-        await Task.Run(() => DisperseActions(list.Select(x => new Action(() => action(x))).ToList(), maxConcurrency));
+        await AsyncHelpers.RunAsync(() => DisperseActions(list.Select(x => new Action(() => action(x))).ToList(), maxConcurrency));
+    }
+
+    public static EventWaitHandle GetNativeEventWaitHandle(int handle)
+    {
+        return new EventWaitHandle(false, EventResetMode.ManualReset)
+        {
+            SafeWaitHandle = new SafeWaitHandle((IntPtr)handle, false)
+        };
     }
 }
