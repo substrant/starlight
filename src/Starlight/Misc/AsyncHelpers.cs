@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace Starlight.Misc;
 
-public static class AsyncHelpers
+internal static class AsyncHelpers
 {
     static readonly TaskFactory TaskFactory = new(CancellationToken.None, TaskCreationOptions.None,
         TaskContinuationOptions.None, TaskScheduler.Default);

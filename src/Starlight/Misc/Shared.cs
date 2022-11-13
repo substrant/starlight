@@ -4,9 +4,15 @@ using System.Net.Http;
 
 namespace Starlight.Misc;
 
+/// <summary>
+///     Shared objects for the Starlight library.
+/// </summary>
 public static class Shared
 {
+    /// <summary>
+    ///     The path the the plugin directory.
+    /// </summary>
     public static string PluginDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Plugins");
 
-    public static readonly HttpClient Web = new();
+    internal static readonly HttpClient Web = new();
 }
