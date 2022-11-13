@@ -4,6 +4,7 @@ using RestSharp.Serializers.NewtonsoftJson;
 using System;
 using System.Collections.Generic;
 using System.Net;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Starlight.Apis;
@@ -101,7 +102,8 @@ public class Page<T> : IDisposable where T : class
         _extras = extras;
     }
 
-    internal async Task<T[]> InternalFetchAsync(string cursor)
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    internal async Task<T[]> InternalFetchAsync(string cursor, CancellationToken token = default)
     {
         var req = new RestRequest(_resource.AbsolutePath)
             .AddQueryParameter("limit", _limit)
@@ -111,8 +113,8 @@ public class Page<T> : IDisposable where T : class
             foreach (var kv in _extras)
                 req.AddQueryParameter(kv.Key, kv.Value);
         }
-        var res = await _client.ExecuteAsync<PageBody>(req);
-
+        var res = await _client.ExecuteAsync<PageBody>(req, token);
+        
         if (res.Data is null || res.StatusCode != HttpStatusCode.OK)
             return null;
 
@@ -125,8 +127,10 @@ public class Page<T> : IDisposable where T : class
     ///     Fetch the page contents for the new page number.
     /// </summary>
     /// <param name="newPageNumber">The page number to fetch.</param>
+    /// <param name="token">The cancellation token to use.</param>
     /// <returns>The contents of the fetched page.</returns>
-    public async Task<T[]> FetchAsync(int newPageNumber)
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    public async Task<T[]> FetchAsync(int newPageNumber, CancellationToken token = default)
     {
         var delta = PageNumber - newPageNumber;
         T[] data = null;
@@ -140,15 +144,15 @@ public class Page<T> : IDisposable where T : class
             {
                 data = sign switch
                 {
-                    -1 => await InternalFetchAsync(_lastFetchedBody?.PreviousPageCursor),
-                    1 => await InternalFetchAsync(_lastFetchedBody?.NextPageCursor),
+                    -1 => await InternalFetchAsync(_lastFetchedBody?.PreviousPageCursor, token),
+                    1 => await InternalFetchAsync(_lastFetchedBody?.NextPageCursor, token),
                     _ => data
                 };
             }
         }
         else
         {
-            data = await InternalFetchAsync(_lastCursor);
+            data = await InternalFetchAsync(_lastCursor, token);
         }
 
         PageNumber = newPageNumber;
@@ -158,22 +162,26 @@ public class Page<T> : IDisposable where T : class
     /// <summary>
     ///     Fetch the page contents for the next page.
     /// </summary>
+    /// <param name="token">The cancellation token to use.</param>
     /// <returns>The contents of the fetched page.</returns>
-    public async Task<T[]> FetchNextAsync()
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    public async Task<T[]> FetchNextAsync(CancellationToken token = default)
     {
         PageNumber++;
-        return await FetchAsync(PageNumber);
+        return await FetchAsync(PageNumber, token);
     }
 
     /// <summary>
     ///     Fetch the page contents for the previous page.
     /// </summary>
+    /// <param name="token">The cancellation token to use.</param>
     /// <returns>The contents of the fetched page.</returns>
-    public async Task<T[]> FetchPreviousAsync()
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    public async Task<T[]> FetchPreviousAsync(CancellationToken token = default)
     {
         if (PageNumber != 0)
             PageNumber--;
-        return await FetchAsync(PageNumber);
+        return await FetchAsync(PageNumber, token);
     }
 
     /* IDisposable implementation */
