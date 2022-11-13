@@ -2,6 +2,7 @@
 using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections.Generic;
+using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
@@ -35,39 +36,58 @@ internal class Utility
         }
     }
 
-    public static void DisperseActions(IList<Action> actions, int maxConcurrency)
+    public static void DisperseActions(IList<Action> actions, int maxConcurrency, CancellationToken token = default)
     {
         var curConcurrency = 0;
         var threadFinishedEvent = new AutoResetEvent(false);
+        var threads = new List<Thread>();
 
         foreach (var action in actions)
         {
-            var thread = new Thread(() =>
+            var thread = new Thread(curThread =>
             {
                 action();
                 threadFinishedEvent.Set();
+                threads.Remove((Thread)curThread);
             });
 
-            thread.Start();
+            threads.Add(thread);
+            thread.Start(thread);
             curConcurrency++;
 
             while (curConcurrency >= maxConcurrency)
             {
-                threadFinishedEvent.WaitOne();
+                if (WaitHandle.WaitAny(new[] { token.WaitHandle, threadFinishedEvent }) == 0)
+                {
+                    foreach (var t in threads)
+                    {
+                        t.Abort();
+                        curConcurrency--;
+                    }
+                    throw new TaskCanceledException();
+                }
                 curConcurrency--;
             }
         }
 
         while (curConcurrency > 0)
         {
-            threadFinishedEvent.WaitOne();
+            if (WaitHandle.WaitAny(new[] { token.WaitHandle, threadFinishedEvent }) == 0)
+            {
+                foreach (var t in threads)
+                {
+                    t.Abort();
+                    curConcurrency--;
+                }
+                throw new TaskCanceledException();
+            }
             curConcurrency--;
         }
     }
 
-    public static async Task DisperseActionsAsync<T>(IList<T> list, Action<T> action, int maxConcurrency)
+    public static async Task DisperseActionsAsync<T>(IList<T> list, Action<T> action, int maxConcurrency, CancellationToken token = default)
     {
-        await AsyncHelpers.RunAsync(() => DisperseActions(list.Select(x => new Action(() => action(x))).ToList(), maxConcurrency));
+        await AsyncHelpers.RunAsync(() => DisperseActions(list.Select(x => new Action(() => action(x))).ToList(), maxConcurrency, token));
     }
 
     public static EventWaitHandle GetNativeEventWaitHandle(int handle)
