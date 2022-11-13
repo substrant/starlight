@@ -146,7 +146,7 @@ public class Session : RbxUser, IDisposable
     ///     More information on XSRF and why there's tokens for it:<br/>
     ///     <see href="https://en.wikipedia.org/wiki/Cross-site_request_forgery" />.
     /// </summary>
-    /// <param name="bypassCache"></param>
+    /// <param name="bypassCache">Bypass the cache.</param>
     /// <returns>The cross-site request forgery token.</returns>
     public async Task<string> GetXsrfTokenAsync(bool bypassCache = false)
     {
