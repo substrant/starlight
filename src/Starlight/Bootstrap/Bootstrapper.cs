@@ -43,7 +43,7 @@ public static class Bootstrapper
 
     /* Clients */
 
-    static readonly RestClient RbxCdnClient = new("https://setup.rbxcdn.com");
+    internal static readonly RestClient RbxCdnClient = new("https://setup.rbxcdn.com");
 
     /* Data */
 

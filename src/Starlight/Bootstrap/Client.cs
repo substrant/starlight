@@ -1,7 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using RestSharp;
 using Starlight.Misc.Extensions;
 using static Starlight.Misc.Shared;
 
@@ -60,13 +62,15 @@ public class Client
     /// <summary>
     ///     Gets the list of installation files for the client.
     /// </summary>
+    /// <param name="token">The cancellation token to use.</param>
     /// <returns>A list of <see cref="Downloadable"/> instances.</returns>
-    public async Task<IList<Downloadable>> GetFilesAsync()
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    public async Task<IList<Downloadable>> GetFilesAsync(CancellationToken token = default)
     {
         var files = new List<Downloadable>();
 
-        var raw = await Web.DownloadStringAsync($"http://setup.rbxcdn.com/version-{VersionHash}-rbxPkgManifest.txt");
-        var split = raw.Split("\r\n", "\n").Where(x => x != string.Empty).ToArray();
+        var raw = (await Bootstrapper.RbxCdnClient.GetAsync(new RestRequest($"/version-{VersionHash}-rbxPkgManifest.txt"), token));
+        var split = raw.Content.Split("\r\n", "\n").Where(x => x != string.Empty).ToArray();
         for (var i = 1; i < split.Length;)
             files.Add(new Downloadable(VersionHash, split[i++], split[i++], long.Parse(split[i++]),
                 long.Parse(split[i++])));
