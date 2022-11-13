@@ -7,7 +7,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
+using RestSharp;
 using static Starlight.Misc.Shared;
 
 namespace Starlight.Bootstrap;
@@ -39,6 +41,12 @@ public static class Bootstrapper
         { "ssl.zip", "ssl" }
     };
 
+    /* Clients */
+
+    static readonly RestClient RbxCdnClient = new("https://setup.rbxcdn.com");
+
+    /* Data */
+
     static DateTime _lastVersionHashFetch = DateTime.MinValue;
     static string _latestVersionHash;
 
@@ -64,16 +72,18 @@ public static class Bootstrapper
     ///     Get the latest version hash of Roblox.
     /// </summary>
     /// <param name="bypassCache">As an optimization opportunity, Starlight will cache the version hash to avoid making unnecessary web requests. Set this to <c>true</c> to bypass caching the hash.</param>
+    /// <param name="token">The cancellation token to use.</param>
     /// <returns>The latest version hash of Roblox.</returns>
-    public static async Task<string> GetLatestVersionHashAsync(bool bypassCache = false)
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    public static async Task<string> GetLatestVersionHashAsync(bool bypassCache = false, CancellationToken token = default)
     {
         if (!bypassCache && (_latestVersionHash is not null || DateTime.Now - _lastVersionHashFetch > TimeSpan.FromDays(1)))
             return await Task.FromResult(_latestVersionHash);
         
-        var version = await Web.DownloadStringAsync("http://setup.rbxcdn.com/version.txt");
+        var version = await RbxCdnClient.GetAsync(new RestRequest("/version.txt"), token);
 
         _lastVersionHashFetch = DateTime.Now;
-        return _latestVersionHash = version.Split("version-")[1];
+        return _latestVersionHash = version.Content.Split("version-")[1];
     }
 
     /* Clients */
@@ -128,10 +138,12 @@ public static class Bootstrapper
     ///    Get the latest client in the given scope.
     /// </summary>
     /// <param name="scope">The scope to set the client's location in.</param>
+    /// <param name="token">The cancellation token to use.</param>
     /// <returns>The latest client. If the client doesn't exist, it will still return a client. Use <see cref="Client.Exists"/> to check if it exists.</returns>
-    public static async Task<Client> GetLatestClientAsync(ClientScope scope = ClientScope.Global)
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    public static async Task<Client> GetLatestClientAsync(ClientScope scope = ClientScope.Global, CancellationToken token = default)
     {
-        var versionHash = await GetLatestVersionHashAsync();
+        var versionHash = await GetLatestVersionHashAsync(false, token);
         return new Client(versionHash, scope);
     }
 
@@ -227,7 +239,9 @@ public static class Bootstrapper
     /// <param name="client">The client object to install.</param>
     /// <param name="tracker">The progress tracker to use when installing.</param>
     /// <param name="cfg">The installation configuration to use when installing.</param>
-    public static async Task InstallAsync(Client client, ProgressTracker tracker = null, InstallConfig cfg = null)
+    /// <param name="token">The cancellation token to use.</param>
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    public static async Task InstallAsync(Client client, ProgressTracker tracker = null, InstallConfig cfg = null, CancellationToken token = default)
     {
         cfg ??= InstallConfig.Default;
 
@@ -249,7 +263,7 @@ public static class Bootstrapper
             AsyncHelpers.RunSync(() => file.DownloadAsync(client.Location));
         }
 
-        await Utility.DisperseActionsAsync(files, Download, cfg.DownloadConcurrency);
+        await Utility.DisperseActionsAsync(files, Download, cfg.DownloadConcurrency, token);
 
         // Post-download (extract and delete)
         var postDownloadTracker = tracker?.SubStep(files.Count);
@@ -284,7 +298,7 @@ public static class Bootstrapper
             File.Delete(filePath);
         }
 
-        await Utility.DisperseActionsAsync(files, Extract, cfg.UnzipConcurrency);
+        await Utility.DisperseActionsAsync(files, Extract, cfg.UnzipConcurrency, token);
 
         File.WriteAllText(Path.Combine(client.Location, "AppSettings.xml"),
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<Settings>\r\n    <ContentFolder>content</ContentFolder>\r\n    <BaseUrl>http://www.roblox.com</BaseUrl>\r\n</Settings>");
