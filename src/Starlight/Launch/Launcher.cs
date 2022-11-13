@@ -19,12 +19,16 @@ public static class Launcher
     /// </summary>
     /// <param name="client">The client to launch.</param>
     /// <param name="info">The parameters to use.</param>
+    /// <param name="token">The frame delay in hertz.</param>
     /// <returns>An instance of the client.</returns>
-    public static async Task<ClientInstance> LaunchAsync(Client client, LaunchParams info)
+    public static async Task<ClientInstance> LaunchAsync(Client client, LaunchParams info, CancellationToken token = default)
     {
         // Run pre-launch methods
         foreach (var plugin in PluginArbiter.GetEnabledPlugins())
             plugin.PreLaunch(info, ref client);
+
+        if (token.IsCancellationRequested)
+            throw new TaskCanceledException();
 
         // Ensure the client exists
         if (!client.Exists)
@@ -56,7 +60,18 @@ public static class Launcher
         finally
         {
             if (inst is null)
+            {
+                if (!proc.HasExited)
+                    proc.Kill();
                 throw new NotImplementedException();
+            }
+        }
+
+        if (token.IsCancellationRequested)
+        {
+            if (!proc.HasExited)
+                proc.Kill();
+            throw new TaskCanceledException();
         }
 
         var cancelSrc = new CancellationTokenSource();
@@ -79,7 +94,7 @@ public static class Launcher
         }
         catch (Exception)
         {
-            inst.Proc.Kill();
+            proc.Kill();
             throw;
         }
 
@@ -88,16 +103,27 @@ public static class Launcher
         var hWnd = IntPtr.Zero;
         var windowTask = Task.Run(() =>
         {
-            while ((hWnd = inst.Proc.MainWindowHandle) == IntPtr.Zero
+            while ((hWnd = proc.MainWindowHandle) == IntPtr.Zero
                    && !cancelSrc.IsCancellationRequested)
                 Thread.Sleep(TimeSpan.FromSeconds(1.0d / 15));
         }, cancelSrc.Token);
 
         // ReSharper disable once MethodSupportsCancellation
         windowTask.Wait();
-        
+
+        if (token.IsCancellationRequested)
+        {
+            if (!proc.HasExited)
+                proc.Kill();
+            throw new TaskCanceledException();
+        }
+
         if (cancelSrc.IsCancellationRequested)
+        {
+            if (!proc.HasExited)
+                proc.Kill();
             throw new NotImplementedException();
+        }
 
         // Run post-window methods
         try
@@ -107,7 +133,8 @@ public static class Launcher
         }
         catch (Exception)
         {
-            inst.Proc.Kill();
+            if (!proc.HasExited)
+                proc.Kill();
             throw;
         }
 
