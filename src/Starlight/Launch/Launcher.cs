@@ -11,6 +11,12 @@ namespace Starlight.Launch;
 
 public static class Launcher
 {
+    /// <summary>
+    /// Launch a client with the specified parameters.
+    /// </summary>
+    /// <param name="client">The client to launch.</param>
+    /// <param name="info">The parameters to use.</param>
+    /// <returns>An instance of the client.</returns>
     public static async Task<ClientInstance> LaunchAsync(Client client, LaunchParams info)
     {
         // Run pre-launch methods
