@@ -2,7 +2,9 @@
 using System.IO;
 using System.Net.Http;
 using System.Security.Cryptography;
+using System.Threading;
 using System.Threading.Tasks;
+using RestSharp;
 using Starlight.Misc;
 using Starlight.Misc.Extensions;
 
@@ -50,13 +52,24 @@ public class Downloadable
     ///    Download the file to the specified directory.
     /// </summary>
     /// <param name="dir">The directory to download the file under.</param>
-    public async Task DownloadAsync(string dir)
+    /// <param name="token">The cancellation token to use.</param>
+    /// <exception cref="TaskCanceledException">Thrown if the task is cancelled.</exception>
+    public async Task DownloadAsync(string dir, CancellationToken token = default)
     {
         var filePath = Path.Combine(dir, Name);
 
-        using (var web = new HttpClient())
+        using (var fileStm = File.OpenWrite(filePath))
         {
-            await web.DownloadFileAsync($"http://setup.rbxcdn.com/version-{VersionHash}-{Name}", filePath);
+            var req = new RestRequest($"version-{VersionHash}-{Name}")
+            {
+                ResponseWriter = stm =>
+                {
+                    // ReSharper disable once AccessToDisposedClosure
+                    stm.CopyTo(fileStm);
+                    return stm;
+                }
+            };
+            await Bootstrapper.RbxCdnClient.DownloadDataAsync(req, token);
         }
 
         if (!Validate(filePath))
