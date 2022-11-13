@@ -7,19 +7,47 @@ using static Starlight.Misc.Shared;
 
 namespace Starlight.Bootstrap;
 
+/// <summary>
+///     Represents a Roblox client installation.
+/// </summary>
 public class Client
 {
-    public readonly string Launcher;
-
+    /// <summary>
+    ///     The full path to the installation directory.
+    /// </summary>
     public readonly string Location;
 
+    /// <summary>
+    ///     A boolean value indicating if the client is installed.
+    /// </summary>
+    public bool Exists => Directory.Exists(Location);
+
+    /// <summary>
+    ///     The full path to the launcher executable (RobloxPlayerLauncher.exe).
+    /// </summary>
+    public readonly string Launcher;
+
+    /// <summary>
+    ///     The full path to the player executable (RobloxPlayerBeta.exe).
+    /// </summary>
     public readonly string Player;
 
+    /// <summary>
+    ///     The scope of the installation.
+    /// </summary>
     public readonly ClientScope Scope;
+
+    /// <summary>
+    ///     The version hash of the installation.
+    /// </summary>
     public readonly string VersionHash;
 
-    IReadOnlyList<Downloadable> _files;
-
+    /// <summary>
+    ///     Instantiates a new <see cref="Client"/> class.
+    /// </summary>
+    /// <param name="versionHash">The version hash of the client.</param>
+    /// <param name="scope">The client's installation scope.</param>
+    /// <param name="launcherBin">The launcher binary.</param>
     public Client(string versionHash, ClientScope scope = ClientScope.Global, string launcherBin = null)
     {
         VersionHash = versionHash;
@@ -29,13 +57,12 @@ public class Client
         Player = Path.Combine(Location, "RobloxPlayerBeta.exe");
     }
 
-    public bool Exists => Directory.Exists(Location);
-
-    public async Task<IReadOnlyList<Downloadable>> GetFiles()
+    /// <summary>
+    ///     Gets the list of installation files for the client.
+    /// </summary>
+    /// <returns>A list of <see cref="Downloadable"/> instances.</returns>
+    public async Task<IList<Downloadable>> GetFilesAsync()
     {
-        if (_files is not null)
-            return _files;
-
         var files = new List<Downloadable>();
 
         var raw = await Web.DownloadStringAsync($"http://setup.rbxcdn.com/version-{VersionHash}-rbxPkgManifest.txt");
@@ -44,6 +71,6 @@ public class Client
             files.Add(new Downloadable(VersionHash, split[i++], split[i++], long.Parse(split[i++]),
                 long.Parse(split[i++])));
 
-        return _files = files;
+        return files;
     }
 }
