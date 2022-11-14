@@ -12,7 +12,7 @@ namespace Starlight.Bootstrap;
 /// <summary>
 ///     Represents a Roblox client installation.
 /// </summary>
-public class Client
+public partial class Client
 {
     /// <summary>
     ///     The full path to the installation directory.
