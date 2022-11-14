@@ -13,7 +13,7 @@ namespace Starlight.Bootstrap;
 /// <summary>
 ///     Represents a downloadable file.
 /// </summary>
-public class Downloadable
+public partial class Downloadable
 {
     internal Downloadable(string versionHash, string name, string checksum, long size, long trueSize)
     {
