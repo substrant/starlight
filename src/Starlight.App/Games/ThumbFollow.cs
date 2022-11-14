@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
+﻿using Newtonsoft.Json;
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
 using Starlight.Apis;
-using Starlight.Apis.Pages;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Starlight.App.Games;
 
@@ -32,8 +27,7 @@ public class ThumbFollow
     {
         [JsonProperty("data")] public ThumbData[] Data;
     }
-
-    // takes about 10 seconds to scan, really depends on your internet speed and game server counts
+    
     public static async Task<Guid?> GetServerId(long userId, long placeId)
     {
         using var thumbClient = new RestClient("https://thumbnails.roblox.com/").UseNewtonsoftJson();
@@ -45,13 +39,8 @@ public class ThumbFollow
 
         var lookFor = thumb.Data[0].ImageUrl;
 
-        var pageClient = new Page<GameInfo>(
-            "https://games.roblox.com/",
-            $"/v1/games/{placeId}/servers/Public/",
-            new PageOptions { Limit = 100 });
-
-        var page = await pageClient.FetchAsync();
-        while (pageClient is not null)
+        var pageClient = new Page<GameInfo>($"https://games.roblox.com/v1/games/{placeId}/servers/Public/");
+        for (var page = await pageClient.FetchNextAsync(); page != null; page = await pageClient.FetchNextAsync())
         {
             foreach (var info in page)
             {
@@ -69,11 +58,10 @@ public class ThumbFollow
 
                 if (batchRes.Data?.Data == null)
                     continue;
-                
+
                 if (batchRes.Data.Data.Any(thumbRes => thumbRes.ImageUrl == lookFor))
                     return info.JobId;
             }
-            pageClient = await pageClient.NextAsync();
         }
 
         return null;
