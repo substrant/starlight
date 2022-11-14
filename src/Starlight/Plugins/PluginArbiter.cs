@@ -41,7 +41,7 @@ public class PluginArbiter
     }
 
     /// <summary>
-    ///     Load all plugins in <see cref="Shared.PluginDir"/>.
+    ///     Load all plugins in <see cref="Shared.PluginDir" />.
     /// </summary>
     public static void LoadPlugins()
     {
@@ -51,7 +51,7 @@ public class PluginArbiter
 
         if (!Directory.Exists(Shared.PluginDir))
             Directory.CreateDirectory(Shared.PluginDir);
-        
+
         foreach (var file in Directory.GetFiles(Shared.PluginDir, "*.dll"))
             try
             {
@@ -67,9 +67,9 @@ public class PluginArbiter
     {
         try
         {
-            foreach (var type in asm.GetTypes().Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(PluginBase))))
+            foreach (var type in asm.GetTypes()
+                         .Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(PluginBase))))
             {
-
                 var plugin = (PluginBase)Activator.CreateInstance(type);
                 plugin.Enabled = true;
             }

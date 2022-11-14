@@ -1,16 +1,15 @@
-﻿using Microsoft.Win32;
-using Starlight.Misc;
-using Starlight.Misc.Extensions;
-using Starlight.Misc.Profiling;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.Win32;
 using RestSharp;
-using static Starlight.Misc.Shared;
+using Starlight.Misc;
+using Starlight.Misc.Extensions;
+using Starlight.Misc.Profiling;
 
 namespace Starlight.Bootstrap;
 
@@ -53,7 +52,7 @@ public static partial class Bootstrapper
     /* Versions */
 
     /// <summary>
-    ///    Get the parent directory of all clients at the given scope.
+    ///     Get the parent directory of all clients at the given scope.
     /// </summary>
     public static string GetScopeDirectory(ClientScope scope)
     {
@@ -69,12 +68,14 @@ public static partial class Bootstrapper
     /// <summary>
     ///     Get the latest version hash of Roblox.
     /// </summary>
-    /// <exception cref="TaskCanceledException"/>
-    public static async Task<string> GetLatestVersionHashAsync(bool bypassCache = false, CancellationToken token = default)
+    /// <exception cref="TaskCanceledException" />
+    public static async Task<string> GetLatestVersionHashAsync(bool bypassCache = false,
+        CancellationToken token = default)
     {
-        if (!bypassCache && (_latestVersionHash is not null || DateTime.Now - _lastVersionHashFetch > TimeSpan.FromDays(1)))
+        if (!bypassCache && (_latestVersionHash is not null ||
+                             DateTime.Now - _lastVersionHashFetch > TimeSpan.FromDays(1)))
             return await Task.FromResult(_latestVersionHash);
-        
+
         var version = await RbxCdnClient.GetAsync(new RestRequest("/version.txt"), token);
 
         _lastVersionHashFetch = DateTime.Now;
@@ -84,7 +85,7 @@ public static partial class Bootstrapper
     /* Clients */
 
     /// <summary>
-    ///    Get a list of installed clients.
+    ///     Get a list of installed clients.
     /// </summary>
     public static IList<Client> GetClients(ClientScope scope = ClientScope.Global)
     {
@@ -105,9 +106,9 @@ public static partial class Bootstrapper
     }
 
     /// <summary>
-    ///     Get a <see cref="Client"/> by its version hash.
+    ///     Get a <see cref="Client" /> by its version hash.
     /// </summary>
-    /// <returns>The <see cref="Client"/> that was found, or null if it doesn't exist.</returns>
+    /// <returns>The <see cref="Client" /> that was found, or null if it doesn't exist.</returns>
     public static Client QueryClient(string versionHash, ClientScope scope = ClientScope.Global)
     {
         var client = GetClients(scope).FirstOrDefault(x => x.VersionHash == versionHash);
@@ -115,20 +116,24 @@ public static partial class Bootstrapper
     }
 
     /// <summary>
-    ///     Get the first <see cref="Client"/> that matches the given predicate in the given scope.
+    ///     Get the first <see cref="Client" /> that matches the given predicate in the given scope.
     /// </summary>
-    /// <returns>The <see cref="Client"/> that matched the predicate, or null if not found.</returns>
+    /// <returns>The <see cref="Client" /> that matched the predicate, or null if not found.</returns>
     public static Client GetFirstClient(ClientScope scope = ClientScope.Global, Func<Client, bool> predicate = null)
     {
         return GetClients(scope).FirstOrDefault(predicate ?? (_ => true));
     }
 
     /// <summary>
-    ///    Get the latest <see cref="Client"/> in the given scope.
+    ///     Get the latest <see cref="Client" /> in the given scope.
     /// </summary>
-    /// <returns>A <see cref="Client"/> object. The <see cref="Client"/> will be returned even if it isn't installed. Use <see cref="Client.Exists"/> to check if it exists.</returns>
-    /// <exception cref="TaskCanceledException"/>
-    public static async Task<Client> GetLatestClientAsync(ClientScope scope = ClientScope.Global, CancellationToken token = default)
+    /// <returns>
+    ///     A <see cref="Client" /> object. The <see cref="Client" /> will be returned even if it isn't installed. Use
+    ///     <see cref="Client.Exists" /> to check if it exists.
+    /// </returns>
+    /// <exception cref="TaskCanceledException" />
+    public static async Task<Client> GetLatestClientAsync(ClientScope scope = ClientScope.Global,
+        CancellationToken token = default)
     {
         var versionHash = await GetLatestVersionHashAsync(false, token);
         return new Client(versionHash, scope);
@@ -140,8 +145,9 @@ public static partial class Bootstrapper
     ///     Checks if Roblox is registered in the registry.
     /// </summary>
     /// <returns>
-    ///     A boolean variable that determines if Roblox has been registered in the past.<br/>
-    ///     <strong>Note:</strong> This does not check if Roblox is currently registered. If Roblox has been installed prior to uninstallation, this method will return <c>true</c>.
+    ///     A boolean variable that determines if Roblox has been registered in the past.<br />
+    ///     <strong>Note:</strong> This does not check if Roblox is currently registered. If Roblox has been installed prior to
+    ///     uninstallation, this method will return <c>true</c>.
     /// </returns>
     public static bool IsRobloxRegistered()
     {
@@ -151,7 +157,7 @@ public static partial class Bootstrapper
     }
 
     /// <summary>
-    ///     Adds a <see cref="Client"/>'s <c>roblox-player</c> scheme class to the registry.
+    ///     Adds a <see cref="Client" />'s <c>roblox-player</c> scheme class to the registry.
     /// </summary>
     public static void RegisterClass(Client client)
     {
@@ -169,7 +175,7 @@ public static partial class Bootstrapper
     }
 
     /// <summary>
-    ///     Removes a <see cref="Client"/>'s scheme class from the registry.
+    ///     Removes a <see cref="Client" />'s scheme class from the registry.
     /// </summary>
     public static void UnregisterClass()
     {
@@ -178,7 +184,7 @@ public static partial class Bootstrapper
     }
 
     /// <summary>
-    ///     <para>Adds a <see cref="Client"/>'s environment to the registry.</para>
+    ///     <para>Adds a <see cref="Client" />'s environment to the registry.</para>
     ///     <strong>Note:</strong> Registry envirionment keys are required for Roblox's player to function properly.
     /// </summary>
     public static void RegisterClient(Client client)
@@ -207,7 +213,7 @@ public static partial class Bootstrapper
     }
 
     /// <summary>
-    ///    Removes a <see cref="Client"/>'s environment from the registry.
+    ///     Removes a <see cref="Client" />'s environment from the registry.
     /// </summary>
     public static void UnregisterClient()
     {
@@ -218,11 +224,12 @@ public static partial class Bootstrapper
     /* Installation */
 
     /// <summary>
-    ///     Installs a <see cref="Client"/> to the computer.<br/>
+    ///     Installs a <see cref="Client" /> to the computer.<br />
     ///     This method will download the client, extract it, and register it.
     /// </summary>
-    /// <exception cref="TaskCanceledException"/>
-    public static async Task InstallAsync(Client client, ProgressTracker tracker = null, InstallConfig cfg = null, CancellationToken token = default)
+    /// <exception cref="TaskCanceledException" />
+    public static async Task InstallAsync(Client client, ProgressTracker tracker = null, InstallConfig cfg = null,
+        CancellationToken token = default)
     {
         cfg ??= InstallConfig.Default;
 
@@ -299,7 +306,7 @@ public static partial class Bootstrapper
     }
 
     /// <summary>
-    ///     Uninstalls a <see cref="Client"/>.<br/>
+    ///     Uninstalls a <see cref="Client" />.<br />
     ///     This method will unregister the client and delete the client's directory.
     /// </summary>
     public static void Uninstall(Client client, InstallConfig cfg = null)

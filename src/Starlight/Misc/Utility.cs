@@ -1,12 +1,11 @@
-﻿using IWshRuntimeLibrary;
-using Microsoft.Win32.SafeHandles;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Globalization;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using IWshRuntimeLibrary;
+using Microsoft.Win32.SafeHandles;
 
 namespace Starlight.Misc;
 
@@ -64,8 +63,10 @@ internal class Utility
                         t.Abort();
                         curConcurrency--;
                     }
+
                     throw new TaskCanceledException();
                 }
+
                 curConcurrency--;
             }
         }
@@ -79,15 +80,19 @@ internal class Utility
                     t.Abort();
                     curConcurrency--;
                 }
+
                 throw new TaskCanceledException();
             }
+
             curConcurrency--;
         }
     }
 
-    public static async Task DisperseActionsAsync<T>(IList<T> list, Action<T> action, int maxConcurrency, CancellationToken token = default)
+    public static async Task DisperseActionsAsync<T>(IList<T> list, Action<T> action, int maxConcurrency,
+        CancellationToken token = default)
     {
-        await AsyncHelpers.RunAsync(() => DisperseActions(list.Select(x => new Action(() => action(x))).ToList(), maxConcurrency, token));
+        await AsyncHelpers.RunAsync(() =>
+            DisperseActions(list.Select(x => new Action(() => action(x))).ToList(), maxConcurrency, token));
     }
 
     public static EventWaitHandle GetNativeEventWaitHandle(int handle)

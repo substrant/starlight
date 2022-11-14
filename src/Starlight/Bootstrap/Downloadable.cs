@@ -1,12 +1,9 @@
 ﻿using System;
 using System.IO;
-using System.Net.Http;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using RestSharp;
-using Starlight.Misc;
-using Starlight.Misc.Extensions;
 
 namespace Starlight.Bootstrap;
 
@@ -15,19 +12,10 @@ namespace Starlight.Bootstrap;
 /// </summary>
 public partial class Downloadable
 {
-    internal Downloadable(string versionHash, string name, string checksum, long size, long trueSize)
-    {
-        VersionHash = versionHash;
-        Name = name;
-        Checksum = checksum;
-        TrueSize = trueSize;
-        Size = size;
-    }
-
     /// <summary>
     ///     <para>The MD5 checksum of the file.</para>
-    ///     For more information on MD5:<br/>
-    ///     <see href="https://en.wikipedia.org/wiki/MD5"/>
+    ///     For more information on MD5:<br />
+    ///     <see href="https://en.wikipedia.org/wiki/MD5" />
     /// </summary>
     public readonly string Checksum;
 
@@ -51,11 +39,20 @@ public partial class Downloadable
     /// </summary>
     public readonly string VersionHash;
 
+    internal Downloadable(string versionHash, string name, string checksum, long size, long trueSize)
+    {
+        VersionHash = versionHash;
+        Name = name;
+        Checksum = checksum;
+        TrueSize = trueSize;
+        Size = size;
+    }
+
     /// <summary>
-    ///    Download the file to the specified directory.
+    ///     Download the file to the specified directory.
     /// </summary>
-    /// <exception cref="TaskCanceledException"/>
-    /// <exception cref="IOException"/>
+    /// <exception cref="TaskCanceledException" />
+    /// <exception cref="IOException" />
     public async Task DownloadAsync(string dir, CancellationToken token = default)
     {
         var filePath = Path.Combine(dir, Name);
@@ -80,7 +77,7 @@ public partial class Downloadable
             throw new IOException("File failed checksum validation.");
         }
     }
-    
+
     internal bool Validate(string filePath)
     {
         if (!File.Exists(filePath) || new FileInfo(filePath).Length != Size)

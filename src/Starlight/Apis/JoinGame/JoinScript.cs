@@ -1,11 +1,11 @@
-﻿using Newtonsoft.Json;
-using System.Linq;
+﻿using System.Linq;
 using System.Net;
+using Newtonsoft.Json;
 
 namespace Starlight.Apis.JoinGame;
 
 /// <summary>
-///     Represents a join script.<br/>
+///     Represents a join script.<br />
 ///     A join script is esentially another term for server information.
 /// </summary>
 public class JoinScript
@@ -15,7 +15,7 @@ public class JoinScript
     [JsonProperty("UdmuxEndpoints")] internal UdmuxEndpoint[] UdmuxEndpoints;
 
     /// <summary>
-    ///     Get an <see cref="IPEndPoint"/> representing the endpoint of the server.
+    ///     Get an <see cref="IPEndPoint" /> representing the endpoint of the server.
     /// </summary>
     public IPEndPoint GetEndpoint()
     {

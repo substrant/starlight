@@ -26,12 +26,7 @@ public class InstallConfig
     public int DownloadConcurrency = 3;
 
     /// <summary>
-    ///     The max concurrent threads running while unzipping.
-    /// </summary>
-    public int UnzipConcurrency = 3;
-
-    /// <summary>
-    ///    A boolean indicating if the scheme should be registered.
+    ///     A boolean indicating if the scheme should be registered.
     /// </summary>
     public bool RegisterClass = true;
 
@@ -39,4 +34,9 @@ public class InstallConfig
     ///     A boolean indicating if the client's environment should be registered.
     /// </summary>
     public bool RegisterClient = true;
+
+    /// <summary>
+    ///     The max concurrent threads running while unzipping.
+    /// </summary>
+    public int UnzipConcurrency = 3;
 }

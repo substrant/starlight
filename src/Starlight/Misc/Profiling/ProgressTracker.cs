@@ -7,19 +7,14 @@ namespace Starlight.Misc.Profiling;
 /// </summary>
 public class ProgressTracker
 {
-    double _lastValue;
-    double _value;
-
     /// <summary>
     ///     A callback for when the progress is updated.
     /// </summary>
     /// <param name="sender">The progress tracker object.</param>
     public delegate void ProgressUpdatedCallback(ProgressTracker sender);
 
-    /// <summary>
-    ///     The event that is called when the progress is updated.
-    /// </summary>
-    public event ProgressUpdatedCallback ProgressUpdated;
+    double _lastValue;
+    double _value;
 
     /// <summary>
     ///     The annotation of the currently running step.
@@ -59,6 +54,11 @@ public class ProgressTracker
     ///     A boolean value indicating if the task is complete.
     /// </summary>
     public bool Fufilled => PercentComplete == 100;
+
+    /// <summary>
+    ///     The event that is called when the progress is updated.
+    /// </summary>
+    public event ProgressUpdatedCallback ProgressUpdated;
 
     /// <summary>
     ///     Step into another progress tracker.

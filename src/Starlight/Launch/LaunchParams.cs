@@ -1,9 +1,9 @@
-﻿using Starlight.Apis;
-using Starlight.Apis.JoinGame;
-using System;
+﻿using System;
 using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
+using Starlight.Apis;
+using Starlight.Apis.JoinGame;
 
 namespace Starlight.Launch;
 
@@ -13,20 +13,15 @@ namespace Starlight.Launch;
 public class LaunchParams
 {
     /// <summary>
-    ///     The authentication method to use when launching.
-    /// </summary>
-    public AuthType AuthType = AuthType.Ticket;
-
-    /// <summary>
-    ///     The authentication string to be used.<br/>
-    ///     Use <see cref="AuthType"/> to set the method of authentication.
+    ///     The authentication string to be used.<br />
+    ///     Use <see cref="AuthType" /> to set the method of authentication.
     /// </summary>
     public string AuthStr;
 
     /// <summary>
-    ///     The locale to use in Roblox.
+    ///     The authentication method to use when launching.
     /// </summary>
-    public CultureInfo RobloxLocale;
+    public AuthType AuthType = AuthType.Ticket;
 
     /// <summary>
     ///     The locale to use in the game.
@@ -42,6 +37,11 @@ public class LaunchParams
     ///     The join request to use.
     /// </summary>
     public JoinRequest Request;
+
+    /// <summary>
+    ///     The locale to use in Roblox.
+    /// </summary>
+    public CultureInfo RobloxLocale;
 
     /// <summary>
     ///     Get the parameters used in the CLI to launch Roblox.
@@ -66,8 +66,10 @@ public class LaunchParams
         str.Append(" -j \"" + Request);
         str.Append("\" -b " + Request.BrowserTrackerId);
         str.Append(" --launchtime=" + DateTimeOffset.Now.ToUnixTimeSeconds());
-        str.Append(" --rloc " + (RobloxLocale ?? CultureInfo.CurrentCulture).Name.Replace('-', '_').Split('/')[0].ToLowerInvariant());
-        str.Append(" --gloc " + (GameLocale ?? CultureInfo.CurrentCulture).Name.Replace('-', '_').Split('/')[0].ToLowerInvariant());
+        str.Append(" --rloc " + (RobloxLocale ?? CultureInfo.CurrentCulture).Name.Replace('-', '_').Split('/')[0]
+            .ToLowerInvariant());
+        str.Append(" --gloc " + (GameLocale ?? CultureInfo.CurrentCulture).Name.Replace('-', '_').Split('/')[0]
+            .ToLowerInvariant());
 
         // Return the parameters
         return str.ToString();

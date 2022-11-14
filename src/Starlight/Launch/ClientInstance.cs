@@ -1,8 +1,8 @@
-﻿using HackerFramework;
-using Starlight.Bootstrap;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using HackerFramework;
+using Starlight.Bootstrap;
 
 namespace Starlight.Launch;
 
@@ -11,22 +11,6 @@ namespace Starlight.Launch;
 /// </summary>
 public class ClientInstance
 {
-    uint _frameDelayOff;
-    long _userId;
-    TaskScheduler _taskScheduler;
-
-    internal ClientInstance(Client client, Process proc)
-    {
-        Client = client;
-        Proc = proc;
-        Target = new Target(Proc);
-    }
-
-    /// <summary>
-    ///     The client of the instance.
-    /// </summary>
-    public Client Client;
-
     /// <summary>
     ///     The process of the running instance.
     /// </summary>
@@ -36,6 +20,22 @@ public class ClientInstance
     ///     The target of the running instance (HackerFramework).
     /// </summary>
     public readonly Target Target;
+
+    uint _frameDelayOff;
+    TaskScheduler _taskScheduler;
+    long _userId;
+
+    /// <summary>
+    ///     The client of the instance.
+    /// </summary>
+    public Client Client;
+
+    internal ClientInstance(Client client, Process proc)
+    {
+        Client = client;
+        Proc = proc;
+        Target = new Target(Proc);
+    }
 
     /// <summary>
     ///     Get the playing user's ID.
@@ -80,8 +80,8 @@ public class ClientInstance
     }
 
     /// <summary>
-    /// <para>Set the TaskScheduler frame delay.</para>
-    /// <strong>Note:</strong> The delay is in hertz, not frames per second.
+    ///     <para>Set the TaskScheduler frame delay.</para>
+    ///     <strong>Note:</strong> The delay is in hertz, not frames per second.
     /// </summary>
     public async Task SetFrameDelayAsync(double delay)
     {
@@ -105,7 +105,7 @@ public class ClientInstance
 
         sched.WriteDouble(_frameDelayOff, delay);
     }
-    
+
     ~ClientInstance()
     {
         Target.Dispose();

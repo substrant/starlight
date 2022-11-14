@@ -7,19 +7,20 @@ namespace Starlight.Apis.JoinGame;
 /// </summary>
 public class JoinResponse
 {
-    internal JoinResponse()
-    {
-    }
-
-    /// <summary>
-    ///     Indicates whether the request was successful or not.
-    /// </summary>
-    [JsonIgnore] public bool Success;
-
     /// <summary>
     ///     The response status (not HTTP).
     /// </summary>
     [JsonProperty("status")] internal int? InternalStatus;
+
+    /// <summary>
+    ///     The join request URL that the server returned.
+    /// </summary>
+    [JsonProperty("joinScriptUrl")] public string JoinRequestUrl;
+
+    /// <summary>
+    ///     The <see cref="JoinScript" /> that the server returned.
+    /// </summary>
+    [JsonProperty("joinScript")] public JoinScript JoinScript;
 
     /// <summary>
     ///     The status message of the response.
@@ -27,14 +28,13 @@ public class JoinResponse
     [JsonProperty("message")] public string Message;
 
     /// <summary>
-    ///     The <see cref="JoinScript"/> that the server returned.
+    ///     Indicates whether the request was successful or not.
     /// </summary>
-    [JsonProperty("joinScript")] public JoinScript JoinScript;
+    [JsonIgnore] public bool Success;
 
-    /// <summary>
-    ///    The join request URL that the server returned.
-    /// </summary>
-    [JsonProperty("joinScriptUrl")] public string JoinRequestUrl;
+    internal JoinResponse()
+    {
+    }
 
     /// <summary>
     ///     The join status (not HTTP status) of the response.

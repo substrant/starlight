@@ -1,11 +1,11 @@
-﻿using Starlight.Bootstrap;
-using Starlight.Misc;
-using Starlight.Plugins;
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using Starlight.Bootstrap;
+using Starlight.Misc;
+using Starlight.Plugins;
 
 namespace Starlight.Launch;
 
@@ -15,17 +15,18 @@ namespace Starlight.Launch;
 public static partial class Launcher
 {
     /// <summary>
-    /// Launch a client with the specified parameters.
+    ///     Launch a client with the specified parameters.
     /// </summary>
     /// <param name="client">The client to launch.</param>
     /// <param name="info">The parameters to use.</param>
     /// <param name="token">The frame delay in hertz.</param>
     /// <returns>An instance of the client.</returns>
-    /// <exception cref="ClientNotFoundException"/>
-    /// <exception cref="PrematureCloseException"/>
-    /// <exception cref="TaskCanceledException"/>
+    /// <exception cref="ClientNotFoundException" />
+    /// <exception cref="PrematureCloseException" />
+    /// <exception cref="TaskCanceledException" />
     /// <exception cref="Exception">Thrown when a plugin throws an exception.</exception>
-    public static async Task<ClientInstance> LaunchAsync(Client client, LaunchParams info, CancellationToken token = default)
+    public static async Task<ClientInstance> LaunchAsync(Client client, LaunchParams info,
+        CancellationToken token = default)
     {
         // Run pre-launch methods
         foreach (var plugin in PluginArbiter.GetEnabledPlugins())
@@ -80,7 +81,7 @@ public static partial class Launcher
 
         var cancelSrc = new CancellationTokenSource();
 
-#   pragma warning disable CS4014
+# pragma warning disable CS4014
         // Add a failsafe if launch fails
         var exitEvent = Utility.GetNativeEventWaitHandle(inst.Target.Handle);
         Task.Run(() =>
@@ -88,7 +89,7 @@ public static partial class Launcher
             if (WaitHandle.WaitAny(new[] { exitEvent, cancelSrc.Token.WaitHandle }) == 0)
                 cancelSrc.Cancel();
         }, cancelSrc.Token);
-#   pragma warning restore CS4014
+# pragma warning restore CS4014
 
         // Run post-launch methods
         try

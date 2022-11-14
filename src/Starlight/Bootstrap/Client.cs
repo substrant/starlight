@@ -5,7 +5,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using RestSharp;
 using Starlight.Misc.Extensions;
-using static Starlight.Misc.Shared;
 
 namespace Starlight.Bootstrap;
 
@@ -15,19 +14,14 @@ namespace Starlight.Bootstrap;
 public partial class Client
 {
     /// <summary>
-    ///     The full path to the installation directory.
-    /// </summary>
-    public readonly string Location;
-
-    /// <summary>
-    ///     A boolean value indicating if the client is installed.
-    /// </summary>
-    public bool Exists => Directory.Exists(Location);
-
-    /// <summary>
     ///     The full path to the launcher executable (RobloxPlayerLauncher.exe).
     /// </summary>
     public readonly string Launcher;
+
+    /// <summary>
+    ///     The full path to the installation directory.
+    /// </summary>
+    public readonly string Location;
 
     /// <summary>
     ///     The full path to the player executable (RobloxPlayerBeta.exe).
@@ -45,7 +39,7 @@ public partial class Client
     public readonly string VersionHash;
 
     /// <summary>
-    ///     Instantiates a new <see cref="Client"/>.
+    ///     Instantiates a new <see cref="Client" />.
     /// </summary>
     public Client(string versionHash, ClientScope scope = ClientScope.Global, string launcherBin = null)
     {
@@ -57,14 +51,20 @@ public partial class Client
     }
 
     /// <summary>
-    ///     Gets a list of the <see cref="Client"/>'s <see cref="Downloadable"/> instances.
+    ///     A boolean value indicating if the client is installed.
     /// </summary>
-    /// <exception cref="TaskCanceledException"/>
+    public bool Exists => Directory.Exists(Location);
+
+    /// <summary>
+    ///     Gets a list of the <see cref="Client" />'s <see cref="Downloadable" /> instances.
+    /// </summary>
+    /// <exception cref="TaskCanceledException" />
     public async Task<IList<Downloadable>> GetFilesAsync(CancellationToken token = default)
     {
         var files = new List<Downloadable>();
 
-        var raw = (await Bootstrapper.RbxCdnClient.GetAsync(new RestRequest($"/version-{VersionHash}-rbxPkgManifest.txt"), token));
+        var raw = await Bootstrapper.RbxCdnClient.GetAsync(
+            new RestRequest($"/version-{VersionHash}-rbxPkgManifest.txt"), token);
         var split = raw.Content.Split("\r\n", "\n").Where(x => x != string.Empty).ToArray();
         for (var i = 1; i < split.Length;)
             files.Add(new Downloadable(VersionHash, split[i++], split[i++], long.Parse(split[i++]),

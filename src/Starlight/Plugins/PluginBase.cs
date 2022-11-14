@@ -12,17 +12,17 @@ namespace Starlight.Plugins;
 /// </summary>
 public abstract class PluginBase
 {
+    /// <summary>
+    ///     The software development kit for this plugin.
+    /// </summary>
+    public readonly PluginSdk Sdk;
+
     bool _enabled = true;
 
     protected PluginBase()
     {
         Sdk = new PluginSdk(Assembly.GetCallingAssembly());
     }
-
-    /// <summary>
-    ///     The software development kit for this plugin.
-    /// </summary>
-    public readonly PluginSdk Sdk;
 
     /// <summary>
     ///     This plugin's name.
@@ -40,7 +40,7 @@ public abstract class PluginBase
     public abstract string Description { get; }
 
     /// <summary>
-    ///     Gets or sets whether this plugin is enabled.<br/>
+    ///     Gets or sets whether this plugin is enabled.<br />
     ///     If this is set to false, the plugin will be unloaded, and vice versa.
     /// </summary>
 #pragma warning disable CS0618

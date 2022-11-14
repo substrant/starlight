@@ -17,7 +17,8 @@ public class PluginSdk
     internal PluginSdk(Assembly pluginAssembly)
     {
         string pluginDir;
-        if (!File.Exists(pluginAssembly.Location) || (pluginDir = Path.GetDirectoryName(pluginAssembly.Location)) is null)
+        if (!File.Exists(pluginAssembly.Location) ||
+            (pluginDir = Path.GetDirectoryName(pluginAssembly.Location)) is null)
             throw new ArgumentException("Invalid plugin assembly.", nameof(pluginAssembly));
 
         _configPath = Path.Combine(pluginDir, Path.GetFileNameWithoutExtension(pluginAssembly.Location) + ".json");
@@ -73,7 +74,7 @@ public class PluginSdk
     }
 
     /// <summary>
-    ///    Set an entry in the configuration.
+    ///     Set an entry in the configuration.
     /// </summary>
     /// <typeparam name="T">The type to serialize.</typeparam>
     public void SetValue<T>(string name, T? value)

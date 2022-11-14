@@ -1,29 +1,33 @@
-﻿using Newtonsoft.Json;
-using RestSharp;
-using RestSharp.Serializers.NewtonsoftJson;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json;
+using RestSharp;
+using RestSharp.Serializers.NewtonsoftJson;
 
 namespace Starlight.Apis;
 
 /// <summary>
 ///     <para>Represents a navigatable page collection on Roblox.</para>
-///     Example pages: game servers, catalog items, inventory contents, etc.<br/>
+///     Example pages: game servers, catalog items, inventory contents, etc.<br />
 ///     <strong>Note:</strong> The generic object is deserialized using Json.NET (Newtonsoft.Json).
 /// </summary>
 /// <typeparam name="T">Any serializable class.</typeparam>
 public partial class Page<T> : IDisposable where T : class
 {
-    readonly int _limit;
-    readonly IReadOnlyDictionary<string, string> _extras;
     readonly RestClient _client;
+    readonly IReadOnlyDictionary<string, string> _extras;
+    readonly int _limit;
     readonly Uri _resource;
 
-    PageBody _lastFetchedBody;
+    /* IDisposable implementation */
+
+    bool _disposed;
     string _lastCursor;
+
+    PageBody _lastFetchedBody;
 
     /// <summary>
     ///     The current page number.
@@ -31,11 +35,11 @@ public partial class Page<T> : IDisposable where T : class
     public int PageNumber;
 
     /// <summary>
-    ///     <para>Creates a new page collection from <paramref name="resource"/>.</para>
+    ///     <para>Creates a new page collection from <paramref name="resource" />.</para>
     ///     <strong>Note:</strong> The page limit should be either 10, 25, 50, or 100.
     /// </summary>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
+    /// <exception cref="ArgumentNullException" />
+    /// <exception cref="ArgumentException" />
     public Page(Uri resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
     {
         if (resource == null)
@@ -51,11 +55,14 @@ public partial class Page<T> : IDisposable where T : class
     }
 
     /// <summary>
-    ///     <para>Creates a new page collection from <paramref name="resource"/> and authenticate with <paramref name="session"/>.</para>
+    ///     <para>
+    ///         Creates a new page collection from <paramref name="resource" /> and authenticate with
+    ///         <paramref name="session" />.
+    ///     </para>
     ///     <strong>Note:</strong> The page limit should be either 10, 25, 50, or 100.
     /// </summary>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
+    /// <exception cref="ArgumentNullException" />
+    /// <exception cref="ArgumentException" />
     public Page(Session session, Uri resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
     {
         if (session == null)
@@ -75,11 +82,11 @@ public partial class Page<T> : IDisposable where T : class
     }
 
     /// <summary>
-    ///     <para>Creates a new page collection from <paramref name="resource"/>.</para>
+    ///     <para>Creates a new page collection from <paramref name="resource" />.</para>
     ///     <strong>Note:</strong> The page limit should be either 10, 25, 50, or 100.
     /// </summary>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
+    /// <exception cref="ArgumentNullException" />
+    /// <exception cref="ArgumentException" />
     public Page(string resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
     {
         if (string.IsNullOrWhiteSpace(resource))
@@ -95,11 +102,14 @@ public partial class Page<T> : IDisposable where T : class
     }
 
     /// <summary>
-    ///     <para>Creates a new page collection from <paramref name="resource"/> and authenticate with <paramref name="session"/>.</para>
+    ///     <para>
+    ///         Creates a new page collection from <paramref name="resource" /> and authenticate with
+    ///         <paramref name="session" />.
+    ///     </para>
     ///     <strong>Note:</strong> The page limit should be either 10, 25, 50, or 100.
     /// </summary>
-    /// <exception cref="ArgumentNullException"/>
-    /// <exception cref="ArgumentException"/>
+    /// <exception cref="ArgumentNullException" />
+    /// <exception cref="ArgumentException" />
     public Page(Session session, string resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
     {
         if (session == null)
@@ -118,19 +128,26 @@ public partial class Page<T> : IDisposable where T : class
         _extras = extras;
     }
 
-    /// <exception cref="TaskCanceledException"/>
+    /// <summary>
+    ///     Clean up and release the client.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
+    /// <exception cref="TaskCanceledException" />
     internal async Task<T[]> InternalFetchAsync(string cursor, CancellationToken token = default)
     {
         var req = new RestRequest(_resource.AbsolutePath)
             .AddQueryParameter("limit", _limit)
             .AddQueryParameter("cursor", cursor);
         if (_extras is not null)
-        {
             foreach (var kv in _extras)
                 req.AddQueryParameter(kv.Key, kv.Value);
-        }
         var res = await _client.ExecuteAsync<PageBody>(req, token);
-        
+
         if (res.Data is null || res.StatusCode != HttpStatusCode.OK)
             return null;
 
@@ -142,8 +159,8 @@ public partial class Page<T> : IDisposable where T : class
     /// <summary>
     ///     Fetch the page contents for the new page number.
     /// </summary>
-    /// <exception cref="ArgumentException"/>
-    /// <exception cref="TaskCanceledException"/>
+    /// <exception cref="ArgumentException" />
+    /// <exception cref="TaskCanceledException" />
     public async Task<T[]> FetchAsync(int newPageNumber, CancellationToken token = default)
     {
         if (newPageNumber < 0)
@@ -158,14 +175,12 @@ public partial class Page<T> : IDisposable where T : class
             var sign = Math.Sign(delta);
 
             for (var i = 0; i < absDelta; i++)
-            {
                 data = sign switch
                 {
                     -1 => await InternalFetchAsync(_lastFetchedBody?.PreviousPageCursor, token),
                     1 => await InternalFetchAsync(_lastFetchedBody?.NextPageCursor, token),
                     _ => data
                 };
-            }
         }
         else
         {
@@ -179,8 +194,8 @@ public partial class Page<T> : IDisposable where T : class
     /// <summary>
     ///     Fetch the page contents for the next page.
     /// </summary>
-    /// <exception cref="ArgumentException"/>
-    /// <exception cref="TaskCanceledException"/>
+    /// <exception cref="ArgumentException" />
+    /// <exception cref="TaskCanceledException" />
     public async Task<T[]> FetchNextAsync(CancellationToken token = default)
     {
         PageNumber++;
@@ -190,18 +205,14 @@ public partial class Page<T> : IDisposable where T : class
     /// <summary>
     ///     Fetch the page contents for the previous page.
     /// </summary>
-    /// <exception cref="ArgumentException"/>
-    /// <exception cref="TaskCanceledException"/>
+    /// <exception cref="ArgumentException" />
+    /// <exception cref="TaskCanceledException" />
     public async Task<T[]> FetchPreviousAsync(CancellationToken token = default)
     {
         if (PageNumber != 0)
             PageNumber--;
         return await FetchAsync(PageNumber, token);
     }
-
-    /* IDisposable implementation */
-
-    bool _disposed;
 
     protected virtual void Dispose(bool disposing)
     {
@@ -210,15 +221,6 @@ public partial class Page<T> : IDisposable where T : class
 
         _disposed = true;
         _client.Dispose();
-    }
-
-    /// <summary>
-    ///     Clean up and release the client.
-    /// </summary>
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
     }
 
     class PageBody

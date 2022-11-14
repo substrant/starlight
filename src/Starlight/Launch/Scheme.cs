@@ -40,7 +40,7 @@ public static class Scheme
             info.AuthStr = ticket;
             info.AuthType = AuthType.Ticket;
         }
-        
+
         if (args.TryGetValue("placelauncherurl", out var launchUrl))
         {
             result |= ParseResultFlags.RequestExists;
@@ -50,7 +50,7 @@ public static class Scheme
                 info.Request = JoinRequest.FromUri(launchUri);
             }
         }
-        
+
         if (args.TryGetValue("launchtime", out var launchTimeStr))
         {
             result |= ParseResultFlags.LaunchTimeExists;
@@ -60,7 +60,7 @@ public static class Scheme
                 info.LaunchTime = DateTimeOffset.FromUnixTimeMilliseconds(launchTime);
             }
         }
-        
+
         if (args.TryGetValue("browsertrackerid", out var trackerIdStr))
         {
             result |= ParseResultFlags.TrackerIdExists;
@@ -70,7 +70,7 @@ public static class Scheme
                 info.Request.BrowserTrackerId = trackerId;
             }
         }
-        
+
         if (args.TryGetValue("robloxLocale", out var rbxLocaleStr))
         {
             result |= ParseResultFlags.RobloxLocaleExists;
@@ -80,7 +80,7 @@ public static class Scheme
                 info.RobloxLocale = rbxLocale;
             }
         }
-        
+
         // ReSharper disable InvertIf
         if (args.TryGetValue("gameLocale", out var gameLocaleStr))
         {
@@ -97,7 +97,7 @@ public static class Scheme
     }
 
     /// <summary>
-    ///     Hook the `roblox-player` scheme for the given <see cref="Client"/>.
+    ///     Hook the `roblox-player` scheme for the given <see cref="Client" />.
     /// </summary>
     public static void Hook(Client client)
     {
