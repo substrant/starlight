@@ -55,6 +55,7 @@ public partial class Downloadable
     ///    Download the file to the specified directory.
     /// </summary>
     /// <exception cref="TaskCanceledException"/>
+    /// <exception cref="IOException"/>
     public async Task DownloadAsync(string dir, CancellationToken token = default)
     {
         var filePath = Path.Combine(dir, Name);
@@ -76,7 +77,7 @@ public partial class Downloadable
         if (!Validate(filePath))
         {
             File.Delete(filePath);
-            throw new NotImplementedException();
+            throw new IOException("File failed checksum validation.");
         }
     }
     

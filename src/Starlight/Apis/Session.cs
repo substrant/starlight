@@ -55,6 +55,7 @@ public partial class Session : RbxUser, IDisposable
     public override string Username { get; protected set; }
 
     /// <exception cref="TaskCanceledException"/>
+    /// <exception cref="InvalidOperationException"/>
     async Task RetrieveInfoAsync(CancellationToken token = default)
     {
         try
@@ -65,13 +66,13 @@ public partial class Session : RbxUser, IDisposable
 
             // Validate that the info retrieval succeeded
             if (string.IsNullOrEmpty(UserId) || string.IsNullOrEmpty(Username))
-                throw new NotImplementedException();
+                throw new InvalidOperationException();
         }
         catch (JsonSerializationException)
         {
             // Roblox returns HTML content when the session is invalid, and redirects to the login page.
             // This is a workaround to catch that and throw a more descriptive exception.
-            throw new NotImplementedException();
+            throw new InvalidOperationException();
         }
     }
 
@@ -80,9 +81,14 @@ public partial class Session : RbxUser, IDisposable
     /// <summary>
     ///     Get a <see cref="Session"/> from a <c>.ROBLOSECURITY</c> cookie.
     /// </summary>
+    /// <exception cref="ArgumentNullException"/>
     /// <exception cref="TaskCanceledException"/>
+    /// <exception cref="InvalidOperationException"/>
     public static async Task<Session> LoginAsync(string authToken, CancellationToken token = default)
     {
+        if (string.IsNullOrWhiteSpace(authToken))
+            throw new ArgumentNullException(nameof(authToken));
+
         var session = new Session { AuthToken = authToken };
 
         await session.RetrieveInfoAsync(token);
@@ -108,6 +114,7 @@ public partial class Session : RbxUser, IDisposable
     /// <summary>
     ///     Get a <see cref="Session"/> using authentication type <paramref name="authType"/>.
     /// </summary>
+    /// <exception cref="ArgumentException"/>
     /// <exception cref="TaskCanceledException"/>
     public static async Task<Session> AuthenticateAsync(string authToken, AuthType authType, CancellationToken token = default)
     {
@@ -115,7 +122,7 @@ public partial class Session : RbxUser, IDisposable
         {
             AuthType.Token => await LoginAsync(authToken, token),
             AuthType.Ticket => await RedeemAsync(authToken, token),
-            _ => throw new NotImplementedException()
+            _ => throw new ArgumentException("Invalid authentication type.", nameof(authType))
         };
     }
 
@@ -123,6 +130,7 @@ public partial class Session : RbxUser, IDisposable
     ///     Create an authentication ticket for a one-time login.
     /// </summary>
     /// <exception cref="TaskCanceledException"/>
+    /// <exception cref="InvalidOperationException"/>
     public async Task<string> GetTicketAsync(CancellationToken token = default)
     {
         // Get a new authentication ticket
@@ -134,7 +142,7 @@ public partial class Session : RbxUser, IDisposable
         // Get the ticket header
         var ticketHeader = res.Headers?.FirstOrDefault(x => x.Name == "rbx-authentication-ticket");
         if (ticketHeader is null)
-            throw new NotImplementedException();
+            throw new InvalidOperationException("Failed to get authentication ticket. Is the session authenticated with a valid token?");
 
         return ticketHeader.Value?.ToString();
     }
@@ -145,6 +153,7 @@ public partial class Session : RbxUser, IDisposable
     ///     <see href="https://en.wikipedia.org/wiki/Cross-site_request_forgery" />.
     /// </summary>
     /// <exception cref="TaskCanceledException"/>
+    /// <exception cref="InvalidOperationException"/>
     public async Task<string> GetXsrfTokenAsync(bool bypassCache = false, CancellationToken token = default)
     {
         // Return previous token if xsrf token is still alive
@@ -158,7 +167,7 @@ public partial class Session : RbxUser, IDisposable
         // Get xsrf token header
         var xsrfHeader = res.Headers?.FirstOrDefault(x => x.Name?.ToLowerInvariant() == "x-csrf-token");
         if (xsrfHeader is null)
-            throw new NotImplementedException();
+            throw new InvalidOperationException("Failed to get cross-site request forgery token. Is the session authenticated with a valid token?");
 
         // Set token
         _xsrfToken = xsrfHeader.Value?.ToString();

@@ -37,7 +37,7 @@ public partial class Client
     /// <summary>
     ///     The scope of the installation.
     /// </summary>
-    public readonly ClientScope Scope;
+    public readonly ClientScope? Scope;
 
     /// <summary>
     ///     The version hash of the installation.

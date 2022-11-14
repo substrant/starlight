@@ -21,7 +21,10 @@ public static partial class Launcher
     /// <param name="info">The parameters to use.</param>
     /// <param name="token">The frame delay in hertz.</param>
     /// <returns>An instance of the client.</returns>
+    /// <exception cref="ClientNotFoundException"/>
+    /// <exception cref="PrematureCloseException"/>
     /// <exception cref="TaskCanceledException"/>
+    /// <exception cref="Exception">Thrown when a plugin throws an exception.</exception>
     public static async Task<ClientInstance> LaunchAsync(Client client, LaunchParams info, CancellationToken token = default)
     {
         // Run pre-launch methods
@@ -33,8 +36,8 @@ public static partial class Launcher
 
         // Ensure the client exists
         if (!client.Exists)
-            throw new NotImplementedException();
-        
+            throw new ClientNotFoundException(client);
+
         // Start Roblox
         Process proc = null;
         try
@@ -49,7 +52,7 @@ public static partial class Launcher
         finally
         {
             if (proc is null)
-                throw new NotImplementedException();
+                throw new PrematureCloseException(client, null);
         }
 
         // Get the instance
@@ -64,7 +67,7 @@ public static partial class Launcher
             {
                 if (!proc.HasExited)
                     proc.Kill();
-                throw new NotImplementedException();
+                throw new PrematureCloseException(client, proc);
             }
         }
 
@@ -123,7 +126,7 @@ public static partial class Launcher
         {
             if (!proc.HasExited)
                 proc.Kill();
-            throw new NotImplementedException();
+            throw new PrematureCloseException(client, proc);
         }
 
         // Run post-window methods

@@ -34,10 +34,15 @@ public partial class Page<T> : IDisposable where T : class
     ///     <para>Creates a new page collection from <paramref name="resource"/>.</para>
     ///     <strong>Note:</strong> The page limit should be either 10, 25, 50, or 100.
     /// </summary>
+    /// <exception cref="ArgumentNullException"/>
+    /// <exception cref="ArgumentException"/>
     public Page(Uri resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
     {
+        if (resource == null)
+            throw new ArgumentNullException(nameof(resource));
+
         if (limit != 10 && limit != 25 && limit != 50 && limit != 100)
-            throw new NotImplementedException();
+            throw new ArgumentException("The page limit must be either 10, 25, 50, or 100.", nameof(limit));
 
         _client = new RestClient(resource.Host).UseNewtonsoftJson();
         _resource = resource;
@@ -49,10 +54,18 @@ public partial class Page<T> : IDisposable where T : class
     ///     <para>Creates a new page collection from <paramref name="resource"/> and authenticate with <paramref name="session"/>.</para>
     ///     <strong>Note:</strong> The page limit should be either 10, 25, 50, or 100.
     /// </summary>
+    /// <exception cref="ArgumentNullException"/>
+    /// <exception cref="ArgumentException"/>
     public Page(Session session, Uri resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
     {
+        if (session == null)
+            throw new ArgumentNullException(nameof(session));
+
+        if (resource == null)
+            throw new ArgumentNullException(nameof(resource));
+
         if (limit != 10 && limit != 25 && limit != 50 && limit != 100)
-            throw new NotImplementedException();
+            throw new ArgumentException("The page limit must be either 10, 25, 50, or 100.", nameof(limit));
 
         _client = new RestClient(resource.Host).UseNewtonsoftJson()
             .AddCookie(".ROBLOSECURITY", session.AuthToken, "/", ".roblox.com");
@@ -65,10 +78,15 @@ public partial class Page<T> : IDisposable where T : class
     ///     <para>Creates a new page collection from <paramref name="resource"/>.</para>
     ///     <strong>Note:</strong> The page limit should be either 10, 25, 50, or 100.
     /// </summary>
+    /// <exception cref="ArgumentNullException"/>
+    /// <exception cref="ArgumentException"/>
     public Page(string resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
     {
+        if (string.IsNullOrWhiteSpace(resource))
+            throw new ArgumentNullException(nameof(resource));
+
         if (limit != 10 && limit != 25 && limit != 50 && limit != 100)
-            throw new NotImplementedException();
+            throw new ArgumentException("The page limit must be either 10, 25, 50, or 100.", nameof(limit));
 
         _resource = new Uri(resource);
         _client = new RestClient(_resource.Host).UseNewtonsoftJson();
@@ -80,10 +98,18 @@ public partial class Page<T> : IDisposable where T : class
     ///     <para>Creates a new page collection from <paramref name="resource"/> and authenticate with <paramref name="session"/>.</para>
     ///     <strong>Note:</strong> The page limit should be either 10, 25, 50, or 100.
     /// </summary>
+    /// <exception cref="ArgumentNullException"/>
+    /// <exception cref="ArgumentException"/>
     public Page(Session session, string resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
     {
+        if (session == null)
+            throw new ArgumentNullException(nameof(session));
+
+        if (string.IsNullOrWhiteSpace(resource))
+            throw new ArgumentNullException(nameof(resource));
+
         if (limit != 10 && limit != 25 && limit != 50 && limit != 100)
-            throw new NotImplementedException();
+            throw new ArgumentException("The page limit must be either 10, 25, 50, or 100.", nameof(limit));
 
         _resource = new Uri(resource);
         _client = new RestClient(_resource.Host).UseNewtonsoftJson()
@@ -116,9 +142,13 @@ public partial class Page<T> : IDisposable where T : class
     /// <summary>
     ///     Fetch the page contents for the new page number.
     /// </summary>
+    /// <exception cref="ArgumentException"/>
     /// <exception cref="TaskCanceledException"/>
     public async Task<T[]> FetchAsync(int newPageNumber, CancellationToken token = default)
     {
+        if (newPageNumber < 0)
+            throw new ArgumentException("The page number must be greater than or equal to 0.", nameof(newPageNumber));
+
         var delta = PageNumber - newPageNumber;
         T[] data = null;
 
@@ -149,6 +179,7 @@ public partial class Page<T> : IDisposable where T : class
     /// <summary>
     ///     Fetch the page contents for the next page.
     /// </summary>
+    /// <exception cref="ArgumentException"/>
     /// <exception cref="TaskCanceledException"/>
     public async Task<T[]> FetchNextAsync(CancellationToken token = default)
     {
@@ -159,6 +190,7 @@ public partial class Page<T> : IDisposable where T : class
     /// <summary>
     ///     Fetch the page contents for the previous page.
     /// </summary>
+    /// <exception cref="ArgumentException"/>
     /// <exception cref="TaskCanceledException"/>
     public async Task<T[]> FetchPreviousAsync(CancellationToken token = default)
     {

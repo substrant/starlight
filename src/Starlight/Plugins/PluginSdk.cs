@@ -18,7 +18,7 @@ public class PluginSdk
     {
         string pluginDir;
         if (!File.Exists(pluginAssembly.Location) || (pluginDir = Path.GetDirectoryName(pluginAssembly.Location)) is null)
-            throw new NotImplementedException();
+            throw new ArgumentException("Invalid plugin assembly.", nameof(pluginAssembly));
 
         _configPath = Path.Combine(pluginDir, Path.GetFileNameWithoutExtension(pluginAssembly.Location) + ".json");
 
