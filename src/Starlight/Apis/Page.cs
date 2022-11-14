@@ -15,7 +15,7 @@ namespace Starlight.Apis;
 ///     <strong>Note:</strong> The generic object is deserialized using Json.NET (Newtonsoft.Json).
 /// </summary>
 /// <typeparam name="T">Any serializable class.</typeparam>
-public class Page<T> : IDisposable where T : class
+public partial class Page<T> : IDisposable where T : class
 {
     readonly int _limit;
     readonly IReadOnlyDictionary<string, string> _extras;
