@@ -3,12 +3,11 @@ using System.Security.Cryptography;
 using System.Windows.Forms;
 using Starlight.Bootstrap;
 using Starlight.Launch;
-using Starlight.Misc;
 using Starlight.Plugins;
-using Starlight.PostLaunch;
 
 namespace Starlight.Std;
 
+// ReSharper disable once UnusedMember.Global
 public class Plugin : PluginBase
 {
     public override string Name => "Starlight.Std";
@@ -16,7 +15,7 @@ public class Plugin : PluginBase
     public override string Author => "RealNickk";
 
     public override string Description => "Base plugin for Starlight's functionality";
-
+    
     public override void Load()
     {
         /* Overloads */
@@ -45,11 +44,7 @@ public class Plugin : PluginBase
         /* Overloads */
 
         if (Sdk.GetValue("versionHash", out string versionHash) && !string.IsNullOrWhiteSpace(versionHash))
-        {
             client = new Client(versionHash, ClientScope.Local);
-            if (!client.Exists)
-                throw new ClientNotFoundException(client);
-        }
 
         /* Spoofing */
 
@@ -72,11 +67,12 @@ public class Plugin : PluginBase
     {
         /* Display */
 
+        // ReSharper disable once InvertIf
         if (Sdk.GetValue("maxFramerate", out int? fpsCap) && fpsCap is not null)
             if (fpsCap == 0)
-                inst.SetFrameDelay(1.0d / 1000); // lol
+                inst.SetFrameDelayAsync(1.0d / 1000).Wait(); // lol
             else
-                inst.SetFrameDelay(1.0d / fpsCap.Value);
+                inst.SetFrameDelayAsync(1.0d / fpsCap.Value).Wait();
     }
 
     public override void PostWindow(IntPtr hwnd)
@@ -112,6 +108,7 @@ public class Plugin : PluginBase
             }
         }
 
+        // ReSharper disable once InvertIf
         if (Sdk.GetValue("headless", out bool isHeadless) && isHeadless)
         {
             Native.SendMessage(hwnd, Native.WmSysCommand, Native.ScMinimize,

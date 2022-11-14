@@ -8,7 +8,6 @@ using System.Windows;
 using Starlight.Apis;
 using Starlight.Launch;
 using Starlight.Plugins;
-using Starlight.SchemeLaunch;
 
 namespace Starlight.Gui
 {
@@ -35,7 +34,7 @@ namespace Starlight.Gui
                 }
 
 #           if DEBUG
-                var session = Session.Login(Environment.GetEnvironmentVariable("RBX_AUTH"), AuthType.Token);
+                var session = Session.Login(Environment.GetEnvironmentVariable("RBX_AUTH"));
                 info.AuthStr = session.GetTicket();
 #           endif
 

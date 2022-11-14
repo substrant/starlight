@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -27,18 +28,20 @@ namespace Starlight.Gui
             InitializeComponent();
             LaunchInfo = launchInfo;
             Tracker.ProgressUpdated += sender =>
-                Dispatcher.Invoke(() => ProgressBar.Value = sender.PercentComplete);
+                Dispatcher.Invoke(() =>
+                {
+                    if (!string.IsNullOrWhiteSpace(sender.Annotation))
+                        Label.Text = sender.Annotation;
+                    ProgressBar.Value = sender.PercentComplete;
+                });
         }
 
         async Task<Client> EnsureLatest()
         {
-            Label.Text = "fetcshing bone";
             var client = await Bootstrapper.GetLatestClientAsync(ClientScope.Local);
-            Label.Text = "ensuring";
 
             if (!client.Exists)
             {
-                Label.Text = "updiatign";
                 Tracker.Start(2, "Updating Roblox");
                 await Bootstrapper.InstallAsync(client, Tracker.SubStep(), new InstallConfig
                 {
@@ -57,17 +60,14 @@ namespace Starlight.Gui
 
         async void Window_Loaded(object sender, RoutedEventArgs e)
         {
-            Label.Text = "init";
             try
             {
                 var client = await EnsureLatest();
-                Label.Text = "quack";
-                Launcher.Launch(LaunchInfo, client);        
+                await Launcher.LaunchAsync(client, LaunchInfo);        
             }
-            catch (BadIntegrityException)
+            catch (IOException)
             {
-                MessageBox.Show("Installation failed: Corrupt download", "Starlight", MessageBoxButton.OK,
-                    MessageBoxImage.Error);
+                MessageBox.Show("Installation failed due to a filesystem error.", "Starlight", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             catch (PrematureCloseException)
             {

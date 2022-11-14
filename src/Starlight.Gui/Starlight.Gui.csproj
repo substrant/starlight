@@ -45,6 +45,9 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\Starlight.App\Starlight.App.csproj" />
+	  <ProjectReference Include="..\Starlight.Std\Starlight.Std.csproj">
+	    <Private>False</Private>
+	  </ProjectReference>
 	</ItemGroup>
 	<ItemGroup>
 	  <Compile Update="App.xaml.cs">

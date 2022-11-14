@@ -72,8 +72,7 @@ public static partial class Bootstrapper
     public static async Task<string> GetLatestVersionHashAsync(bool bypassCache = false,
         CancellationToken token = default)
     {
-        if (!bypassCache && (_latestVersionHash is not null ||
-                             DateTime.Now - _lastVersionHashFetch > TimeSpan.FromDays(1)))
+        if (!bypassCache && _latestVersionHash is not null && DateTime.Now - _lastVersionHashFetch > TimeSpan.FromDays(1))
             return await Task.FromResult(_latestVersionHash);
 
         var version = await RbxCdnClient.GetAsync(new RestRequest("/version.txt"), token);

@@ -21,7 +21,7 @@
 		<AssemblyVersion>$(Version).$(BuildNumber)</AssemblyVersion>
 		<FileVersion>$(Version).$(BuildNumber)</FileVersion>
 		<Copyright>Copyright (c) 2022 $(Company)</Copyright>
-		<OutputPath>bin\$(Configuration)\</OutputPath>
+		<OutputPath>..\Starlight.Gui\bin\$(Configuration)\Plugins\</OutputPath>
 		<BaseIntermediateOutputPath>obj\$(Configuration)\</BaseIntermediateOutputPath>
 		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
 	</PropertyGroup>
@@ -36,10 +36,62 @@
 	  <EmbeddedResource Remove="obj\**" />
 	  <None Remove="obj\**" />
 	</ItemGroup>
+	<Target Name="ClearReferenceCopyLocalPaths" AfterTargets="ResolveAssemblyReferences">
+		<ItemGroup>
+			<ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" />
+		</ItemGroup>
+	</Target>
 	<ItemGroup>
 	  <ProjectReference Include="..\Starlight\Starlight.csproj" />
 	</ItemGroup>
 	<ItemGroup>
-	  <Reference Include="System.Windows.Forms" />
+	  <Reference Include="System.Windows.Forms">
+	    <Private></Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Update="System">
+	    <Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Update="System.Core">
+	    <Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Update="System.Data">
+	    <Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Update="System.Drawing">
+	    <Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Update="System.IO.Compression.FileSystem">
+	    <Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Update="System.Numerics">
+	    <Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Update="System.Runtime.Serialization">
+	    <Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Update="System.Xml">
+	    <Private>False</Private>
+	  </Reference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Reference Update="System.Xml.Linq">
+	    <Private>False</Private>
+	  </Reference>
 	</ItemGroup>
 </Project>
