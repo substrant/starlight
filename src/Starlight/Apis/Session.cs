@@ -172,7 +172,7 @@ public partial class Session : RbxUser, IDisposable
     public async Task<string> GetXsrfTokenAsync(bool bypassCache = false, CancellationToken token = default)
     {
         // Return previous token if xsrf token is still alive
-        if (!bypassCache && (string.IsNullOrEmpty(_xsrfToken) || (DateTime.Now - _xsrfLastGrabbed).TotalMinutes > 2))
+        if (!bypassCache && !string.IsNullOrEmpty(_xsrfToken) && (DateTime.Now - _xsrfLastGrabbed).TotalMinutes > 2)
             return _xsrfToken;
 
         // This won't log you out without a xsrf token
