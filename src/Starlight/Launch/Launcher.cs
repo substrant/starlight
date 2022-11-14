@@ -12,7 +12,7 @@ namespace Starlight.Launch;
 /// <summary>
 ///     Contains methods for launching Roblox.
 /// </summary>
-public static class Launcher
+public static partial class Launcher
 {
     /// <summary>
     /// Launch a client with the specified parameters.
