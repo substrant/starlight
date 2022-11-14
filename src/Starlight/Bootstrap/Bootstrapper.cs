@@ -17,7 +17,7 @@ namespace Starlight.Bootstrap;
 /// <summary>
 ///     Contains methods for installing, and uninstalling Roblox, as well as auxliary functions for installation.
 /// </summary>
-public static class Bootstrapper
+public static partial class Bootstrapper
 {
     static readonly IReadOnlyDictionary<string, string> ZipMap = new Dictionary<string, string>
     {
