@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Threading;
 using System.Threading.Tasks;
 using HackerFramework;
+using Serilog;
 using Starlight.Bootstrap;
 
 namespace Starlight.Launch;
@@ -66,12 +68,17 @@ public class ClientInstance
         if (_taskScheduler is not null)
             return _taskScheduler;
 
-        var results = Target.FindPattern(RobloxData.TaskSchedulerSignature);
+        var results = Target.FindPattern(RobloxData.TssCallRefSignature);
         if (results.Count is 0 or > 1)
             throw new NotImplementedException();
+        var tssFunction = Target.CallAt(results[0] + RobloxData.TssCallOffset);
+
+        results = Target.FindPattern(RobloxData.TssPtrRefSignature, new VirtualRange<uint>(tssFunction, tssFunction + 0x100));
+        if (results.Count == 0)
+            throw new NotImplementedException();
+        var singletonPtr = Target.ReadPointer(results[0] + 1); // A1 ?? ?? ?? ??
 
         var sched = new TaskScheduler { Instance = this };
-        var singletonPtr = Target.ReadPointer(results[0] + RobloxData.TaskSchedulerOffset);
         while ((sched.BaseAddress = Target.ReadPointer(singletonPtr)) == 0)
             await Task.Delay(100);
 

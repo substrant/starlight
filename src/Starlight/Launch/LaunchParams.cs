@@ -31,7 +31,7 @@ public class LaunchParams
     /// <summary>
     ///     The unix time when the launch was requested.
     /// </summary>
-    public DateTimeOffset? LaunchTime = DateTimeOffset.Now;
+    public DateTimeOffset LaunchTime = DateTimeOffset.Now;
 
     /// <summary>
     ///     The join request to use.
@@ -63,9 +63,9 @@ public class LaunchParams
         // Build the parameters
         var str = new StringBuilder("--app");
         str.Append(" -t " + authToken);
-        str.Append(" -j \"" + Request);
-        str.Append("\" -b " + Request.BrowserTrackerId);
-        str.Append(" --launchtime=" + DateTimeOffset.Now.ToUnixTimeSeconds());
+        str.Append(" -j " + Request);
+        str.Append(" -b " + Request.BrowserTrackerId);
+        str.Append(" --launchtime=" + LaunchTime.ToUnixTimeSeconds());
         str.Append(" --rloc " + (RobloxLocale ?? CultureInfo.CurrentCulture).Name.Replace('-', '_').Split('/')[0]
             .ToLowerInvariant());
         str.Append(" --gloc " + (GameLocale ?? CultureInfo.CurrentCulture).Name.Replace('-', '_').Split('/')[0]
