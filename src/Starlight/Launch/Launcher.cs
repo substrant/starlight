@@ -17,26 +17,9 @@ public static partial class Launcher
 {
     [DllImport("kernel32.dll")]
     static extern int CreateEvent(IntPtr lpEventAttributes, bool bManualReset, bool bInitialState, string lpName);
-    
-    [DllImport("kernel32.dll", SetLastError = true)]
-    static extern int OpenEvent(uint dwDesiredAccess, bool bInheritHandle, string lpName);
 
     [DllImport("kernel32.dll")]
     static extern bool CloseHandle(int hObject);
-
-    const uint STANDARD_RIGHTS_REQUIRED = 0x000F0000;
-    const uint SYNCHRONIZE = 0x00100000;
-    const uint EVENT_ALL_ACCESS = (STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE | 0x3);
-    const uint EVENT_MODIFY_STATE = 0x0002;
-    const long ERROR_FILE_NOT_FOUND = 2L;
-
-    [StructLayout(LayoutKind.Sequential)]
-    struct SECURITY_ATTRIBUTES
-    {
-        public int length;
-        public IntPtr securityDesc;
-        public bool inherit;
-    }
 
     /// <summary>
     ///     Launch a client with the specified parameters.
@@ -116,6 +99,7 @@ public static partial class Launcher
         using var exitEvent = Utility.GetNativeEventWaitHandle(inst.Target.Handle);
         Task.Run(() =>
         {
+            // ReSharper disable once AccessToDisposedClosure
             if (WaitHandle.WaitAny(new[] { exitEvent, cancelSrc.Token.WaitHandle }) == 0)
                 cancelSrc.Cancel();
         }, cancelSrc.Token);
