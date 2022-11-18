@@ -1,4 +1,4 @@
-workspaceLocation: gitpod-ws.code-workspace
+workspaceLocation: Starlight/gitpod-ws.code-workspace
 
 image:
   file: .gitpod.Dockerfile
