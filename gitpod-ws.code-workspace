@@ -24,5 +24,9 @@
             "name": "Docs",
             "path": "docs"
         }
-    ]
+    ],
+    "settings": {
+        "omnisharp.path": "latest",
+        "omnisharp.useModernNet": false
+    }
 }

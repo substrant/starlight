@@ -1,4 +1,8 @@
-image: gitpod/workspace-dotnet
+workspaceLocation: gitpod-ws.code-workspace
+
+image:
+  file: .gitpod.Dockerfile
+
 vscode:
   extensions:
     - muhammad-sammy.csharp
