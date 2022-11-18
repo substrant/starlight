@@ -1,0 +1,28 @@
+{
+    "folders": [
+        {
+            "name": "Starlight",
+            "path": "src/Starlight/"
+        },
+        {
+            "name": "Starlight.App",
+            "path": "src/Starlight.App"
+        },
+        {
+            "name": "Starlight.Gui",
+            "path": "src/Starlight.Gui"
+        },
+        {
+            "name": "Starlight.Std",
+            "path": "src/Starlight.Std"
+        },
+        {
+            "name": "Root",
+            "path": "."
+        },
+        {
+            "name": "Docs",
+            "path": "docs"
+        }
+    ]
+}
