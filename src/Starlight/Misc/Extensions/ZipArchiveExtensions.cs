@@ -6,7 +6,7 @@ namespace Starlight.Misc.Extensions;
 
 internal static class ZipArchiveExtensions
 {
-    public static void ExtractToDirectory(this ZipArchive archive, string destinationDirectoryName,
+    public static void ExtractToDirectoryEx(this ZipArchive archive, string destinationDirectoryName,
         bool overwrite = false)
     {
         destinationDirectoryName = Directory.CreateDirectory(destinationDirectoryName).FullName;

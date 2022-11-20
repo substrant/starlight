@@ -272,7 +272,7 @@ public static partial class Bootstrapper
             postDownloadTracker?.Step($"Extracting {file.Name}");
             using (var archive = ZipFile.OpenRead(filePath))
             {
-                archive.ExtractToDirectory(extractTo, true);
+                archive.ExtractToDirectoryEx(extractTo, true);
             }
 
             ExtractFin:
