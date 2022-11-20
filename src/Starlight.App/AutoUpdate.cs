@@ -1,8 +1,14 @@
 ﻿using System;
 using System.Diagnostics;
+using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+
+#if !DEBUG
+using RestSharp;
+using RestSharp.Serializers.NewtonsoftJson;
+#endif
 
 namespace Starlight.App;
 
