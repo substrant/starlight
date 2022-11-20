@@ -5,7 +5,6 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using IWshRuntimeLibrary;
 using Microsoft.Win32;
 using RestSharp;
 using Starlight.Misc;
@@ -322,50 +321,11 @@ public static partial class Bootstrapper
 
             if (cfg.RegisterClient)
                 RegisterClient(client);
-
-            AddShortcuts(client, cfg);
         }
         else
         {
             UnregisterClass();
             UnregisterClient();
-            RemoveShortcuts();
         }
-    }
-
-    /* Shortcuts */
-
-    internal static void AddShortcuts(Client client, InstallConfig cfg)
-    {
-        RemoveShortcuts();
-
-        if (cfg.CreateStartMenuShortcut)
-        {
-            var menuShortcut = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-                "Microsoft\\Windows\\Start Menu\\Programs\\Roblox", "Roblox Player.lnk");
-            Utility.CreateShortcut(menuShortcut, client.Launcher, client.Location);
-        }
-
-        // ReSharper disable once InvertIf
-        if (cfg.CreateDesktopShortcut)
-        {
-            var desktopShorctut = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-                "Roblox Player.lnk");
-            Utility.CreateShortcut(desktopShorctut, client.Launcher, client.Location);
-        }
-    }
-
-    internal static void RemoveShortcuts()
-    {
-        var menuShortcut = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "Microsoft\\Windows\\Start Menu\\Programs\\Roblox", "Roblox Player.lnk");
-        var desktopShorctut = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Desktop),
-            "Roblox Player.lnk");
-
-        if (File.Exists(menuShortcut))
-            File.Delete(menuShortcut);
-
-        if (File.Exists(desktopShorctut))
-            File.Delete(desktopShorctut);
     }
 }

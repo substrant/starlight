@@ -5,7 +5,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using IWshRuntimeLibrary;
 using Microsoft.Win32.SafeHandles;
 using File = System.IO.File;
 
@@ -13,16 +12,6 @@ namespace Starlight.Misc;
 
 internal class Utility
 {
-    public static void CreateShortcut(string filePath, string target, string workingDir)
-    {
-        WshShell shell = new(); // This is a nasty library; I wish COM didn't exist.
-        var shortcut = (IWshShortcut)shell.CreateShortcut(filePath);
-
-        shortcut.TargetPath = target;
-        shortcut.WorkingDirectory = workingDir;
-        shortcut.Save();
-    }
-
     public static bool TryGetCultureInfo(string name, out CultureInfo ci)
     {
         try

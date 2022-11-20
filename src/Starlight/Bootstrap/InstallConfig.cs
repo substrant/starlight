@@ -11,16 +11,6 @@ public class InstallConfig
     public static InstallConfig Default = new();
 
     /// <summary>
-    ///     A boolean indicating if a desktop shortcut should be created.
-    /// </summary>
-    public bool CreateDesktopShortcut = true;
-
-    /// <summary>
-    ///     A boolean indicating if a start menu shortcut should be created.
-    /// </summary>
-    public bool CreateStartMenuShortcut = true;
-
-    /// <summary>
     ///     The max concurrent threads running while downloading.
     /// </summary>
     public int DownloadConcurrency = 3;

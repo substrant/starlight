@@ -70,8 +70,6 @@ namespace Starlight.Gui
                 Tracker.Start(2, "Updating Roblox");
                 await Bootstrapper.InstallAsync(client, Tracker.SubStep(), new InstallConfig
                 {
-                    CreateDesktopShortcut = false,
-                    CreateStartMenuShortcut = false,
                     RegisterClass = false
                 });
             }
