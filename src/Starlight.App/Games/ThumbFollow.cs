@@ -1,39 +1,22 @@
-﻿using Newtonsoft.Json;
+﻿using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
 using Starlight.Apis;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Starlight.App.Games;
 
 public class ThumbFollow
 {
-    class GameInfo
-    {
-        [JsonProperty("id")] public Guid? JobId;
-        [JsonProperty("playerTokens")] public string[] PlayerTokens;
-    }
-
-    class ThumbData
-    {
-        [JsonProperty("targetId")] public long TargetId;
-        [JsonProperty("state")] public string State;
-        [JsonProperty("imageUrl")] public string ImageUrl;
-    }
-
-    class ThumbResponse
-    {
-        [JsonProperty("data")] public ThumbData[] Data;
-    }
-    
     public static async Task<Guid?> GetServerId(long userId, long placeId)
     {
         using var thumbClient = new RestClient("https://thumbnails.roblox.com/").UseNewtonsoftJson();
-        
-        var thumb = await thumbClient.GetJsonAsync<ThumbResponse>($"/v1/users/avatar-headshot?userIds={userId}&size=150x150&format=Png&isCircular=false");
-        
+
+        var thumb = await thumbClient.GetJsonAsync<ThumbResponse>(
+            $"/v1/users/avatar-headshot?userIds={userId}&size=150x150&format=Png&isCircular=false");
+
         if (thumb is null)
             return null;
 
@@ -41,7 +24,6 @@ public class ThumbFollow
 
         var pageClient = new Page<GameInfo>($"https://games.roblox.com/v1/games/{placeId}/servers/Public/");
         for (var page = await pageClient.FetchNextAsync(); page != null; page = await pageClient.FetchNextAsync())
-        {
             foreach (var info in page)
             {
                 var batchReq = new RestRequest("/v1/batch", Method.Post)
@@ -62,8 +44,25 @@ public class ThumbFollow
                 if (batchRes.Data.Data.Any(thumbRes => thumbRes.ImageUrl == lookFor))
                     return info.JobId;
             }
-        }
 
         return null;
+    }
+
+    private class GameInfo
+    {
+        [JsonProperty("id")] public Guid? JobId;
+        [JsonProperty("playerTokens")] public string[] PlayerTokens;
+    }
+
+    private class ThumbData
+    {
+        [JsonProperty("imageUrl")] public string ImageUrl;
+        [JsonProperty("state")] public string State;
+        [JsonProperty("targetId")] public long TargetId;
+    }
+
+    private class ThumbResponse
+    {
+        [JsonProperty("data")] public ThumbData[] Data;
     }
 }

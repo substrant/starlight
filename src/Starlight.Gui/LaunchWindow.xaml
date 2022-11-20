@@ -3,7 +3,6 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:self="clr-namespace:Starlight.Gui"
         mc:Ignorable="d"
         Title="LaunchWindow" Height="200" Width="600"
         ResizeMode="NoResize"
@@ -11,7 +10,9 @@
         WindowStartupLocation="CenterScreen"
         Loaded="Window_Loaded">
     <Grid>
-        <TextBlock x:Name="Label" Text="stars light launchor hehehaha" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,43,0,0" FontSize="30px"/>
-        <ProgressBar x:Name="ProgressBar" HorizontalAlignment="Center" Height="38" Margin="0,0,0,50" VerticalAlignment="Bottom" Width="528"/>
+        <TextBlock x:Name="Label" Text="stars light launchor hehehaha" HorizontalAlignment="Center"
+                   VerticalAlignment="Top" Margin="0,43,0,0" FontSize="30px" />
+        <ProgressBar x:Name="ProgressBar" HorizontalAlignment="Center" Height="38" Margin="0,0,0,50"
+                     VerticalAlignment="Bottom" Width="528" />
     </Grid>
 </Window>

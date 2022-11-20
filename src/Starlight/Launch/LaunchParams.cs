@@ -14,8 +14,8 @@ namespace Starlight.Launch;
 /// </summary>
 public partial class LaunchParams
 {
-    CultureInfo _gameLocale;
-    CultureInfo _robloxLocale;
+    private CultureInfo _gameLocale;
+    private CultureInfo _robloxLocale;
 
     /// <summary>
     ///     The authentication string to be used.<br />

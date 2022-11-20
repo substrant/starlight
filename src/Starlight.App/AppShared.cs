@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Starlight.Bootstrap;
@@ -11,9 +8,9 @@ namespace Starlight.App;
 
 public static class AppShared
 {
-    static Client _appClient = InitAppClient();
+    private static Client _appClient = InitAppClient();
 
-    static Client InitAppClient()
+    private static Client InitAppClient()
     {
         try
         {

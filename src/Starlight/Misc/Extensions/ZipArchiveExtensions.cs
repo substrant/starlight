@@ -40,7 +40,8 @@ internal static class ZipArchiveExtensions
             {
                 file.ExtractToFile(completeFileName, true);
             }
-            catch (IOException) // Roblox likes to make my life harder than it has to be. No clue why this throws but it's going into production because it works.
+            catch
+                (IOException) // Roblox likes to make my life harder than it has to be. No clue why this throws but it's going into production because it works.
             {
             }
         }

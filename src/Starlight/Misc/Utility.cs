@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.Win32.SafeHandles;
-using File = System.IO.File;
 
 namespace Starlight.Misc;
 
@@ -103,7 +102,7 @@ internal class Utility
     {
         foreach (var dirPath in Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories))
             Directory.CreateDirectory(dirPath.Replace(sourcePath, targetPath));
-        
+
         foreach (var newPath in Directory.GetFiles(sourcePath, "*.*", SearchOption.AllDirectories))
             File.Copy(newPath, newPath.Replace(sourcePath, targetPath), true);
     }

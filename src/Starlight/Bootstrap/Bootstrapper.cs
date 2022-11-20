@@ -10,7 +10,6 @@ using RestSharp;
 using Starlight.Misc;
 using Starlight.Misc.Extensions;
 using Starlight.Misc.Profiling;
-using File = System.IO.File;
 
 namespace Starlight.Bootstrap;
 
@@ -19,7 +18,7 @@ namespace Starlight.Bootstrap;
 /// </summary>
 public static partial class Bootstrapper
 {
-    static readonly IReadOnlyDictionary<string, string> ZipMap = new Dictionary<string, string>
+    private static readonly IReadOnlyDictionary<string, string> ZipMap = new Dictionary<string, string>
     {
         { "content-avatar.zip", "content\\avatar" },
         { "content-configs.zip", "content\\configs" },
@@ -50,8 +49,8 @@ public static partial class Bootstrapper
     internal static string GlobalInstallPath =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Roblox", "Versions");
 
-    static DateTime _lastVersionHashFetch = DateTime.MinValue;
-    static string _latestVersionHash;
+    private static DateTime _lastVersionHashFetch = DateTime.MinValue;
+    private static string _latestVersionHash;
 
     /* Versions */
 
@@ -62,7 +61,8 @@ public static partial class Bootstrapper
     public static async Task<string> GetLatestVersionHashAsync(bool bypassCache = false,
         CancellationToken token = default)
     {
-        if (!bypassCache && _latestVersionHash is not null && DateTime.Now - _lastVersionHashFetch > TimeSpan.FromDays(1))
+        if (!bypassCache && _latestVersionHash is not null &&
+            DateTime.Now - _lastVersionHashFetch > TimeSpan.FromDays(1))
             return await Task.FromResult(_latestVersionHash);
 
         var version = await RbxCdnClient.GetAsync(new RestRequest("/version.txt"), token);

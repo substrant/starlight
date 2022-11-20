@@ -11,15 +11,15 @@ namespace Starlight.Plugins;
 /// </summary>
 public class PluginSdk
 {
-    readonly JObject _config;
-    readonly string _configPath;
+    private readonly JObject _config;
+    private readonly string _configPath;
 
     internal PluginSdk(Assembly pluginAssembly)
     {
         if (!File.Exists(pluginAssembly.Location))
             throw new ArgumentException("Invalid plugin assembly.", nameof(pluginAssembly));
 
-        string pluginDir = Path.GetDirectoryName(pluginAssembly.Location)!;
+        var pluginDir = Path.GetDirectoryName(pluginAssembly.Location)!;
         _configPath = Path.Combine(pluginDir, Path.GetFileNameWithoutExtension(pluginAssembly.Location) + ".json");
 
         if (File.Exists(_configPath))

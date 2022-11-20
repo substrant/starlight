@@ -14,10 +14,6 @@ namespace Starlight.Bootstrap;
 /// </summary>
 public partial class Client
 {
-    internal Client()
-    {
-    }
-
     /// <summary>
     ///     Determines of the installation is common, or stored in Roblox's installation directory.
     /// </summary>
@@ -43,6 +39,15 @@ public partial class Client
     /// </summary>
     public string VersionHash;
 
+    internal Client()
+    {
+    }
+
+    /// <summary>
+    ///     A boolean value indicating if the client is installed.
+    /// </summary>
+    public bool Exists => Directory.Exists(Location);
+
     /// <summary>
     ///     Instantiates a new <see cref="Client" /> from Roblox's global installation directory.
     /// </summary>
@@ -64,7 +69,7 @@ public partial class Client
     }
 
     /// <summary>
-    ///    Instantiates a new <see cref="Client" /> from a custom (hinted) Roblox installation directory.
+    ///     Instantiates a new <see cref="Client" /> from a custom (hinted) Roblox installation directory.
     /// </summary>
     /// <exception cref="ArgumentNullException" />
     /// <exception cref="ArgumentException" />
@@ -77,11 +82,12 @@ public partial class Client
         {
             var lockFile = Path.Combine(installPath, "Starlight.lock");
             if (!File.Exists(lockFile))
-                throw new ArgumentException("Could not find the version hint file to compensate for the undefined hash.", nameof(installPath));
+                throw new ArgumentException(
+                    "Could not find the version hint file to compensate for the undefined hash.", nameof(installPath));
 
             versionHash = File.ReadAllText(lockFile);
         }
-        
+
         return new Client
         {
             VersionHash = versionHash,
@@ -90,11 +96,6 @@ public partial class Client
             Launcher = Path.Combine(installPath, "RobloxPlayerLauncher.exe")
         };
     }
-
-    /// <summary>
-    ///     A boolean value indicating if the client is installed.
-    /// </summary>
-    public bool Exists => Directory.Exists(Location);
 
     /// <summary>
     ///     Gets a list of the <see cref="Client" />'s <see cref="Downloadable" /> instances.

@@ -4,7 +4,6 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json.Linq;
 using Starlight.Bootstrap;
 using Starlight.Misc;
 using Starlight.Plugins;
@@ -17,20 +16,19 @@ namespace Starlight.Launch;
 public static partial class Launcher
 {
     [DllImport("kernel32.dll")]
-    static extern int CreateEvent(IntPtr lpEventAttributes, bool bManualReset, bool bInitialState, string lpName);
+    private static extern int CreateEvent(IntPtr lpEventAttributes, bool bManualReset, bool bInitialState,
+        string lpName);
 
     [DllImport("kernel32.dll")]
-    static extern bool CloseHandle(int hObject);
+    private static extern bool CloseHandle(int hObject);
 
     internal static async Task<bool> WaitRobloxInitAsync(int timeout, CancellationToken token = default)
     {
         var singletonEvent = CreateEvent(IntPtr.Zero, false, false, "ROBLOX_singletonEvent");
 
         using var singletonWaitHandle = Utility.GetNativeEventWaitHandle(singletonEvent);
-        var res = await Task.Run(() =>
-        {
-            return WaitHandle.WaitAny(new[] { singletonWaitHandle, token.WaitHandle }, timeout);
-        }, token);
+        var res = await Task.Run(
+            () => { return WaitHandle.WaitAny(new[] { singletonWaitHandle, token.WaitHandle }, timeout); }, token);
 
         CloseHandle(singletonEvent);
         return res == 0;
@@ -50,7 +48,8 @@ public static partial class Launcher
         throw new PrematureCloseException(client, proc);
     }
 
-    internal static async Task<ClientInstance> GetInstanceAsync(Client client, LaunchParams info, CancellationToken token = default)
+    internal static async Task<ClientInstance> GetInstanceAsync(Client client, LaunchParams info,
+        CancellationToken token = default)
     {
         // Start Roblox
         Process proc = null;
@@ -115,7 +114,7 @@ public static partial class Launcher
 
         if (token.IsCancellationRequested)
             throw new TaskCanceledException();
-        
+
         // Ensure the client exists
         if (!client.Exists)
             throw new ClientNotFoundException(client);
@@ -173,7 +172,7 @@ public static partial class Launcher
         {
             FailLaunch(client, inst.Proc);
         }
-        
+
         return inst;
     }
 }

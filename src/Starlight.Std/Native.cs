@@ -1,51 +1,51 @@
 ﻿using System;
 using System.Runtime.InteropServices;
 
-namespace Starlight.Std
+namespace Starlight.Std;
+
+internal class Native
 {
-    internal class Native
+    public enum CmdShow
     {
-        [DllImport("user32.dll")]
-        public static extern bool GetWindowRect(IntPtr hWnd, out Rect lpRect);
+        Hide,
+        Show = 5,
+        Minimize
+    }
 
-        [StructLayout(LayoutKind.Sequential)]
-        public struct Rect
-        {
-            public int Left;
-            public int Top;
-            public int Right;
-            public int Bottom;
-        }
+    public const int WmSysCommand = 0x112;
 
-        [DllImport("user32.dll")]
-        public static extern IntPtr SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy, uint wFlags);
+    public const int ScMinimize = 0xF020;
 
-        [DllImport("user32.dll")]
-        public static extern int SetWindowLong(IntPtr hWnd, int nIndex, uint dwNewLong);
+    public const uint SwpNoZOrder = 0x0004;
 
-        [DllImport("user32.dll")]
-        public static extern bool ShowWindow(IntPtr hWnd, CmdShow nCmdShow);
+    public const uint SwpNoOwnerZOrder = 0x0200;
 
-        [DllImport("user32.dll")]
-        public static extern IntPtr SendMessage(IntPtr hWnd, int nMsg, int wParam, IntPtr lParam);
+    public const int GwlStyle = -16;
 
-        public enum CmdShow : int
-        {
-            Hide,
-            Show = 5,
-            Minimize
-        }
+    public const uint WsPopupWindow = 0x80880000;
 
-        public const int WmSysCommand = 0x112;
+    [DllImport("user32.dll")]
+    public static extern bool GetWindowRect(IntPtr hWnd, out Rect lpRect);
 
-        public const int ScMinimize = 0xF020;
+    [DllImport("user32.dll")]
+    public static extern IntPtr SetWindowPos(IntPtr hWnd, IntPtr hWndInsertAfter, int x, int y, int cx, int cy,
+        uint wFlags);
 
-        public const uint SwpNoZOrder = 0x0004;
+    [DllImport("user32.dll")]
+    public static extern int SetWindowLong(IntPtr hWnd, int nIndex, uint dwNewLong);
 
-        public const uint SwpNoOwnerZOrder = 0x0200;
+    [DllImport("user32.dll")]
+    public static extern bool ShowWindow(IntPtr hWnd, CmdShow nCmdShow);
 
-        public const int GwlStyle = -16;
+    [DllImport("user32.dll")]
+    public static extern IntPtr SendMessage(IntPtr hWnd, int nMsg, int wParam, IntPtr lParam);
 
-        public const uint WsPopupWindow = 0x80880000;
+    [StructLayout(LayoutKind.Sequential)]
+    public struct Rect
+    {
+        public int Left;
+        public int Top;
+        public int Right;
+        public int Bottom;
     }
 }

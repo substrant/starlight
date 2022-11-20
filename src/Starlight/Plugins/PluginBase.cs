@@ -19,7 +19,7 @@ public abstract class PluginBase
     /// </summary>
     public readonly PluginSdk Sdk;
 
-    bool _enabled = true;
+    private bool _enabled = true;
 
     protected PluginBase()
     {

@@ -23,16 +23,16 @@ public partial class Session : RbxUser, IDisposable
 
     /* Tokens */
 
-    string _authToken;
+    private string _authToken;
 
     /* IDisposable implementation */
 
-    bool _disposed;
+    private bool _disposed;
 
-    DateTime _xsrfLastGrabbed;
-    string _xsrfToken;
+    private DateTime _xsrfLastGrabbed;
+    private string _xsrfToken;
 
-    Session()
+    private Session()
     {
     }
 
@@ -69,7 +69,7 @@ public partial class Session : RbxUser, IDisposable
 
     /// <exception cref="TaskCanceledException" />
     /// <exception cref="InvalidOperationException" />
-    async Task RetrieveInfoAsync(CancellationToken token = default)
+    private async Task RetrieveInfoAsync(CancellationToken token = default)
     {
         try
         {
@@ -245,7 +245,7 @@ public partial class Session : RbxUser, IDisposable
         GameClient.Dispose();
     }
 
-    class SessionInfo
+    private class SessionInfo
     {
         [JsonProperty("UserId")] public string UserId;
         [JsonProperty("Name")] public string Username;

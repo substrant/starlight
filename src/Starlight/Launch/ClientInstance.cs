@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Threading;
 using System.Threading.Tasks;
 using HackerFramework;
-using Serilog;
 using Starlight.Bootstrap;
 
 namespace Starlight.Launch;
@@ -23,9 +21,9 @@ public class ClientInstance
     /// </summary>
     public readonly Target Target;
 
-    uint _frameDelayOff;
-    TaskScheduler _taskScheduler;
-    long _userId;
+    private uint _frameDelayOff;
+    private TaskScheduler _taskScheduler;
+    private long _userId;
 
     /// <summary>
     ///     The client of the instance.
@@ -73,7 +71,8 @@ public class ClientInstance
             throw new NotImplementedException();
         var tssFunction = Target.CallAt(results[0] + RobloxData.TssCallOffset);
 
-        results = Target.FindPattern(RobloxData.TssPtrRefSignature, new VirtualRange<uint>(tssFunction, tssFunction + 0x100));
+        results = Target.FindPattern(RobloxData.TssPtrRefSignature,
+            new VirtualRange<uint>(tssFunction, tssFunction + 0x100));
         if (results.Count == 0)
             throw new NotImplementedException();
         var singletonPtr = Target.ReadPointer(results[0] + 1); // A1 ?? ?? ?? ??

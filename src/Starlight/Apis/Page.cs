@@ -17,17 +17,17 @@ namespace Starlight.Apis;
 /// <typeparam name="T">Any serializable class.</typeparam>
 public partial class Page<T> : IDisposable where T : class
 {
-    readonly RestClient _client;
-    readonly IReadOnlyDictionary<string, string> _extras;
-    readonly int _limit;
-    readonly Uri _resource;
+    private readonly RestClient _client;
+    private readonly IReadOnlyDictionary<string, string> _extras;
+    private readonly int _limit;
+    private readonly Uri _resource;
 
     /* IDisposable implementation */
 
-    bool _disposed;
-    string _lastCursor;
+    private bool _disposed;
+    private string _lastCursor;
 
-    PageBody _lastFetchedBody;
+    private PageBody _lastFetchedBody;
 
     /// <summary>
     ///     The current page number.
@@ -223,7 +223,7 @@ public partial class Page<T> : IDisposable where T : class
         _client.Dispose();
     }
 
-    class PageBody
+    private class PageBody
     {
         [JsonProperty("data")] public T[] Data;
         [JsonProperty("nextPageCursor")] public string NextPageCursor;

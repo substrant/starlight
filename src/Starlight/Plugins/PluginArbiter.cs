@@ -12,7 +12,7 @@ namespace Starlight.Plugins;
 /// </summary>
 public class PluginArbiter
 {
-    static bool _loaded;
+    private static bool _loaded;
 
     internal static List<PluginBase> Plugins = new();
 

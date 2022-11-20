@@ -16,6 +16,11 @@ public class InstallConfig
     public int DownloadConcurrency = 3;
 
     /// <summary>
+    ///     The directory to copy overloads from.
+    /// </summary>
+    public string OverloadDirectory;
+
+    /// <summary>
     ///     A boolean indicating if the scheme should be registered.
     /// </summary>
     public bool RegisterClass = true;
@@ -29,9 +34,4 @@ public class InstallConfig
     ///     The max concurrent threads running while unzipping.
     /// </summary>
     public int UnzipConcurrency = 3;
-
-    /// <summary>
-    ///     The directory to copy overloads from.
-    /// </summary>
-    public string OverloadDirectory;
 }

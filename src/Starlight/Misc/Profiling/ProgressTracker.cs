@@ -13,8 +13,8 @@ public class ProgressTracker
     /// <param name="sender">The progress tracker object.</param>
     public delegate void ProgressUpdatedCallback(ProgressTracker sender);
 
-    double _lastValue;
-    double _value;
+    private double _lastValue;
+    private double _value;
 
     /// <summary>
     ///     The annotation of the currently running step.

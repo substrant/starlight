@@ -7,7 +7,7 @@ namespace Starlight.Misc;
 
 internal static class AsyncHelpers
 {
-    static readonly TaskFactory TaskFactory = new(CancellationToken.None, TaskCreationOptions.None,
+    private static readonly TaskFactory TaskFactory = new(CancellationToken.None, TaskCreationOptions.None,
         TaskContinuationOptions.None, TaskScheduler.Default);
 
     public static Task RunAsync(Action action)
