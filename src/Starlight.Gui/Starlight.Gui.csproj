@@ -6,7 +6,7 @@
 		<AssemblyTitle>Starlight.Gui</AssemblyTitle>
 		<AssemblyName>Starlight.Gui</AssemblyName>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net6.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<Platforms>AnyCPU;x86;x64</Platforms>
 		<Configurations>Debug;Release</Configurations>

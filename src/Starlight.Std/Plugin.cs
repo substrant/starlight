@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Drawing;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+using System.Windows;
 using Starlight.Bootstrap;
 using Starlight.Launch;
 using Starlight.Plugins;
@@ -86,7 +87,11 @@ public class Plugin : PluginBase
             {
                 // Get the bounds of the window and screen
                 var bounds = Utility.GetWindowBounds(hwnd);
-                var screenBounds = Screen.PrimaryScreen.WorkingArea with { X = 0, Y = 0 };
+                var screenBounds = new Rectangle
+                {
+                    Width = (int)SystemParameters.PrimaryScreenWidth,
+                    Height = (int)SystemParameters.PrimaryScreenHeight
+                };
 
                 // Center the window in the middle of the screen
                 Native.SetWindowPos(

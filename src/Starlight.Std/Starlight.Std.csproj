@@ -6,10 +6,11 @@
 		<AssemblyTitle>Starlight.Std</AssemblyTitle>
 		<AssemblyName>Starlight.Std</AssemblyName>
 		<OutputType>Library</OutputType>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net6.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<Platforms>AnyCPU;x86;x64</Platforms>
 		<Configurations>Debug;Release</Configurations>
+		<UseWPF>true</UseWPF>
 	</PropertyGroup>
 	<PropertyGroup>
 		<RootNamespace>$(AssemblyName)</RootNamespace>
@@ -36,11 +37,6 @@
 	</Target>
 	<ItemGroup>
 	  <ProjectReference Include="..\Starlight\Starlight.csproj" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Reference Include="System.Windows.Forms">
-	    <Private></Private>
-	  </Reference>
 	</ItemGroup>
 	<ItemGroup>
 	  <Reference Update="System">

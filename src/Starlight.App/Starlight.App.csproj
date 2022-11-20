@@ -6,7 +6,7 @@
 		<AssemblyTitle>Starlight.App</AssemblyTitle>
 		<AssemblyName>Starlight.App</AssemblyName>
 		<OutputType>Library</OutputType>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net6.0-windows</TargetFramework>
 		<LangVersion>latest</LangVersion>
 		<Platforms>AnyCPU;x86;x64</Platforms>
 		<Configurations>Debug;Release</Configurations>
@@ -34,8 +34,5 @@
 	</ItemGroup>
 	<ItemGroup>
 	  <ProjectReference Include="..\Starlight\Starlight.csproj" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Reference Include="System.ServiceProcess" />
 	</ItemGroup>
 </Project>
