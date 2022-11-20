@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using IWshRuntimeLibrary;
 using Microsoft.Win32.SafeHandles;
+using File = System.IO.File;
 
 namespace Starlight.Misc;
 
@@ -33,6 +35,11 @@ internal class Utility
             ci = null;
             return false;
         }
+    }
+
+    public static string GetLocaleName(CultureInfo ci)
+    {
+        return ci.Name.Split('/')[0].Replace('-', '_').ToLowerInvariant();
     }
 
     public static void DisperseActions(IList<Action> actions, int maxConcurrency, CancellationToken token = default)
@@ -101,5 +108,14 @@ internal class Utility
         {
             SafeWaitHandle = new SafeWaitHandle((IntPtr)handle, false)
         };
+    }
+
+    public static void CopyDirRecursive(string sourcePath, string targetPath)
+    {
+        foreach (var dirPath in Directory.GetDirectories(sourcePath, "*", SearchOption.AllDirectories))
+            Directory.CreateDirectory(dirPath.Replace(sourcePath, targetPath));
+        
+        foreach (var newPath in Directory.GetFiles(sourcePath, "*.*", SearchOption.AllDirectories))
+            File.Copy(newPath, newPath.Replace(sourcePath, targetPath), true);
     }
 }

@@ -52,7 +52,7 @@ public class JoinRequest
     /// <summary>
     ///     The type of join request to make.
     /// </summary>
-    [JsonIgnore] public JoinType? ReqType = JoinType.Auto;
+    [JsonIgnore] public JoinType ReqType = JoinType.Auto;
 
     /// <summary>
     ///     Instantiate a join request.
@@ -76,7 +76,7 @@ public class JoinRequest
         }
     }
 
-    [JsonIgnore]
+    [JsonProperty("request")]
     internal string RequestName
     {
         get
@@ -108,12 +108,13 @@ public class JoinRequest
         var query = new StringBuilder();
         foreach (var pair in JObject.FromObject(this))
         {
-            if (pair.Value is null)
+            if (pair.Value?.Type == JTokenType.Null)
                 continue;
 
-            query.Append($"{pair.Key}={HttpUtility.UrlEncode(pair.Value.ToString())}&");
+            query.Append($"{pair.Key}={HttpUtility.UrlEncode(pair.Value?.ToString())}&");
         }
 
-        return "https://assetgame.roblox.com/game/PlaceLauncher.ashx?" + query;
+        var str = "https://assetgame.roblox.com/game/PlaceLauncher.ashx?" + query;
+        return str.Substring(0, str.Length - 1);
     }
 }

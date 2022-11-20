@@ -12,7 +12,7 @@ public sealed class PrematureCloseException : Exception
     internal PrematureCloseException(Client client, Process proc) : base("The client prematurely closed.")
     {
         Data.Add("ProcId", proc?.Id);
-        Data.Add("Scope", client?.Scope);
+        Data.Add("Location", client?.Location);
         Data.Add("VersionHash", client?.VersionHash);
     }
 }

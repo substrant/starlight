@@ -48,7 +48,7 @@ public partial class Page<T> : IDisposable where T : class
         if (limit != 10 && limit != 25 && limit != 50 && limit != 100)
             throw new ArgumentException("The page limit must be either 10, 25, 50, or 100.", nameof(limit));
 
-        _client = new RestClient(resource.Host).UseNewtonsoftJson();
+        _client = new RestClient(new Uri(resource.Scheme + "://" + resource.Host)).UseNewtonsoftJson();
         _resource = resource;
         _limit = limit;
         _extras = extras;
@@ -74,7 +74,7 @@ public partial class Page<T> : IDisposable where T : class
         if (limit != 10 && limit != 25 && limit != 50 && limit != 100)
             throw new ArgumentException("The page limit must be either 10, 25, 50, or 100.", nameof(limit));
 
-        _client = new RestClient(resource.Host).UseNewtonsoftJson()
+        _client = new RestClient(new Uri(resource.Scheme + "://" + resource.Host)).UseNewtonsoftJson()
             .AddCookie(".ROBLOSECURITY", session.AuthToken, "/", ".roblox.com");
         _resource = resource;
         _limit = limit;
@@ -96,7 +96,7 @@ public partial class Page<T> : IDisposable where T : class
             throw new ArgumentException("The page limit must be either 10, 25, 50, or 100.", nameof(limit));
 
         _resource = new Uri(resource);
-        _client = new RestClient(_resource.Host).UseNewtonsoftJson();
+        _client = new RestClient(new Uri(_resource.Scheme + "://" + _resource.Host)).UseNewtonsoftJson();
         _limit = limit;
         _extras = extras;
     }
@@ -122,7 +122,7 @@ public partial class Page<T> : IDisposable where T : class
             throw new ArgumentException("The page limit must be either 10, 25, 50, or 100.", nameof(limit));
 
         _resource = new Uri(resource);
-        _client = new RestClient(_resource.Host).UseNewtonsoftJson()
+        _client = new RestClient(new Uri(_resource.Scheme + "://" + _resource.Host)).UseNewtonsoftJson()
             .AddCookie(".ROBLOSECURITY", session.AuthToken, "/", ".roblox.com");
         _limit = limit;
         _extras = extras;

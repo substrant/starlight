@@ -10,7 +10,7 @@ public sealed class ClientNotFoundException : Exception
 {
     internal ClientNotFoundException(Client client) : base("The specified client doesn't exist.")
     {
-        Data.Add("Scope", client?.Scope);
+        Data.Add("Location", client?.Location);
         Data.Add("VersionHash", client?.VersionHash);
     }
 }

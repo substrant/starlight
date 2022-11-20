@@ -12,9 +12,9 @@ public static partial class Bootstrapper
     }
 
     /// <summary>Synchronous wrapper for <see cref="GetLatestClientAsync" />.</summary>
-    public static Client GetLatestClient(ClientScope scope = ClientScope.Global)
+    public static Client GetLatestClient()
     {
-        return AsyncHelpers.RunSync(() => GetLatestClientAsync(scope));
+        return AsyncHelpers.RunSync(() => GetLatestClientAsync());
     }
 
     /// <summary>Synchronous wrapper for <see cref="InstallAsync" />.</summary>

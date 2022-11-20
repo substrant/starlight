@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using Newtonsoft.Json.Linq;
 using Starlight.Bootstrap;
 using Starlight.Launch;
@@ -93,23 +95,32 @@ public abstract class PluginBase
     /// </summary>
     /// <param name="info">The parameters used to launch Roblox.</param>
     /// <param name="client">The client to launch.</param>
-    public virtual void PreLaunch(LaunchParams info, ref Client client)
+    /// <param name="token">The cancellation token used to cancel the task.</param>
+    /// <exception cref="TaskCanceledException" />
+    public virtual Task<Client> PreLaunch(Client client, LaunchParams info, CancellationToken token = default)
     {
+        return Task.FromResult<Client>(null);
     }
 
     /// <summary>
     ///     The method that is called after Roblox launches.
     /// </summary>
     /// <param name="inst">The running instance of Roblox.</param>
-    public virtual void PostLaunch(ClientInstance inst)
+    /// <param name="token">The cancellation token used to cancel the task.</param>
+    /// <exception cref="TaskCanceledException" />
+    public virtual Task PostLaunch(ClientInstance inst, CancellationToken token = default)
     {
+        return Task.CompletedTask;
     }
 
     /// <summary>
     ///     The method that is called when Roblox's window opens.
     /// </summary>
     /// <param name="hwnd">Roblox's main window handle.</param>
-    public virtual void PostWindow(IntPtr hwnd)
+    /// <param name="token">The cancellation token used to cancel the task.</param>
+    /// <exception cref="TaskCanceledException" />
+    public virtual Task PostWindow(IntPtr hwnd, CancellationToken token = default)
     {
+        return Task.CompletedTask;
     }
 }
