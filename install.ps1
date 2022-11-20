@@ -24,9 +24,9 @@ if ($Uninstall -or $Update) {
 
 	if ($Uninstall) {
 		if ($anyRemoved) {
-			Write-Host "Starlight has been uninstalled." -ForegroundColor Green;
+			Write-Output "Starlight has been uninstalled.";
 		} else {
-			Write-Host "Starlight installation doesn't exist." -ForegroundColor Yellow;
+			Write-Output "Starlight installation doesn't exist.";
 		}
 		exit;
 	}
@@ -43,10 +43,7 @@ $metadata = if (!$firstInstall) { Get-Content $metadataFile | ConvertFrom-Json; 
 
 # Gets the latest release
 function Get-ReleaseData {
-	if ($Global:relData -eq $null) {
-		$Global:relData = Invoke-WebRequest "https://api.github.com/repos/$($args[0])/releases/latest" | ConvertFrom-Json;
-	}
-	return $Global:relData;
+	return Invoke-WebRequest "https://api.github.com/repos/$($args[0])/releases/latest" | ConvertFrom-Json;
 }
 
 # Gets an asset from a release by name
@@ -73,7 +70,7 @@ function Send-Prompt {
 		} elseif ($res -eq "n") {
 			return $false;
 		} else {
-			Write-Host "Invalid response. Please try again.";
+			Write-Output "Invalid response. Please try again.";
 		}
 	}
 }
@@ -90,12 +87,12 @@ function Create-Shortcut {
 $getFailed = $false;
 try {
 	$data = Get-ReleaseData $repo;
-	Write-Host "Latest release: $($data.tag_name)";
+	Write-Output "Latest release: $($data.tag_name)";
 } catch {
 	$getFailed = $true;
 } finally {
 	if ($getFailed -or $data -eq $null) {
-		Write-Host "Failed to get latest release data. Aborting." -ForegroundColor Red;
+		Write-Output "Failed to get latest release data. Aborting.";
 		exit;
 	}
 }
@@ -103,7 +100,7 @@ try {
 # Check if that version is already installed and set version to install afterwards
 if ($metadata.version -eq $data.tag_name) {
 	if (!(Send-Prompt "Starlight is already up to date. Do you want to reinstall Starlight?")) {
-		Write-Host "Aborting.";
+		Write-Output "Aborting.";
 		exit;
 	}
 }
@@ -112,7 +109,7 @@ $metadata.version = $data.tag_name;
 # Get the asset
 $package = Get-ReleaseAsset $data $packageName;
 if ($package -eq $null) {
-	Write-Host "Failed to get asset. Aborting." -ForegroundColor Red;
+	Write-Output "Failed to get asset. Aborting.";
 	exit;
 }
 
@@ -120,7 +117,7 @@ if ($package -eq $null) {
 $packagePath = Download-Asset $package;
 Expand-Archive -Path $packagePath -DestinationPath $InstallPath -Force;
 Remove-Item $packagePath -Force;
-Write-Host "Starlight has been downloaded to $InstallPath";
+Write-Output "Starlight has been downloaded to $InstallPath";
 
 # Create shortcuts
 if ($firstInstall -and !$Update) {
@@ -135,4 +132,4 @@ if ($firstInstall -and !$Update) {
 # Save metadata
 $metadata | ConvertTo-Json | Out-File $metadataFile -Force;
 
-Write-Host "Installation complete! Starlight can be found at $InstallPath." -ForegroundColor Green;
+Write-Output "Installation complete! Starlight can be found at $InstallPath.";

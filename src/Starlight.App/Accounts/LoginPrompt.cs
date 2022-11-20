@@ -4,19 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Starlight.App.Accounts
+namespace Starlight.App.Accounts;
+
+public enum LoginPromptMethod
 {
-    public enum LoginPromptMethod
-    {
-        Popup,
-        InBrowser,
-        Console
-    }
+    Popup,
+    InBrowser,
+    Console
+}
 
-    public class LoginPrompt
-    {
-        public string Username;
-
-        
-    }
+public class LoginPrompt
+{
+    public string Username;
 }

@@ -59,7 +59,7 @@ public partial class Downloadable
 
         using (var fileStm = File.OpenWrite(filePath))
         {
-            using var cdnClient = new RestClient("https://setup.rbxcdn.com");;
+            using var cdnClient = new RestClient("https://setup.rbxcdn.com");
             var req = new RestRequest($"version-{VersionHash}-{Name}")
             {
                 ResponseWriter = stm =>

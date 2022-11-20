@@ -97,8 +97,8 @@ public class Plugin : PluginBase
                 Native.SetWindowPos(
                     hwnd,
                     IntPtr.Zero,
-                    screenBounds.Right / 2 - bounds.Width / 2, // Center X
-                    screenBounds.Bottom / 2 - bounds.Height / 2, // Center Y
+                    (screenBounds.Right / 2) - (bounds.Width / 2), // Center X
+                    (screenBounds.Bottom / 2) - (bounds.Height / 2), // Center Y
                     res.Value.X,
                     res.Value.Y,
                     Native.SwpNoOwnerZOrder | Native.SwpNoZOrder);

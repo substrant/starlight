@@ -4,6 +4,7 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using Newtonsoft.Json.Linq;
 using Starlight.Bootstrap;
 using Starlight.Misc;
 using Starlight.Plugins;
@@ -20,6 +21,75 @@ public static partial class Launcher
 
     [DllImport("kernel32.dll")]
     static extern bool CloseHandle(int hObject);
+
+    internal static async Task<bool> WaitRobloxInitAsync(int timeout, CancellationToken token = default)
+    {
+        var singletonEvent = CreateEvent(IntPtr.Zero, false, false, "ROBLOX_singletonEvent");
+
+        using var singletonWaitHandle = Utility.GetNativeEventWaitHandle(singletonEvent);
+        var res = await Task.Run(() =>
+        {
+            return WaitHandle.WaitAny(new[] { singletonWaitHandle, token.WaitHandle }, timeout);
+        }, token);
+
+        CloseHandle(singletonEvent);
+        return res == 0;
+    }
+
+    internal static void CancelLaunch(Process proc)
+    {
+        if (!proc.HasExited)
+            proc.Kill();
+        throw new TaskCanceledException();
+    }
+
+    internal static void FailLaunch(Client client, Process proc)
+    {
+        if (!proc.HasExited)
+            proc.Kill();
+        throw new PrematureCloseException(client, proc);
+    }
+
+    internal static async Task<ClientInstance> GetInstanceAsync(Client client, LaunchParams info, CancellationToken token = default)
+    {
+        // Start Roblox
+        Process proc = null;
+        try
+        {
+            proc = Process.Start(new ProcessStartInfo
+            {
+                FileName = client.Player,
+                Arguments = "\"" + Path.GetFullPath(client.Player) + "\" " + await info.GetCliParamsAsync(),
+                WorkingDirectory = client.Location
+            });
+        }
+        finally
+        {
+            if (proc is null)
+                FailLaunch(client, null);
+        }
+
+        // Wait for the singleton event to fire (app init)
+        var singEventFired = await WaitRobloxInitAsync(15000, token);
+        if (!singEventFired)
+            FailLaunch(client, proc);
+
+        // Get the instance
+        ClientInstance inst = null;
+        try
+        {
+            inst = new ClientInstance(client, proc);
+        }
+        finally
+        {
+            if (inst is null)
+                FailLaunch(client, proc);
+            else if (token.IsCancellationRequested)
+                CancelLaunch(proc);
+        }
+
+        return inst;
+    }
 
     /// <summary>
     ///     Launch a client with the specified parameters.
@@ -50,52 +120,7 @@ public static partial class Launcher
         if (!client.Exists)
             throw new ClientNotFoundException(client);
 
-        // Start Roblox
-        Process proc = null;
-        try
-        {
-            proc = Process.Start(new ProcessStartInfo
-            {
-                FileName = client.Player,
-                Arguments = "\"" + Path.GetFullPath(client.Player) + "\" " + await info.GetCliParamsAsync(),
-                WorkingDirectory = client.Location
-            });
-        }
-        finally
-        {
-            if (proc is null)
-                throw new PrematureCloseException(client, null);
-        }
-        
-        // Wait for roblox singleton event to fire (app init)
-        var singletonEvent = CreateEvent(IntPtr.Zero, false, false, "ROBLOX_singletonEvent");
-        using var singletonWaitHandle = Utility.GetNativeEventWaitHandle(singletonEvent);
-        singletonWaitHandle.WaitOne();
-        CloseHandle(singletonEvent);
-        
-        // Get the instance
-        ClientInstance inst = null;
-        try
-        {
-            inst = new ClientInstance(client, proc);
-        }
-        finally
-        {
-            if (inst is null)
-            {
-                if (!proc.HasExited)
-                    proc.Kill();
-                throw new PrematureCloseException(client, proc);
-            }
-        }
-
-        if (token.IsCancellationRequested)
-        {
-            if (!proc.HasExited)
-                proc.Kill();
-            throw new TaskCanceledException();
-        }
-
+        var inst = await GetInstanceAsync(client, info, token);
         var cancelSrc = new CancellationTokenSource();
 
 # pragma warning disable CS4014
@@ -104,7 +129,7 @@ public static partial class Launcher
         Task.Run(() =>
         {
             // ReSharper disable once AccessToDisposedClosure
-            if (WaitHandle.WaitAny(new[] { exitEvent, cancelSrc.Token.WaitHandle }) == 0)
+            if (WaitHandle.WaitAny(new[] { exitEvent, cancelSrc.Token.WaitHandle, token.WaitHandle }) == 0)
                 cancelSrc.Cancel();
         }, token);
 # pragma warning restore CS4014
@@ -117,8 +142,7 @@ public static partial class Launcher
         }
         catch (Exception)
         {
-            proc.Kill();
-            throw;
+            FailLaunch(client, inst.Proc);
         }
 
         // Wait for Roblox's window to open
@@ -126,27 +150,18 @@ public static partial class Launcher
         var hWnd = IntPtr.Zero;
         var windowTask = Task.Run(() =>
         {
-            while ((hWnd = proc.MainWindowHandle) == IntPtr.Zero
+            while ((hWnd = inst.Proc!.MainWindowHandle) == IntPtr.Zero
                    && !cancelSrc.IsCancellationRequested)
                 Thread.Sleep(TimeSpan.FromSeconds(1.0d / 15));
         }, token);
 
         // ReSharper disable once MethodSupportsCancellation
-        windowTask.Wait();
-
-        if (token.IsCancellationRequested)
-        {
-            if (!proc.HasExited)
-                proc.Kill();
-            throw new TaskCanceledException();
-        }
+        await windowTask.WaitAsync(token);
 
         if (cancelSrc.IsCancellationRequested)
-        {
-            if (!proc.HasExited)
-                proc.Kill();
-            throw new PrematureCloseException(client, proc);
-        }
+            FailLaunch(client, inst.Proc);
+        else if (token.IsCancellationRequested)
+            CancelLaunch(inst.Proc);
 
         // Run post-window methods
         try
@@ -156,9 +171,7 @@ public static partial class Launcher
         }
         catch (Exception)
         {
-            if (!proc.HasExited)
-                proc.Kill();
-            throw;
+            FailLaunch(client, inst.Proc);
         }
         
         return inst;
