@@ -1,0 +1,27 @@
+version: 2.0.{build}
+build_cloud: WORKSTATION # Self-hosted build agent because builds are slow on AppVeyor's cloud
+max_jobs: 1
+image: Windows
+clone_depth: 5
+clone_folder: C:\Trunk\
+clone_script:
+- cmd: >-
+    git clone -q --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
+        cd %APPVEYOR_BUILD_FOLDER%
+        git checkout -qf %APPVEYOR_REPO_COMMIT%
+        git submodule update --init --recursive
+dotnet_csproj:
+  patch: true
+  file: '**\*.csproj'
+  version: '{version}'
+  assembly_version: '{version}'
+  file_version: '{version}'
+  informational_version: '{version}'
+cache: packages -> **\packages.config
+build_script:
+- ps: .\build.ps1
+test: off
+artifacts:
+- path: src\Starlight.Gui\bin\Release\
+  name: bundle
+deploy: off
