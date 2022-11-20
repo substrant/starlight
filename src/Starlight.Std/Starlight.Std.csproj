@@ -1,97 +1,90 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup Label="Metadata">
-		<Version>0.1.0</Version>
-		<BuildNumber>0</BuildNumber>
-	</PropertyGroup>
-	<PropertyGroup>
-		<Product>Starlight.Std</Product>
-		<Description>Core plugin library for built-in Starlight features.</Description>
-		<Company>Substrant</Company>
-		<AssemblyTitle>Starlight.Std</AssemblyTitle>
-		<AssemblyName>Starlight.Std</AssemblyName>
-		<OutputType>Library</OutputType>
-		<TargetFramework>net48</TargetFramework>
-		<LangVersion>latest</LangVersion>
-		<Platforms>AnyCPU;x86;x64</Platforms>
-		<Configurations>Debug;Release</Configurations>
-	</PropertyGroup>
-	<PropertyGroup>
-		<RootNamespace>$(AssemblyName)</RootNamespace>
-		<InformationalVersion>$(Version)+$(BuildNumber)</InformationalVersion>
-		<AssemblyVersion>$(Version).$(BuildNumber)</AssemblyVersion>
-		<FileVersion>$(Version).$(BuildNumber)</FileVersion>
-		<Copyright>Copyright (c) 2022 $(Company)</Copyright>
-		<OutputPath>..\Starlight.Gui\bin\$(Configuration)\Plugins\</OutputPath>
-		<BaseIntermediateOutputPath>obj\$(Configuration)\</BaseIntermediateOutputPath>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-		<DebugType>portable</DebugType>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-		<DebugType>embedded</DebugType>
-	</PropertyGroup>
-	<ItemGroup>
-	  <Compile Remove="obj\**" />
-	  <EmbeddedResource Remove="obj\**" />
-	  <None Remove="obj\**" />
-	</ItemGroup>
-	<Target Name="ClearReferenceCopyLocalPaths" AfterTargets="ResolveAssemblyReferences">
-		<ItemGroup>
-			<ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" />
-		</ItemGroup>
-	</Target>
-	<ItemGroup>
-	  <ProjectReference Include="..\Starlight\Starlight.csproj" />
-	</ItemGroup>
-	<ItemGroup>
-	  <Reference Include="System.Windows.Forms">
-	    <Private></Private>
-	  </Reference>
-	</ItemGroup>
-	<ItemGroup>
-	  <Reference Update="System">
-	    <Private>False</Private>
-	  </Reference>
-	</ItemGroup>
-	<ItemGroup>
-	  <Reference Update="System.Core">
-	    <Private>False</Private>
-	  </Reference>
-	</ItemGroup>
-	<ItemGroup>
-	  <Reference Update="System.Data">
-	    <Private>False</Private>
-	  </Reference>
-	</ItemGroup>
-	<ItemGroup>
-	  <Reference Update="System.Drawing">
-	    <Private>False</Private>
-	  </Reference>
-	</ItemGroup>
-	<ItemGroup>
-	  <Reference Update="System.IO.Compression.FileSystem">
-	    <Private>False</Private>
-	  </Reference>
-	</ItemGroup>
-	<ItemGroup>
-	  <Reference Update="System.Numerics">
-	    <Private>False</Private>
-	  </Reference>
-	</ItemGroup>
-	<ItemGroup>
-	  <Reference Update="System.Runtime.Serialization">
-	    <Private>False</Private>
-	  </Reference>
-	</ItemGroup>
-	<ItemGroup>
-	  <Reference Update="System.Xml">
-	    <Private>False</Private>
-	  </Reference>
-	</ItemGroup>
-	<ItemGroup>
-	  <Reference Update="System.Xml.Linq">
-	    <Private>False</Private>
-	  </Reference>
-	</ItemGroup>
+    <PropertyGroup>
+        <Product>Starlight.Std</Product>
+        <Description>Core plugin library for built-in Starlight features.</Description>
+        <Company>Substrant</Company>
+        <AssemblyTitle>Starlight.Std</AssemblyTitle>
+        <AssemblyName>Starlight.Std</AssemblyName>
+        <OutputType>Library</OutputType>
+        <TargetFramework>net48</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Platforms>AnyCPU;x86;x64</Platforms>
+        <Configurations>Debug;Release</Configurations>
+    </PropertyGroup>
+    <PropertyGroup>
+        <RootNamespace>$(AssemblyName)</RootNamespace>
+        <Copyright>Copyright (c) 2022 $(Company)</Copyright>
+        <OutputPath>..\Starlight.Gui\bin\$(Configuration)\Plugins\</OutputPath>
+        <BaseIntermediateOutputPath>obj\$(Configuration)\</BaseIntermediateOutputPath>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+        <DebugType>portable</DebugType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+        <DebugType>embedded</DebugType>
+    </PropertyGroup>
+    <ItemGroup>
+      <Compile Remove="obj\**" />
+      <EmbeddedResource Remove="obj\**" />
+      <None Remove="obj\**" />
+    </ItemGroup>
+    <Target Name="ClearReferenceCopyLocalPaths" AfterTargets="ResolveAssemblyReferences">
+        <ItemGroup>
+            <ReferenceCopyLocalPaths Remove="@(ReferenceCopyLocalPaths)" />
+        </ItemGroup>
+    </Target>
+    <ItemGroup>
+      <ProjectReference Include="..\Starlight\Starlight.csproj" />
+    </ItemGroup>
+    <ItemGroup>
+      <Reference Include="System.Windows.Forms">
+        <Private></Private>
+      </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <Reference Update="System">
+        <Private>False</Private>
+      </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <Reference Update="System.Core">
+        <Private>False</Private>
+      </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <Reference Update="System.Data">
+        <Private>False</Private>
+      </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <Reference Update="System.Drawing">
+        <Private>False</Private>
+      </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <Reference Update="System.IO.Compression.FileSystem">
+        <Private>False</Private>
+      </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <Reference Update="System.Numerics">
+        <Private>False</Private>
+      </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <Reference Update="System.Runtime.Serialization">
+        <Private>False</Private>
+      </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <Reference Update="System.Xml">
+        <Private>False</Private>
+      </Reference>
+    </ItemGroup>
+    <ItemGroup>
+      <Reference Update="System.Xml.Linq">
+        <Private>False</Private>
+      </Reference>
+    </ItemGroup>
 </Project>
