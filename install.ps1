@@ -1,6 +1,45 @@
+if ($InstallPath -eq $null) {
+	$InstallPath = "$($env:USERPROFILE)\.starlight";
+}
+
+if ($Uninstall -or $Update) {
+	$anyRemoved = $false;
+
+	if (Test-Path $InstallPath -PathType Container) {
+		Remove-Item $InstallPath -Recurse -Force;
+		$anyRemoved = $true;
+	}
+
+	$desktopShortcut = "$($env:USERPROFILE)\Desktop\Starlight.lnk";
+	if (Test-Path $desktopShortcut -PathType Leaf) {
+		Remove-Item $desktopShortcut -Force;
+		$anyRemoved = $true;
+	}
+
+	$menuShortcut = "$($env:APPDATA)\Microsoft\Windows\Start Menu\Programs\Starlight.lnk";
+	if (Test-Path $menuShortcut -PathType Leaf) {
+		Remove-Item $menuShortcut -Force;
+		$anyRemoved = $true;
+	}
+
+	if ($Uninstall) {
+		if ($anyRemoved) {
+			Write-Host "Starlight has been uninstalled." -ForegroundColor Green;
+		} else {
+			Write-Host "Starlight installation doesn't exist." -ForegroundColor Yellow;
+		}
+		exit;
+	}
+}
+
 # Metadata (don't change unless fork)
 $repo = "Substrant/Starlight";
 $packageName = "Starlight_win32.zip";
+
+# Look for metadata of last installation and decode json to object
+$metadataFile = "$InstallPath\InstallationMetadata.json";
+$firstInstall = !(Test-Path $metadataFile -PathType Leaf);
+$metadata = if (!$firstInstall) { Get-Content $metadataFile | ConvertFrom-Json; } else { @{}; }
 
 # Gets the latest release
 function Get-ReleaseData {
@@ -29,7 +68,7 @@ function Download-Asset {
 function Send-Prompt {
 	for (;;) {
 		$res = Read-Host "$($args[0]) [y/n] ";
-		if ($res -eq "y" -or $res -eq "\n") {
+		if ($res -eq "y" -or $res -eq "") {
 			return $true;
 		} elseif ($res -eq "n") {
 			return $false;
@@ -47,14 +86,11 @@ function Create-Shortcut {
 	$shortcutLink.Save();
 }
 
-# Construct an installation path
-$installPath = if ($args[0]) { $args[0] } else { "$($env:LOCALAPPDATA)\Starlight" };
-
 # Get the latest release data
 $getFailed = $false;
 try {
 	$data = Get-ReleaseData $repo;
-	Write-Host "Latest release: $($data.tag_name). Downloading...";
+	Write-Host "Latest release: $($data.tag_name)";
 } catch {
 	$getFailed = $true;
 } finally {
@@ -63,6 +99,15 @@ try {
 		exit;
 	}
 }
+
+# Check if that version is already installed and set version to install afterwards
+if ($metadata.version -eq $data.tag_name) {
+	if (!(Send-Prompt "Starlight is already up to date. Do you want to reinstall Starlight?")) {
+		Write-Host "Aborting.";
+		exit;
+	}
+}
+$metadata.version = $data.tag_name;
 
 # Get the asset
 $package = Get-ReleaseAsset $data $packageName;
@@ -73,16 +118,21 @@ if ($package -eq $null) {
 
 # Download the asset to a temporary location then unzip the package and delete the compressed file
 $packagePath = Download-Asset $package;
-Expand-Archive -Path $packagePath -DestinationPath $installPath -Force;
+Expand-Archive -Path $packagePath -DestinationPath $InstallPath -Force;
 Remove-Item $packagePath -Force;
-Write-Host "Starlight has been downloaded to $installPath";
+Write-Host "Starlight has been downloaded to $InstallPath";
 
 # Create shortcuts
-if (Send-Prompt "Create desktop shortcut?") {
-	Create-Shortcut "$($env:USERPROFILE)\Desktop\Starlight.lnk" "$installPath\Starlight.Gui.exe";
-}
-if (Send-Prompt "Create start menu shortcut?") {
-	Create-Shortcut "$($env:APPDATA)\Microsoft\Windows\Start Menu\Programs\Starlight.lnk" "$installPath\Starlight.Gui.exe";
+if ($firstInstall -and !$Update) {
+	if (Send-Prompt "Create desktop shortcut?") {
+		Create-Shortcut "$($env:USERPROFILE)\Desktop\Starlight.lnk" "$InstallPath\Starlight.Gui.exe";
+	}
+	if (Send-Prompt "Create start menu shortcut?") {
+		Create-Shortcut "$($env:APPDATA)\Microsoft\Windows\Start Menu\Programs\Starlight.lnk" "$InstallPath\Starlight.Gui.exe";
+	}
 }
 
-Write-Host "Installation complete! Starlight can be found at $installPath." -ForegroundColor Green;
+# Save metadata
+$metadata | ConvertTo-Json | Out-File $metadataFile -Force;
+
+Write-Host "Installation complete! Starlight can be found at $InstallPath." -ForegroundColor Green;
