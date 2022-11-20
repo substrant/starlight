@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -12,6 +13,9 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
+using Starlight.Apis;
+using Starlight.Apis.JoinGame;
+using Starlight.App;
 using Starlight.Bootstrap;
 using Starlight.Launch;
 using Starlight.Misc.Profiling;
@@ -23,10 +27,8 @@ namespace Starlight.Gui
         public readonly LaunchParams LaunchInfo;
         public readonly ProgressTracker Tracker = new();
 
-        public LaunchWindow(LaunchParams launchInfo)
+        void InitializeUi()
         {
-            InitializeComponent();
-            LaunchInfo = launchInfo;
             Tracker.ProgressUpdated += sender =>
                 Dispatcher.Invoke(() =>
                 {
@@ -36,10 +38,33 @@ namespace Starlight.Gui
                 });
         }
 
-        async Task<Client> EnsureLatest()
+        public LaunchWindow(LaunchParams launchInfo)
         {
-            var client = await Bootstrapper.GetLatestClientAsync(ClientScope.Local);
+            InitializeComponent();
+            InitializeUi();
 
+            LaunchInfo = launchInfo;
+        }
+
+        public LaunchWindow(Session session, JoinRequest req)
+        {
+            InitializeComponent();
+            InitializeUi();
+
+            LaunchInfo = new LaunchParams
+            {
+                AuthStr = session.GetTicket(),
+                AuthType = AuthType.Ticket,
+                Request = req,
+                RobloxLocale = CultureInfo.CurrentUICulture,
+                GameLocale = CultureInfo.CurrentCulture
+            };
+        }
+
+        // Ensure it's the latest version and installs new version if not.
+        async Task<Client> GetClient()
+        {
+            var client = await AppShared.GetSharedClientAsync();
             if (!client.Exists)
             {
                 Tracker.Start(2, "Updating Roblox");
@@ -62,7 +87,7 @@ namespace Starlight.Gui
         {
             try
             {
-                var client = await EnsureLatest();
+                var client = await GetClient();
                 await Launcher.LaunchAsync(client, LaunchInfo);        
             }
             catch (IOException)

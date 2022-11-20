@@ -6,6 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using Starlight.Apis;
+using Starlight.App;
 using Starlight.Launch;
 using Starlight.Plugins;
 
@@ -18,6 +19,9 @@ namespace Starlight.Gui
     {
         void Application_Startup(object sender, StartupEventArgs e)
         {
+            if (AutoUpdate.IsUpdateAvailable())
+                AutoUpdate.UpdateOnExit();
+            
             PluginArbiter.LoadPlugins();
 
             var args = Environment.GetCommandLineArgs().Skip(1).ToArray();
@@ -40,6 +44,11 @@ namespace Starlight.Gui
 
                 var launchWnd = new LaunchWindow(info);
                 launchWnd.Show();
+            }
+            else
+            {
+                var mainWnd = new MainWindow();
+                mainWnd.Show();
             }
         }
     }
