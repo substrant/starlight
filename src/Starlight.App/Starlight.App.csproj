@@ -1,38 +1,37 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<PropertyGroup>
-		<Product>Starlight.App</Product>
-		<Description>Shared library for Starlight console and GUI applications.</Description>
-		<Company>Substrant</Company>
-		<AssemblyTitle>Starlight.App</AssemblyTitle>
-		<AssemblyName>Starlight.App</AssemblyName>
-		<OutputType>Library</OutputType>
-		<TargetFramework>net6.0-windows</TargetFramework>
-		<LangVersion>latest</LangVersion>
-		<Platforms>AnyCPU;x86;x64</Platforms>
-		<Configurations>Debug;Release</Configurations>
-	</PropertyGroup>
-	<PropertyGroup>
-		<RootNamespace>$(AssemblyName)</RootNamespace>
-		<Copyright>Copyright (c) 2022 $(Company)</Copyright>
-		<OutputPath>bin\$(Configuration)\</OutputPath>
-		<BaseIntermediateOutputPath>obj\$(Configuration)\</BaseIntermediateOutputPath>
-		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-		<DebugType>portable</DebugType>
-	</PropertyGroup>
-	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-		<DebugType>embedded</DebugType>
-	</PropertyGroup>
-	<ItemGroup>
-	  <Compile Remove="obj\**" />
-	  <EmbeddedResource Remove="obj\**" />
-	  <None Remove="obj\**" />
-	</ItemGroup>
-	<ItemGroup>
-	  <PackageReference Include="System.Net.Http" Version="4.3.0" />
-	</ItemGroup>
-	<ItemGroup>
-	  <ProjectReference Include="..\Starlight\Starlight.csproj" />
-	</ItemGroup>
+    <PropertyGroup>
+        <Product>Starlight.App</Product>
+        <Description>Shared library for Starlight console and GUI applications.</Description>
+        <Company>Substrant</Company>
+        <AssemblyTitle>Starlight.App</AssemblyTitle>
+        <AssemblyName>Starlight.App</AssemblyName>
+        <OutputType>Library</OutputType>
+        <TargetFramework>net6.0-windows</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <Platforms>AnyCPU;x86;x64</Platforms>
+        <Configurations>Debug;Release</Configurations>
+    </PropertyGroup>
+    <PropertyGroup>
+        <RootNamespace>$(AssemblyName)</RootNamespace>
+        <Copyright>Copyright (c) 2022 $(Company)</Copyright>
+        <OutputPath>bin\$(Configuration)\</OutputPath>
+        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+        <DebugType>portable</DebugType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+        <DebugType>embedded</DebugType>
+    </PropertyGroup>
+    <ItemGroup>
+      <Compile Remove="obj\**" />
+      <EmbeddedResource Remove="obj\**" />
+      <None Remove="obj\**" />
+    </ItemGroup>
+    <ItemGroup>
+      <PackageReference Include="System.Net.Http" Version="4.3.0" />
+    </ItemGroup>
+    <ItemGroup>
+      <ProjectReference Include="..\Starlight\Starlight.csproj" />
+    </ItemGroup>
 </Project>
