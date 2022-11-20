@@ -5,11 +5,13 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using IWshRuntimeLibrary;
 using Microsoft.Win32;
 using RestSharp;
 using Starlight.Misc;
 using Starlight.Misc.Extensions;
 using Starlight.Misc.Profiling;
+using File = System.IO.File;
 
 namespace Starlight.Bootstrap;
 
@@ -46,24 +48,13 @@ public static partial class Bootstrapper
 
     /* Data */
 
+    internal static string GlobalInstallPath =
+        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Roblox", "Versions");
+
     static DateTime _lastVersionHashFetch = DateTime.MinValue;
     static string _latestVersionHash;
 
     /* Versions */
-
-    /// <summary>
-    ///     Get the parent directory of all clients at the given scope.
-    /// </summary>
-    public static string GetScopeDirectory(ClientScope scope)
-    {
-        return scope switch
-        {
-            ClientScope.Global => Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Roblox", "Versions"),
-            ClientScope.Local => Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Roblox"),
-            _ => null
-        };
-    }
 
     /// <summary>
     ///     Get the latest version hash of Roblox.
@@ -84,21 +75,23 @@ public static partial class Bootstrapper
     /* Clients */
 
     /// <summary>
-    ///     Get a list of installed clients.
+    ///     Get a list of installed clients in the global installation path.
     /// </summary>
-    public static IList<Client> GetClients(ClientScope scope = ClientScope.Global)
+    public static IList<Client> GetClients()
     {
         List<Client> clients = new();
-        var installPath = GetScopeDirectory(scope);
 
-        if (!Directory.Exists(installPath)) // No valid installation of Roblox exists.
+        if (!Directory.Exists(GlobalInstallPath)) // No valid installation of Roblox exists.
             return clients;
 
-        foreach (var dir in Directory.EnumerateDirectories(installPath))
+        foreach (var dir in Directory.EnumerateDirectories(GlobalInstallPath))
         {
             var dirName = Path.GetFileName(dir);
             if (dirName.StartsWith("version-") && File.Exists(Path.Combine(dir, "RobloxPlayerBeta.exe")))
-                clients.Add(new Client(dirName.Split("version-")[1], scope));
+            {
+                var versionHash = dirName.Split("version-")[1];
+                clients.Add(Client.FromCommon(versionHash));
+            }
         }
 
         return clients;
@@ -108,34 +101,33 @@ public static partial class Bootstrapper
     ///     Get a <see cref="Client" /> by its version hash.
     /// </summary>
     /// <returns>The <see cref="Client" /> that was found, or null if it doesn't exist.</returns>
-    public static Client QueryClient(string versionHash, ClientScope scope = ClientScope.Global)
+    public static Client QueryClient(string versionHash)
     {
-        var client = GetClients(scope).FirstOrDefault(x => x.VersionHash == versionHash);
+        var client = GetClients().FirstOrDefault(x => x.VersionHash == versionHash);
         return client;
     }
 
     /// <summary>
-    ///     Get the first <see cref="Client" /> that matches the given predicate in the given scope.
+    ///     Get the first <see cref="Client" /> that matches the given predicate.
     /// </summary>
     /// <returns>The <see cref="Client" /> that matched the predicate, or null if not found.</returns>
-    public static Client GetFirstClient(ClientScope scope = ClientScope.Global, Func<Client, bool> predicate = null)
+    public static Client GetFirstClient(Func<Client, bool> predicate = null)
     {
-        return GetClients(scope).FirstOrDefault(predicate ?? (_ => true));
+        return GetClients().FirstOrDefault(predicate ?? (_ => true));
     }
 
     /// <summary>
-    ///     Get the latest <see cref="Client" /> in the given scope.
+    ///     Get the latest installed <see cref="Client" />.
     /// </summary>
     /// <returns>
     ///     A <see cref="Client" /> object. The <see cref="Client" /> will be returned even if it isn't installed. Use
     ///     <see cref="Client.Exists" /> to check if it exists.
     /// </returns>
     /// <exception cref="TaskCanceledException" />
-    public static async Task<Client> GetLatestClientAsync(ClientScope scope = ClientScope.Global,
-        CancellationToken token = default)
+    public static async Task<Client> GetLatestClientAsync(CancellationToken token = default)
     {
         var versionHash = await GetLatestVersionHashAsync(false, token);
-        return new Client(versionHash, scope);
+        return Client.FromCommon(versionHash);
     }
 
     /* Registry */
@@ -302,6 +294,14 @@ public static partial class Bootstrapper
 
         if (cfg.RegisterClient)
             RegisterClient(client);
+
+        // Overload
+        if (Directory.Exists(cfg.OverloadDirectory))
+            Utility.CopyDirRecursive(cfg.OverloadDirectory, client.Location);
+
+        // Hint the version if it's not a common installation
+        if (!client.IsCommon)
+            File.WriteAllText(Path.Combine(client.Location, "Starlight.lock"), client.VersionHash);
     }
 
     /// <summary>

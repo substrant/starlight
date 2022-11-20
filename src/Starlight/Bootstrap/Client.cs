@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -13,41 +14,81 @@ namespace Starlight.Bootstrap;
 /// </summary>
 public partial class Client
 {
+    internal Client()
+    {
+    }
+
+    /// <summary>
+    ///     Determines of the installation is common, or stored in Roblox's installation directory.
+    /// </summary>
+    internal bool IsCommon;
+
     /// <summary>
     ///     The full path to the launcher executable (RobloxPlayerLauncher.exe).
     /// </summary>
-    public readonly string Launcher;
+    public string Launcher;
 
     /// <summary>
     ///     The full path to the installation directory.
     /// </summary>
-    public readonly string Location;
+    public string Location;
 
     /// <summary>
     ///     The full path to the player executable (RobloxPlayerBeta.exe).
     /// </summary>
-    public readonly string Player;
-
-    /// <summary>
-    ///     The scope of the installation.
-    /// </summary>
-    public readonly ClientScope? Scope;
+    public string Player;
 
     /// <summary>
     ///     The version hash of the installation.
     /// </summary>
-    public readonly string VersionHash;
+    public string VersionHash;
 
     /// <summary>
-    ///     Instantiates a new <see cref="Client" />.
+    ///     Instantiates a new <see cref="Client" /> from Roblox's global installation directory.
     /// </summary>
-    public Client(string versionHash, ClientScope scope = ClientScope.Global, string launcherBin = null)
+    /// <exception cref="ArgumentNullException" />
+    public static Client FromCommon(string versionHash)
     {
-        VersionHash = versionHash;
-        Scope = scope;
-        Location = Path.Combine(Bootstrapper.GetScopeDirectory(scope), "version-" + versionHash);
-        Launcher = launcherBin ?? Path.Combine(Location, "RobloxPlayerLauncher.exe");
-        Player = Path.Combine(Location, "RobloxPlayerBeta.exe");
+        if (versionHash == null)
+            throw new ArgumentNullException(nameof(versionHash));
+
+        var installPath = Path.Combine(Bootstrapper.GlobalInstallPath, "version-" + versionHash);
+        return new Client
+        {
+            IsCommon = true,
+            VersionHash = versionHash,
+            Location = installPath,
+            Player = Path.Combine(installPath, "RobloxPlayerBeta.exe"),
+            Launcher = Path.Combine(installPath, "RobloxPlayerLauncher.exe")
+        };
+    }
+
+    /// <summary>
+    ///    Instantiates a new <see cref="Client" /> from a custom (hinted) Roblox installation directory.
+    /// </summary>
+    /// <exception cref="ArgumentNullException" />
+    /// <exception cref="ArgumentException" />
+    public static Client FromLocal(string installPath, string versionHash = null)
+    {
+        if (installPath == null)
+            throw new ArgumentNullException(nameof(installPath));
+
+        if (versionHash == null)
+        {
+            var lockFile = Path.Combine(installPath, "Starlight.lock");
+            if (!File.Exists(lockFile))
+                throw new ArgumentException("Could not find the version hint file to compensate for the undefined hash.", nameof(installPath));
+
+            versionHash = File.ReadAllText(lockFile);
+        }
+        
+        return new Client
+        {
+            VersionHash = versionHash,
+            Location = installPath,
+            Player = Path.Combine(installPath, "RobloxPlayerBeta.exe"),
+            Launcher = Path.Combine(installPath, "RobloxPlayerLauncher.exe")
+        };
     }
 
     /// <summary>

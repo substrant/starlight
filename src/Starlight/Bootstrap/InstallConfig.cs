@@ -39,4 +39,9 @@ public class InstallConfig
     ///     The max concurrent threads running while unzipping.
     /// </summary>
     public int UnzipConcurrency = 3;
+
+    /// <summary>
+    ///     The directory to copy overloads from.
+    /// </summary>
+    public string OverloadDirectory;
 }
