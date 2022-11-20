@@ -11,13 +11,6 @@ namespace Starlight.Std
 {
     internal class Utility
     {
-        public static ClientScope ParseScope(string scopeStr)
-        {
-            if (!string.IsNullOrWhiteSpace(scopeStr) && !Enum.TryParse(scopeStr, true, out ClientScope scope))
-                return scope;
-            throw new ArgumentException("Invalid scope string provided");
-        }
-
         public struct Resolution
         {
             public int X;

@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Security.Cryptography;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Starlight.Bootstrap;
 using Starlight.Launch;
@@ -16,13 +18,13 @@ public class Plugin : PluginBase
 
     public override string Description => "Base plugin for Starlight's functionality";
     
+    // Expected behavior; disable warning
+#pragma warning disable CS0672
     public override void Load()
     {
         /* Overloads */
 
         Sdk.SetDefaultValue<string>("versionHash", null);
-
-        Sdk.SetDefaultValue<string>("clientScope", null);
 
         /* Spoofing */
 
@@ -38,14 +40,10 @@ public class Plugin : PluginBase
         if (Sdk.UnsavedConfig)
             Sdk.SaveConfig();
     }
+#pragma warning restore CS0672
 
-    public override void PreLaunch(LaunchParams info, ref Client client)
+    public override Task<Client> PreLaunch(Client client, LaunchParams info, CancellationToken token = default)
     {
-        /* Overloads */
-
-        if (Sdk.GetValue("versionHash", out string versionHash) && !string.IsNullOrWhiteSpace(versionHash))
-            client = new Client(versionHash, ClientScope.Local);
-
         /* Spoofing */
 
         if (Sdk.GetValue("spoofTracker", out bool spoofTracker) && spoofTracker)
@@ -61,21 +59,23 @@ public class Plugin : PluginBase
 
         if (Sdk.GetValue("resetTime", out bool resetTime) && resetTime)
             info.LaunchTime = DateTime.Now;
+
+        return Task.FromResult<Client>(null); // Function is not async so return a task.
     }
 
-    public override void PostLaunch(ClientInstance inst)
+    public override async Task PostLaunch(ClientInstance inst, CancellationToken token = default)
     {
         /* Display */
 
         // ReSharper disable once InvertIf
         if (Sdk.GetValue("maxFramerate", out int? fpsCap) && fpsCap is not null)
             if (fpsCap == 0)
-                inst.SetFrameDelayAsync(1.0d / 1000).Wait(); // lol
+                await inst.SetFrameDelayAsync(1.0d / 1000); // lol
             else
-                inst.SetFrameDelayAsync(1.0d / fpsCap.Value).Wait();
+                await inst.SetFrameDelayAsync(1.0d / fpsCap.Value);
     }
 
-    public override void PostWindow(IntPtr hwnd)
+    public override Task PostWindow(IntPtr hwnd, CancellationToken token = default)
     {
         /* Display */
 
@@ -115,5 +115,7 @@ public class Plugin : PluginBase
                 IntPtr.Zero); // Just learned that minimize = no render :thumbsup:
             Native.ShowWindow(hwnd, Native.CmdShow.Show);
         }
+
+        return Task.CompletedTask;
     }
 }

@@ -37,11 +37,15 @@ public static partial class Launcher
     {
         // Run pre-launch methods
         foreach (var plugin in PluginArbiter.GetEnabledPlugins())
-            plugin.PreLaunch(info, ref client);
+        {
+            var newClient = await plugin.PreLaunch(client, info, token);
+            if (newClient != null)
+                client = newClient;
+        }
 
         if (token.IsCancellationRequested)
             throw new TaskCanceledException();
-
+        
         // Ensure the client exists
         if (!client.Exists)
             throw new ClientNotFoundException(client);
@@ -68,7 +72,7 @@ public static partial class Launcher
         using var singletonWaitHandle = Utility.GetNativeEventWaitHandle(singletonEvent);
         singletonWaitHandle.WaitOne();
         CloseHandle(singletonEvent);
-
+        
         // Get the instance
         ClientInstance inst = null;
         try
@@ -102,14 +106,14 @@ public static partial class Launcher
             // ReSharper disable once AccessToDisposedClosure
             if (WaitHandle.WaitAny(new[] { exitEvent, cancelSrc.Token.WaitHandle }) == 0)
                 cancelSrc.Cancel();
-        }, cancelSrc.Token);
+        }, token);
 # pragma warning restore CS4014
 
         // Run post-launch methods
         try
         {
             foreach (var plugin in PluginArbiter.GetEnabledPlugins())
-                plugin.PostLaunch(inst);
+                await plugin.PostLaunch(inst, token);
         }
         catch (Exception)
         {
@@ -125,7 +129,7 @@ public static partial class Launcher
             while ((hWnd = proc.MainWindowHandle) == IntPtr.Zero
                    && !cancelSrc.IsCancellationRequested)
                 Thread.Sleep(TimeSpan.FromSeconds(1.0d / 15));
-        }, cancelSrc.Token);
+        }, token);
 
         // ReSharper disable once MethodSupportsCancellation
         windowTask.Wait();
@@ -148,7 +152,7 @@ public static partial class Launcher
         try
         {
             foreach (var plugin in PluginArbiter.GetEnabledPlugins())
-                plugin.PostWindow(hWnd);
+                await plugin.PostWindow(hWnd, token);
         }
         catch (Exception)
         {
