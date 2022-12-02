@@ -1,4 +1,6 @@
-version: 2.0.{build}
+environment:
+  version-tag: 2.0.0
+version: $(version-tag)+{build}
 build_cloud: WORKSTATION # Self-hosted build agent because builds are slow on AppVeyor's cloud
 max_jobs: 1
 image: Windows
@@ -13,10 +15,10 @@ clone_script:
 dotnet_csproj:
   patch: true
   file: '**\*.csproj'
-  version: '{version}'
-  assembly_version: '{version}'
-  file_version: '{version}'
-  informational_version: '{version}'
+  version: '$(version-tag).{build}'
+  assembly_version: '$(version-tag).{build}'
+  file_version: '$(version-tag).{build}'
+  informational_version: '$(version-tag)+{build}'
 cache: packages -> **\packages.config
 build_script:
 - ps: .\build.ps1
