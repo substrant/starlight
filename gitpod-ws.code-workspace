@@ -10,7 +10,6 @@
         }
     ],
     "settings": {
-        "omnisharp.path": "latest",
-        "omnisharp.useModernNet": false
+        "omnisharp.useModernNet": true,
     }
 }
