@@ -19,7 +19,8 @@ dotnet_csproj:
   assembly_version: '$(version-tag).{build}'
   file_version: '$(version-tag).{build}'
   informational_version: '$(version-tag)+{build}'
-cache: packages -> **\packages.config
+cache:
+  - packages -> **\packages.config
 build_script:
 - ps: .\build.ps1
 test: off
@@ -27,3 +28,6 @@ artifacts:
 - path: src\Starlight.Gui\bin\Release\
   name: bundle
 deploy: off
+only_commits:
+  files:
+    - src\
