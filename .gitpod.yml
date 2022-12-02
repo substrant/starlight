@@ -1,0 +1,8 @@
+workspaceLocation: Starlight/gitpod-ws.code-workspace
+
+image:
+  file: .gitpod.Dockerfile
+
+vscode:
+  extensions:
+    - muhammad-sammy.csharp

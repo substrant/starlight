@@ -1,0 +1,16 @@
+{
+    "folders": [
+        {
+            "name": "Source",
+            "path": "src/"
+        },
+        {
+            "name": "Root",
+            "path": "./"
+        }
+    ],
+    "settings": {
+        "omnisharp.path": "latest",
+        "omnisharp.useModernNet": false
+    }
+}
