@@ -10,9 +10,9 @@ namespace Starlight.RbxApp
     {
         // TaskScheduler::singleton
         // string: "Load ClientAppSettings", last four calls
-        public static readonly Pattern TssCallRefSignature = new("55 8B EC 83 EC 10 56 E8 ?? ?? ?? ?? 8B F0 8D 45 F0");
+        public static readonly Pattern TssCallRefSignature = new("55 8B EC 83 E4 F8 83 EC 08 E8 ?? ?? ?? ?? 8D 0C 24");
         public static readonly Pattern TssPtrRefSignature = new("A1 ?? ?? ?? ?? 8B 4D F4"); // push eax, dword ptr [tssObjectPtr]
-        public const uint TssCallOffset = 7;
+        public const uint TssCallOffset = 9;
 
         // UserId static global variable
         // string: "PlayerId=%llu\n", last instruction
