@@ -34,7 +34,7 @@ if ($Uninstall -or $Update) {
 
 # Metadata (don't change unless fork)
 $repo = "Substrant/Starlight";
-$packageName = "Starlight_win32.zip";
+$packageName = "bundle_win32.zip";
 
 # Look for metadata of last installation and decode json to object
 $metadataFile = "$InstallPath\InstallationMetadata.json";
