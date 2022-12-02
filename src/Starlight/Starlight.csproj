@@ -10,6 +10,7 @@
         <LangVersion>latest</LangVersion>
         <Platforms>AnyCPU;x86;x64</Platforms>
         <Configurations>Debug;Release</Configurations>
+        <EnableWindowsTargeting>true</EnableWindowsTargeting>
     </PropertyGroup>
     <PropertyGroup>
         <RootNamespace>$(AssemblyName)</RootNamespace>

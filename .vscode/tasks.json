@@ -4,7 +4,12 @@
         {
             "label": "build",
             "type": "shell",
-            "command": ".\\build.ps1",
+            "windows": {
+                "command": ".\\build.ps1"
+            },
+            "linux": {
+                "command": "bash build.sh"
+            },
             "problemMatcher": "$msCompile"
         }
     ]
