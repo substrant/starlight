@@ -4,14 +4,12 @@ using System.IO.Compression;
 
 namespace Starlight.Misc.Extensions;
 
-internal static class ZipArchiveExtensions
-{
+internal static class ZipArchiveExtensions {
     public static void ExtractToDirectoryEx(this ZipArchive archive, string destinationDirectoryName,
-        bool overwrite = false)
-    {
+        bool overwrite = false) {
         destinationDirectoryName = Directory.CreateDirectory(destinationDirectoryName).FullName;
-        foreach (var file in archive.Entries)
-        {
+
+        foreach (var file in archive.Entries) {
             if (file.FullName.StartsWith("\\"))
                 continue;
 
@@ -26,24 +24,22 @@ internal static class ZipArchiveExtensions
 
             // ReSharper disable AssignNullToNotNullAttribute
             var dirName = Path.GetDirectoryName(completeFileName);
+
             if (!Directory.Exists(dirName))
                 Directory.CreateDirectory(dirName);
 
-            if (string.IsNullOrEmpty(file.Name))
-            {
+            if (string.IsNullOrEmpty(file.Name)) {
                 Directory.CreateDirectory(dirName);
                 continue;
             }
             // ReSharper enable AssignNullToNotNullAttribute
 
-            try
-            {
+            try {
                 file.ExtractToFile(completeFileName, true);
             }
             catch
                 (IOException) // Roblox likes to make my life harder than it has to be. No clue why this throws but it's going into production because it works.
-            {
-            }
+            { }
         }
     }
 }

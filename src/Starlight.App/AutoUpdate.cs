@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Diagnostics;
-using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using Newtonsoft.Json;
 
+using Newtonsoft.Json;
 #if !DEBUG
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
@@ -12,13 +11,11 @@ using RestSharp.Serializers.NewtonsoftJson;
 
 namespace Starlight.App;
 
-public static class AutoUpdate
-{
-    private const string Repo = "Substrant/Starlight";
-    private const string Branch = "v2";
+public static class AutoUpdate {
+    const string Repo = "Substrant/Starlight";
+    const string Branch = "v2";
 
-    public static async Task<bool> IsUpdateAvailableAsync(CancellationToken token = default)
-    {
+    public static async Task<bool> IsUpdateAvailableAsync(CancellationToken token = default) {
 # if DEBUG
         return await Task.FromResult(false);
 # else
@@ -32,15 +29,12 @@ public static class AutoUpdate
 # endif
     }
 
-    public static bool IsUpdateAvailable()
-    {
+    public static bool IsUpdateAvailable() {
         return AsyncHelpers.RunSync(() => IsUpdateAvailableAsync());
     }
 
-    public static void UpdateOnExit()
-    {
-        var info = new ProcessStartInfo
-        {
+    public static void UpdateOnExit() {
+        var info = new ProcessStartInfo {
             FileName = "powershell.exe",
             WorkingDirectory = AppDomain.CurrentDomain.BaseDirectory,
             Arguments =
@@ -49,8 +43,7 @@ public static class AutoUpdate
         AppDomain.CurrentDomain.ProcessExit += (_, _) => Process.Start(info);
     }
 
-    private class ReleaseData
-    {
+    class ReleaseData {
         [JsonProperty("tag_name")] public string TagName;
     }
 }

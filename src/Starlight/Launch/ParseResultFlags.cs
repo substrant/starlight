@@ -6,8 +6,7 @@ namespace Starlight.Launch;
 ///     Flags for scheme parsing.
 /// </summary>
 [Flags]
-internal enum ParseResultFlags
-{
+internal enum ParseResultFlags {
     PayloadExists = 0x0,
     TicketExists = 0x2,
     RequestExists = 0x4,

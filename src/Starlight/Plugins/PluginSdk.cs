@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+
 using Newtonsoft.Json.Linq;
 
 namespace Starlight.Plugins;
@@ -9,27 +10,23 @@ namespace Starlight.Plugins;
 /// <summary>
 ///     Provides a software development kit for plugins.
 /// </summary>
-public class PluginSdk
-{
-    private readonly JObject _config;
-    private readonly string _configPath;
+public class PluginSdk {
+    readonly JObject _config;
+    readonly string _configPath;
 
-    internal PluginSdk(Assembly pluginAssembly)
-    {
+    internal PluginSdk(Assembly pluginAssembly) {
         if (!File.Exists(pluginAssembly.Location))
             throw new ArgumentException("Invalid plugin assembly.", nameof(pluginAssembly));
 
         var pluginDir = Path.GetDirectoryName(pluginAssembly.Location)!;
         _configPath = Path.Combine(pluginDir, Path.GetFileNameWithoutExtension(pluginAssembly.Location) + ".json");
 
-        if (File.Exists(_configPath))
-        {
+        if (File.Exists(_configPath)) {
             _config = JObject.Parse(File.ReadAllText(_configPath));
         }
-        else
-        {
+        else {
             File.WriteAllText(_configPath, "{}");
-            _config = new JObject();
+            _config = new();
         }
     }
 
@@ -38,8 +35,7 @@ public class PluginSdk
     /// </summary>
     public bool UnsavedConfig { get; private set; }
 
-    public void SetDefaultValue<T>(string name, T value)
-    {
+    public void SetDefaultValue<T>(string name, T value) {
         if (GetValue<T>(name, out _))
             return;
 
@@ -52,8 +48,7 @@ public class PluginSdk
     /// <summary>
     ///     Save the unsaved changes to the configuration.
     /// </summary>
-    public void SaveConfig()
-    {
+    public void SaveConfig() {
         File.WriteAllText(_configPath, _config.ToString());
         UnsavedConfig = false;
     }
@@ -62,10 +57,8 @@ public class PluginSdk
     ///     Merge the configuration with a given JObject.
     /// </summary>
     /// <param name="obj">The object to merge the configuration with.</param>
-    public void MergeConfig(JObject obj)
-    {
-        _config.Merge(obj, new JsonMergeSettings
-        {
+    public void MergeConfig(JObject obj) {
+        _config.Merge(obj, new() {
             MergeArrayHandling = MergeArrayHandling.Replace,
             MergeNullValueHandling = MergeNullValueHandling.Merge,
             PropertyNameComparison = StringComparison.Ordinal
@@ -76,8 +69,7 @@ public class PluginSdk
     ///     Set an entry in the configuration.
     /// </summary>
     /// <typeparam name="T">The type to serialize.</typeparam>
-    public void SetValue<T>(string name, T? value)
-    {
+    public void SetValue<T>(string name, T? value) {
         _config[name] = value is null ? JValue.CreateNull() : JToken.FromObject(value);
     }
 
@@ -86,17 +78,13 @@ public class PluginSdk
     /// </summary>
     /// <typeparam name="T">The type to deserialize</typeparam>
     /// <returns>A boolean indicating whether or not retrieval succeeded.</returns>
-    public bool GetValue<T>(string name, out T? value)
-    {
+    public bool GetValue<T>(string name, out T? value) {
         if (_config[name] is { } tokenValue)
-            try
-            {
+            try {
                 value = tokenValue.ToObject<T>();
                 return true;
             }
-            catch (InvalidCastException)
-            {
-            }
+            catch (InvalidCastException) { }
 
         value = default;
         return false;

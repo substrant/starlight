@@ -3,8 +3,7 @@
 /// <summary>
 ///     Represents an (un)installation configuration.
 /// </summary>
-public class InstallConfig
-{
+public class InstallConfig {
     /// <summary>
     ///     The default installation configuration.
     /// </summary>

@@ -3,9 +3,12 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Newtonsoft.Json;
+
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
+
 using Starlight.Apis.JoinGame;
 
 namespace Starlight.Apis;
@@ -13,8 +16,7 @@ namespace Starlight.Apis;
 /// <summary>
 ///     Represents a Roblox web session.
 /// </summary>
-public partial class Session : RbxUser, IDisposable
-{
+public partial class Session : RbxUser, IDisposable {
     /* Clients */
 
     internal readonly RestClient AuthClient = new RestClient("https://auth.roblox.com/").UseNewtonsoftJson();
@@ -23,28 +25,24 @@ public partial class Session : RbxUser, IDisposable
 
     /* Tokens */
 
-    private string _authToken;
+    string _authToken;
 
     /* IDisposable implementation */
 
-    private bool _disposed;
+    bool _disposed;
 
-    private DateTime _xsrfLastGrabbed;
-    private string _xsrfToken;
+    DateTime _xsrfLastGrabbed;
+    string _xsrfToken;
 
-    private Session()
-    {
-    }
+    Session() { }
 
     /// <summary>
     ///     The token used to authenticate the session.
     ///     This token is the same thing as a <c>.ROBLOSECURITY</c> cookie.
     /// </summary>
-    public string AuthToken
-    {
+    public string AuthToken {
         get => _authToken;
-        set
-        {
+        set {
             GeneralClient.AddCookie(".ROBLOSECURITY", value, "/", ".roblox.com");
             AuthClient.AddCookie(".ROBLOSECURITY", value, "/", ".roblox.com");
             GameClient.AddCookie(".ROBLOSECURITY", value, "/", ".roblox.com");
@@ -61,18 +59,15 @@ public partial class Session : RbxUser, IDisposable
     /// <summary>
     ///     Clean up and release all clients that have been allocated.
     /// </summary>
-    public void Dispose()
-    {
+    public void Dispose() {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
     /// <exception cref="TaskCanceledException" />
     /// <exception cref="InvalidOperationException" />
-    private async Task RetrieveInfoAsync(CancellationToken token = default)
-    {
-        try
-        {
+    async Task RetrieveInfoAsync(CancellationToken token = default) {
+        try {
             var res = await GeneralClient.GetJsonAsync<SessionInfo>("/my/settings/json", token);
             UserId = res?.UserId;
             Username = res?.Username;
@@ -81,8 +76,7 @@ public partial class Session : RbxUser, IDisposable
             if (string.IsNullOrEmpty(UserId) || string.IsNullOrEmpty(Username))
                 throw new InvalidOperationException();
         }
-        catch (JsonSerializationException)
-        {
+        catch (JsonSerializationException) {
             // Roblox returns HTML content when the session is invalid, and redirects to the login page.
             // This is a workaround to catch that and throw a more descriptive exception.
             throw new InvalidOperationException();
@@ -97,8 +91,7 @@ public partial class Session : RbxUser, IDisposable
     /// <exception cref="ArgumentNullException" />
     /// <exception cref="TaskCanceledException" />
     /// <exception cref="InvalidOperationException" />
-    public static async Task<Session> LoginAsync(string authToken, CancellationToken token = default)
-    {
+    public static async Task<Session> LoginAsync(string authToken, CancellationToken token = default) {
         if (string.IsNullOrWhiteSpace(authToken))
             throw new ArgumentNullException(nameof(authToken));
 
@@ -112,9 +105,9 @@ public partial class Session : RbxUser, IDisposable
     ///     Get a <see cref="Session" /> from a one-time authentication ticket.
     /// </summary>
     /// <exception cref="TaskCanceledException" />
-    public static async Task<Session> RedeemAsync(string authTicket, CancellationToken token = default)
-    {
+    public static async Task<Session> RedeemAsync(string authTicket, CancellationToken token = default) {
         var session = new Session();
+
         var req = new RestRequest("/v1/authentication-ticket/redeem", Method.Post)
             .AddHeader("RBXAuthenticationNegotiation", "1")
             .AddJsonBody(new { authenticationTicket = authTicket });
@@ -130,13 +123,11 @@ public partial class Session : RbxUser, IDisposable
     /// <exception cref="ArgumentException" />
     /// <exception cref="TaskCanceledException" />
     public static async Task<Session> AuthenticateAsync(string authToken, AuthType authType,
-        CancellationToken token = default)
-    {
-        return authType switch
-        {
-            AuthType.Token => await LoginAsync(authToken, token),
+        CancellationToken token = default) {
+        return authType switch {
+            AuthType.Token  => await LoginAsync(authToken, token),
             AuthType.Ticket => await RedeemAsync(authToken, token),
-            _ => throw new ArgumentException("Invalid authentication type.", nameof(authType))
+            _               => throw new ArgumentException("Invalid authentication type.", nameof(authType))
         };
     }
 
@@ -145,8 +136,7 @@ public partial class Session : RbxUser, IDisposable
     /// </summary>
     /// <exception cref="TaskCanceledException" />
     /// <exception cref="InvalidOperationException" />
-    public async Task<string> GetTicketAsync(CancellationToken token = default)
-    {
+    public async Task<string> GetTicketAsync(CancellationToken token = default) {
         // Get a new authentication ticket
         var req = new RestRequest("/v1/authentication-ticket", Method.Post)
             .AddHeader("X-CSRF-TOKEN", await GetXsrfTokenAsync(false, token))
@@ -155,6 +145,7 @@ public partial class Session : RbxUser, IDisposable
 
         // Get the ticket header
         var ticketHeader = res.Headers?.FirstOrDefault(x => x.Name == "rbx-authentication-ticket");
+
         if (ticketHeader is null)
             throw new InvalidOperationException(
                 "Failed to get authentication ticket. Is the session authenticated with a valid token?");
@@ -169,8 +160,7 @@ public partial class Session : RbxUser, IDisposable
     /// </summary>
     /// <exception cref="TaskCanceledException" />
     /// <exception cref="InvalidOperationException" />
-    public async Task<string> GetXsrfTokenAsync(bool bypassCache = false, CancellationToken token = default)
-    {
+    public async Task<string> GetXsrfTokenAsync(bool bypassCache = false, CancellationToken token = default) {
         // Return previous token if xsrf token is still alive
         if (!bypassCache && !string.IsNullOrEmpty(_xsrfToken) && (DateTime.Now - _xsrfLastGrabbed).TotalMinutes > 2)
             return _xsrfToken;
@@ -181,6 +171,7 @@ public partial class Session : RbxUser, IDisposable
 
         // Get xsrf token header
         var xsrfHeader = res.Headers?.FirstOrDefault(x => x.Name?.ToLowerInvariant() == "x-csrf-token");
+
         if (xsrfHeader is null)
             throw new InvalidOperationException(
                 "Failed to get cross-site request forgery token. Is the session authenticated with a valid token?");
@@ -199,29 +190,27 @@ public partial class Session : RbxUser, IDisposable
     /// </summary>
     /// <exception cref="TaskCanceledException" />
     public async Task<JoinResponse> RequestJoinAsync(JoinRequest joinReq, int maxTries = 0,
-        CancellationToken token = default)
-    {
+        CancellationToken token = default) {
         var tries = -1;
-        for (; !token.IsCancellationRequested;)
-        {
+
+        for (; !token.IsCancellationRequested;) {
             var reqBody = JsonConvert.SerializeObject(this, Formatting.None,
                 new JsonSerializerSettings { NullValueHandling = NullValueHandling.Ignore });
+
             var req = new RestRequest(joinReq.Endpoint, Method.Post)
                 .AddHeader("User-Agent", "Roblox/WinInet")
                 .AddJsonBody(reqBody);
             var res = await GameClient.ExecuteAsync<JoinResponse>(req, token);
 
             if (res.Data is null)
-                return new JoinResponse { Success = false };
+                return new() { Success = false };
 
-            if (res.StatusCode != HttpStatusCode.OK || res.Data.Status == JoinStatus.Fail)
-            {
+            if (res.StatusCode != HttpStatusCode.OK || res.Data.Status == JoinStatus.Fail) {
                 res.Data.Success = false;
                 return res.Data;
             }
 
-            if (res.Data.Status == JoinStatus.Retry && tries != maxTries)
-            {
+            if (res.Data.Status == JoinStatus.Retry && tries != maxTries) {
                 await Task.Delay(2000, token); // Wait a bit.
                 tries++;
                 continue;
@@ -234,8 +223,7 @@ public partial class Session : RbxUser, IDisposable
         throw new TaskCanceledException();
     }
 
-    protected virtual void Dispose(bool disposing)
-    {
+    protected virtual void Dispose(bool disposing) {
         if (!disposing || _disposed)
             return;
 
@@ -245,8 +233,7 @@ public partial class Session : RbxUser, IDisposable
         GameClient.Dispose();
     }
 
-    private class SessionInfo
-    {
+    class SessionInfo {
         [JsonProperty("UserId")] public string UserId;
         [JsonProperty("Name")] public string Username;
     }

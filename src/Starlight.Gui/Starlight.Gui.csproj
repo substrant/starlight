@@ -1,50 +1,50 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-    <PropertyGroup>
-        <Product>Starlight.Gui</Product>
-        <Description>Starlight graphical user interface.</Description>
-        <Company>Substrant</Company>
-        <AssemblyTitle>Starlight.Gui</AssemblyTitle>
-        <AssemblyName>Starlight.Gui</AssemblyName>
-        <OutputType>WinExe</OutputType>
-        <TargetFramework>net6.0-windows</TargetFramework>
-        <LangVersion>latest</LangVersion>
-        <Platforms>AnyCPU;x86;x64</Platforms>
-        <Configurations>Debug;Release</Configurations>
-        <UseWPF>true</UseWPF>
-        <EnableWindowsTargeting>true</EnableWindowsTargeting>
-    </PropertyGroup>
-    <PropertyGroup>
-        <RootNamespace>$(AssemblyName)</RootNamespace>
-        <Copyright>Copyright (c) 2022 $(Company)</Copyright>
-        <OutputPath>bin\$(Configuration)\</OutputPath>
-        <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
-        <DebugType>portable</DebugType>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
-        <DebugType>embedded</DebugType>
-    </PropertyGroup>
-    <ItemGroup>
-      <Compile Remove="obj\**" />
-      <EmbeddedResource Remove="obj\**" />
-      <None Remove="obj\**" />
-    </ItemGroup>
-    <ItemGroup>
-      <Page Include="App.xaml">
-        <SubType>Designer</SubType>
-        <Generator>MSBuild:Compile</Generator>
-      </Page>
-    </ItemGroup>
-    <ItemGroup>
-      <ProjectReference Include="..\Starlight.App\Starlight.App.csproj" />
-      <ProjectReference Include="..\Starlight.Std\Starlight.Std.csproj">
-        <Private>False</Private>
-      </ProjectReference>
-    </ItemGroup>
-    <ItemGroup>
-      <Compile Update="App.xaml.cs">
-        <SubType>Code</SubType>
-      </Compile>
-    </ItemGroup>
+	<PropertyGroup>
+		<Product>Starlight.Gui</Product>
+		<Description>Starlight graphical user interface.</Description>
+		<Company>Substrant</Company>
+		<AssemblyTitle>Starlight.Gui</AssemblyTitle>
+		<AssemblyName>Starlight.Gui</AssemblyName>
+		<OutputType>WinExe</OutputType>
+		<TargetFramework>net6.0-windows</TargetFramework>
+		<LangVersion>latest</LangVersion>
+		<Platforms>AnyCPU;x86;x64</Platforms>
+		<Configurations>Debug;Release</Configurations>
+		<UseWPF>true</UseWPF>
+		<EnableWindowsTargeting>true</EnableWindowsTargeting>
+	</PropertyGroup>
+	<PropertyGroup>
+		<RootNamespace>$(AssemblyName)</RootNamespace>
+		<Copyright>Copyright (c) 2022 $(Company)</Copyright>
+		<OutputPath>bin\$(Configuration)\</OutputPath>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x86'">
+		<DebugType>portable</DebugType>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x86'">
+		<DebugType>embedded</DebugType>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Remove="obj\**" />
+	  <EmbeddedResource Remove="obj\**" />
+	  <None Remove="obj\**" />
+	</ItemGroup>
+	<ItemGroup>
+	  <Page Include="App.xaml">
+		<SubType>Designer</SubType>
+		<Generator>MSBuild:Compile</Generator>
+	  </Page>
+	</ItemGroup>
+	<ItemGroup>
+	  <ProjectReference Include="..\Starlight.App\Starlight.App.csproj" />
+	  <ProjectReference Include="..\Starlight.Std\Starlight.Std.csproj">
+		<Private>False</Private>
+	  </ProjectReference>
+	</ItemGroup>
+	<ItemGroup>
+	  <Compile Update="App.xaml.cs">
+		<SubType>Code</SubType>
+	  </Compile>
+	</ItemGroup>
 </Project>

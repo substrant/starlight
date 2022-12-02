@@ -3,8 +3,7 @@
 /// <summary>
 ///     The authentication method to use.
 /// </summary>
-public enum AuthType
-{
+public enum AuthType {
     /// <summary>
     ///     Authenticate using an authentication token (<c>.ROBLOSECURITY</c> cookie).
     /// </summary>

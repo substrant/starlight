@@ -5,8 +5,7 @@ namespace Starlight.Apis.JoinGame;
 /// <summary>
 ///     Represents the server response for a <see cref="JoinRequest" />.
 /// </summary>
-public class JoinResponse
-{
+public class JoinResponse {
     /// <summary>
     ///     The response status (not HTTP).
     /// </summary>
@@ -32,22 +31,19 @@ public class JoinResponse
     /// </summary>
     [JsonIgnore] public bool Success;
 
-    internal JoinResponse()
-    {
-    }
+    internal JoinResponse() { }
 
     /// <summary>
     ///     The join status (not HTTP status) of the response.
     /// </summary>
     [JsonIgnore]
     public JoinStatus Status =>
-        InternalStatus switch
-        {
-            0 => JoinStatus.Retry,
-            1 => JoinStatus.Retry,
-            2 => JoinStatus.Success,
-            6 => JoinStatus.FullGame,
+        InternalStatus switch {
+            0  => JoinStatus.Retry,
+            1  => JoinStatus.Retry,
+            2  => JoinStatus.Success,
+            6  => JoinStatus.FullGame,
             10 => JoinStatus.UserLeft,
-            _ => JoinStatus.Fail
+            _  => JoinStatus.Fail
         };
 }

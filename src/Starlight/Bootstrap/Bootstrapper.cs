@@ -5,8 +5,11 @@ using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Microsoft.Win32;
+
 using RestSharp;
+
 using Starlight.Misc;
 using Starlight.Misc.Extensions;
 using Starlight.Misc.Profiling;
@@ -16,10 +19,8 @@ namespace Starlight.Bootstrap;
 /// <summary>
 ///     Contains methods for installing, and uninstalling Roblox, as well as auxliary functions for installation.
 /// </summary>
-public static partial class Bootstrapper
-{
-    private static readonly IReadOnlyDictionary<string, string> ZipMap = new Dictionary<string, string>
-    {
+public static partial class Bootstrapper {
+    static readonly IReadOnlyDictionary<string, string> ZipMap = new Dictionary<string, string> {
         { "content-avatar.zip", "content\\avatar" },
         { "content-configs.zip", "content\\configs" },
         { "content-fonts.zip", "content\\fonts" },
@@ -49,8 +50,8 @@ public static partial class Bootstrapper
     internal static string GlobalInstallPath =
         Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Roblox", "Versions");
 
-    private static DateTime _lastVersionHashFetch = DateTime.MinValue;
-    private static string _latestVersionHash;
+    static DateTime _lastVersionHashFetch = DateTime.MinValue;
+    static string _latestVersionHash;
 
     /* Versions */
 
@@ -59,13 +60,12 @@ public static partial class Bootstrapper
     /// </summary>
     /// <exception cref="TaskCanceledException" />
     public static async Task<string> GetLatestVersionHashAsync(bool bypassCache = false,
-        CancellationToken token = default)
-    {
+        CancellationToken token = default) {
         if (!bypassCache && _latestVersionHash is not null &&
             DateTime.Now - _lastVersionHashFetch > TimeSpan.FromDays(1))
             return await Task.FromResult(_latestVersionHash);
 
-        var version = await RbxCdnClient.GetAsync(new RestRequest("/version.txt"), token);
+        var version = await RbxCdnClient.GetAsync(new("/version.txt"), token);
 
         _lastVersionHashFetch = DateTime.Now;
         return _latestVersionHash = version.Content.Split("version-")[1];
@@ -76,18 +76,16 @@ public static partial class Bootstrapper
     /// <summary>
     ///     Get a list of installed clients in the global installation path.
     /// </summary>
-    public static IList<Client> GetClients()
-    {
+    public static IList<Client> GetClients() {
         List<Client> clients = new();
 
         if (!Directory.Exists(GlobalInstallPath)) // No valid installation of Roblox exists.
             return clients;
 
-        foreach (var dir in Directory.EnumerateDirectories(GlobalInstallPath))
-        {
+        foreach (var dir in Directory.EnumerateDirectories(GlobalInstallPath)) {
             var dirName = Path.GetFileName(dir);
-            if (dirName.StartsWith("version-") && File.Exists(Path.Combine(dir, "RobloxPlayerBeta.exe")))
-            {
+
+            if (dirName.StartsWith("version-") && File.Exists(Path.Combine(dir, "RobloxPlayerBeta.exe"))) {
                 var versionHash = dirName.Split("version-")[1];
                 clients.Add(Client.FromCommon(versionHash));
             }
@@ -100,8 +98,7 @@ public static partial class Bootstrapper
     ///     Get a <see cref="Client" /> by its version hash.
     /// </summary>
     /// <returns>The <see cref="Client" /> that was found, or null if it doesn't exist.</returns>
-    public static Client QueryClient(string versionHash)
-    {
+    public static Client QueryClient(string versionHash) {
         var client = GetClients().FirstOrDefault(x => x.VersionHash == versionHash);
         return client;
     }
@@ -110,8 +107,7 @@ public static partial class Bootstrapper
     ///     Get the first <see cref="Client" /> that matches the given predicate.
     /// </summary>
     /// <returns>The <see cref="Client" /> that matched the predicate, or null if not found.</returns>
-    public static Client GetFirstClient(Func<Client, bool> predicate = null)
-    {
+    public static Client GetFirstClient(Func<Client, bool> predicate = null) {
         return GetClients().FirstOrDefault(predicate ?? (_ => true));
     }
 
@@ -123,8 +119,7 @@ public static partial class Bootstrapper
     ///     <see cref="Client.Exists" /> to check if it exists.
     /// </returns>
     /// <exception cref="TaskCanceledException" />
-    public static async Task<Client> GetLatestClientAsync(CancellationToken token = default)
-    {
+    public static async Task<Client> GetLatestClientAsync(CancellationToken token = default) {
         var versionHash = await GetLatestVersionHashAsync(false, token);
         return Client.FromCommon(versionHash);
     }
@@ -139,8 +134,7 @@ public static partial class Bootstrapper
     ///     <strong>Note:</strong> This does not check if Roblox is currently registered. If Roblox has been installed prior to
     ///     uninstallation, this method will return <c>true</c>.
     /// </returns>
-    public static bool IsRobloxRegistered()
-    {
+    public static bool IsRobloxRegistered() {
         using var hkcu = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
         using var softKey = hkcu.OpenSubKey(@"Software\ROBLOX Corporation");
         return softKey is null;
@@ -149,8 +143,7 @@ public static partial class Bootstrapper
     /// <summary>
     ///     Adds a <see cref="Client" />'s <c>roblox-player</c> scheme class to the registry.
     /// </summary>
-    public static void RegisterClass(Client client)
-    {
+    public static void RegisterClass(Client client) {
         using var hkcu = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
 
         using var classKey = hkcu.CreateSubKey(@"Software\Classes\roblox-player", true);
@@ -167,8 +160,7 @@ public static partial class Bootstrapper
     /// <summary>
     ///     Removes a <see cref="Client" />'s scheme class from the registry.
     /// </summary>
-    public static void UnregisterClass()
-    {
+    public static void UnregisterClass() {
         using var hkcu = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
         hkcu.DeleteSubKeyTree(@"Software\Classes\roblox-player", false);
     }
@@ -177,8 +169,7 @@ public static partial class Bootstrapper
     ///     <para>Adds a <see cref="Client" />'s environment to the registry.</para>
     ///     <strong>Note:</strong> Registry envirionment keys are required for Roblox's player to function properly.
     /// </summary>
-    public static void RegisterClient(Client client)
-    {
+    public static void RegisterClient(Client client) {
         // Roblox's player takes care of this for us, but we might as well add it.
         using var hkcu = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
 
@@ -205,8 +196,7 @@ public static partial class Bootstrapper
     /// <summary>
     ///     Removes a <see cref="Client" />'s environment from the registry.
     /// </summary>
-    public static void UnregisterClient()
-    {
+    public static void UnregisterClient() {
         using var hkcu = RegistryKey.OpenBaseKey(RegistryHive.CurrentUser, RegistryView.Default);
         hkcu.DeleteSubKeyTree(@"Software\ROBLOX Corporation", false);
     }
@@ -219,8 +209,7 @@ public static partial class Bootstrapper
     /// </summary>
     /// <exception cref="TaskCanceledException" />
     public static async Task InstallAsync(Client client, ProgressTracker tracker = null, InstallConfig cfg = null,
-        CancellationToken token = default)
-    {
+        CancellationToken token = default) {
         cfg ??= InstallConfig.Default;
 
         // Create directory (do an uninstallation if needed)
@@ -235,8 +224,7 @@ public static partial class Bootstrapper
         // Download files
         var downloadTracker = tracker?.SubStep(files.Count);
 
-        void Download(Downloadable file)
-        {
+        void Download(Downloadable file) {
             downloadTracker?.Step($"Downloading {file.Name}");
             AsyncHelpers.RunSync(() => file.DownloadAsync(client.Location, token));
         }
@@ -249,15 +237,12 @@ public static partial class Bootstrapper
         // Post-download (extract and delete)
         var postDownloadTracker = tracker?.SubStep(files.Count);
 
-        void Extract(Downloadable file)
-        {
+        void Extract(Downloadable file) {
             var filePath = Path.Combine(client.Location, file.Name);
             var fileExt = Path.GetExtension(file.Name);
 
-            if (fileExt != ".zip" || !ZipMap.TryGetValue(file.Name, out var extractPath))
-            {
-                if (fileExt == ".exe")
-                {
+            if (fileExt != ".zip" || !ZipMap.TryGetValue(file.Name, out var extractPath)) {
+                if (fileExt == ".exe") {
                     postDownloadTracker?.Step($"Skipping {file.Name}");
                     return;
                 }
@@ -270,8 +255,8 @@ public static partial class Bootstrapper
             if (!Directory.Exists(extractTo)) Directory.CreateDirectory(extractTo);
 
             postDownloadTracker?.Step($"Extracting {file.Name}");
-            using (var archive = ZipFile.OpenRead(filePath))
-            {
+
+            using (var archive = ZipFile.OpenRead(filePath)) {
                 archive.ExtractToDirectoryEx(extractTo, true);
             }
 
@@ -307,23 +292,21 @@ public static partial class Bootstrapper
     ///     Uninstalls a <see cref="Client" />.<br />
     ///     This method will unregister the client and delete the client's directory.
     /// </summary>
-    public static void Uninstall(Client client, InstallConfig cfg = null)
-    {
+    public static void Uninstall(Client client, InstallConfig cfg = null) {
         cfg ??= InstallConfig.Default;
 
         Directory.Delete(client.Location, true);
 
         client = GetFirstClient();
-        if (client is not null)
-        {
+
+        if (client is not null) {
             if (cfg.RegisterClass)
                 RegisterClass(client);
 
             if (cfg.RegisterClient)
                 RegisterClient(client);
         }
-        else
-        {
+        else {
             UnregisterClass();
             UnregisterClient();
         }

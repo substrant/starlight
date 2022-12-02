@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.Globalization;
 using System.Windows;
+
 using Starlight.Apis;
 using Starlight.Apis.JoinGame;
 using Starlight.App.Games;
@@ -12,26 +13,21 @@ namespace Starlight.Gui;
 /// <summary>
 ///     Interaction logic for MainWindow.xaml
 /// </summary>
-public partial class MainWindow : Window
-{
-    public MainWindow()
-    {
+public partial class MainWindow : Window {
+    public MainWindow() {
         InitializeComponent();
     }
 
-    private async void Button_Click(object sender, RoutedEventArgs e)
-    {
+    async void Button_Click(object sender, RoutedEventArgs e) {
         var jobId = await ThumbFollow.GetServerId(
             long.Parse(UidBox.Text), long.Parse(PlidBox.Text));
 
-        if (jobId == null)
-        {
+        if (jobId == null) {
             MessageBox.Show("Invalid user id, place id, or user left game.");
             return;
         }
 
-        var joinReq = new JoinRequest
-        {
+        var joinReq = new JoinRequest {
             ReqType = JoinType.Specific,
             JobId = jobId,
             PlaceId = long.Parse(PlidBox.Text)
@@ -42,15 +38,13 @@ public partial class MainWindow : Window
         launchWnd.Show();
     }
 
-    private async void aaa_Click(object sender, RoutedEventArgs e)
-    {
+    async void aaa_Click(object sender, RoutedEventArgs e) {
         using var session = await Session.LoginAsync(Environment.GetEnvironmentVariable("RBX_AUTH"));
-        var info = new LaunchParams
-        {
+
+        var info = new LaunchParams {
             AuthStr = await session.GetTicketAsync(),
             AuthType = AuthType.Ticket,
-            Request = new JoinRequest
-            {
+            Request = new() {
                 ReqType = JoinType.Auto,
                 PlaceId = 4483381587,
                 BrowserTrackerId = 284243248

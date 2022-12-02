@@ -1,7 +1,6 @@
 ﻿namespace Starlight.Apis;
 
-public abstract class RbxUser
-{
+public abstract class RbxUser {
     /// <summary>
     ///     The user's ID.
     /// </summary>

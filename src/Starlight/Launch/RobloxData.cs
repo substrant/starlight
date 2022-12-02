@@ -5,8 +5,7 @@ namespace Starlight.Launch;
 // updated if Roblox chooses to change their code, which
 // is highly unlikely to happen.
 
-internal class RobloxData
-{
+internal class RobloxData {
     public const uint TssCallOffset = 7;
 
     public const uint UserIdOffset = 2; // skips to rel32 of push instruction

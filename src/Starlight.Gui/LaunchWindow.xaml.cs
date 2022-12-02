@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using System.Threading.Tasks;
 using System.Windows;
+
 using Starlight.Apis;
 using Starlight.Apis.JoinGame;
 using Starlight.App;
@@ -12,26 +13,22 @@ using Starlight.Misc.Profiling;
 
 namespace Starlight.Gui;
 
-public partial class LaunchWindow : Window
-{
+public partial class LaunchWindow : Window {
     public readonly LaunchParams LaunchInfo;
     public readonly ProgressTracker Tracker = new();
 
-    public LaunchWindow(LaunchParams launchInfo)
-    {
+    public LaunchWindow(LaunchParams launchInfo) {
         InitializeComponent();
         InitializeUi();
 
         LaunchInfo = launchInfo;
     }
 
-    public LaunchWindow(Session session, JoinRequest req)
-    {
+    public LaunchWindow(Session session, JoinRequest req) {
         InitializeComponent();
         InitializeUi();
 
-        LaunchInfo = new LaunchParams
-        {
+        LaunchInfo = new() {
             AuthStr = session.GetTicket(),
             AuthType = AuthType.Ticket,
             Request = req,
@@ -40,11 +37,9 @@ public partial class LaunchWindow : Window
         };
     }
 
-    private void InitializeUi()
-    {
+    void InitializeUi() {
         Tracker.ProgressUpdated += sender =>
-            Dispatcher.Invoke(() =>
-            {
+            Dispatcher.Invoke(() => {
                 if (!string.IsNullOrWhiteSpace(sender.Annotation))
                     Label.Text = sender.Annotation;
                 ProgressBar.Value = sender.PercentComplete;
@@ -52,47 +47,39 @@ public partial class LaunchWindow : Window
     }
 
     // Ensure it's the latest version and installs new version if not.
-    private async Task<Client> GetClient()
-    {
+    async Task<Client> GetClient() {
         var client = await AppShared.GetSharedClientAsync();
-        if (!client.Exists)
-        {
+
+        if (!client.Exists) {
             Tracker.Start(2, "Updating Roblox");
-            await Bootstrapper.InstallAsync(client, Tracker.SubStep(), new InstallConfig
-            {
+
+            await Bootstrapper.InstallAsync(client, Tracker.SubStep(), new() {
                 RegisterClass = false
             });
         }
-        else
-        {
+        else {
             Tracker.Start(1, "Launching Roblox");
         }
 
         return client;
     }
 
-    private async void Window_Loaded(object sender, RoutedEventArgs e)
-    {
-        try
-        {
+    async void Window_Loaded(object sender, RoutedEventArgs e) {
+        try {
             var client = await GetClient();
             await Launcher.LaunchAsync(client, LaunchInfo);
         }
-        catch (IOException)
-        {
+        catch (IOException) {
             MessageBox.Show("Installation failed due to a filesystem error.", "Starlight", MessageBoxButton.OK,
                 MessageBoxImage.Error);
         }
-        catch (PrematureCloseException)
-        {
+        catch (PrematureCloseException) {
             MessageBox.Show("Roblox prematurely closed. Did you provide a valid authentication ticket?");
         }
-        catch (Exception ex)
-        {
+        catch (Exception ex) {
             MessageBox.Show($"An error occurred: {ex}");
         }
-        finally
-        {
+        finally {
             Close();
         }
     }

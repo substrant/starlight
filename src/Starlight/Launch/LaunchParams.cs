@@ -3,6 +3,7 @@ using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+
 using Starlight.Apis;
 using Starlight.Apis.JoinGame;
 using Starlight.Misc;
@@ -12,10 +13,9 @@ namespace Starlight.Launch;
 /// <summary>
 ///     Represents parameters for launching Roblox.
 /// </summary>
-public partial class LaunchParams
-{
-    private CultureInfo _gameLocale;
-    private CultureInfo _robloxLocale;
+public partial class LaunchParams {
+    CultureInfo _gameLocale;
+    CultureInfo _robloxLocale;
 
     /// <summary>
     ///     The authentication string to be used.<br />
@@ -41,8 +41,7 @@ public partial class LaunchParams
     /// <summary>
     ///     The locale to use in the game.
     /// </summary>
-    public CultureInfo GameLocale
-    {
+    public CultureInfo GameLocale {
         get => _gameLocale ?? CultureInfo.CurrentCulture;
         set => _gameLocale = value;
     }
@@ -50,8 +49,7 @@ public partial class LaunchParams
     /// <summary>
     ///     The locale to use in Roblox.
     /// </summary>
-    public CultureInfo RobloxLocale
-    {
+    public CultureInfo RobloxLocale {
         get => _robloxLocale ?? CultureInfo.CurrentCulture;
         set => _robloxLocale = value;
     }
@@ -59,16 +57,15 @@ public partial class LaunchParams
     /// <summary>
     ///     Get the parameters used in the CLI to launch Roblox.
     /// </summary>
-    public async Task<string> GetCliParamsAsync()
-    {
+    public async Task<string> GetCliParamsAsync() {
         // Runtime check
         if (AuthStr is null || Request is null)
             throw new InvalidOperationException("AuthStr and Request must be set before calling GetCliParams.");
 
         // Log in if a token was provided
         var authToken = AuthStr;
-        if (AuthType == AuthType.Token)
-        {
+
+        if (AuthType == AuthType.Token) {
             var session = await Session.LoginAsync(authToken);
             authToken = await session.GetTicketAsync();
         }
@@ -89,16 +86,15 @@ public partial class LaunchParams
     /// <summary>
     ///     Get the URI used to launch Roblox through the `roblox-player` scheme.
     /// </summary>
-    public async Task<string> GetLaunchUriAsync()
-    {
+    public async Task<string> GetLaunchUriAsync() {
         // Runtime check
         if (AuthStr is null || Request is null)
             throw new InvalidOperationException("AuthStr and Request must be set before calling GetLaunchUri.");
 
         // Log in if a token was provided
         var authToken = AuthStr;
-        if (AuthType == AuthType.Token)
-        {
+
+        if (AuthType == AuthType.Token) {
             var session = await Session.LoginAsync(authToken);
             authToken = await session.GetTicketAsync();
         }

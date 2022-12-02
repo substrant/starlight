@@ -5,16 +5,15 @@ namespace Starlight.Misc.Profiling;
 /// <summary>
 ///     A class that tracks progress of a task.
 /// </summary>
-public class ProgressTracker
-{
+public class ProgressTracker {
     /// <summary>
     ///     A callback for when the progress is updated.
     /// </summary>
     /// <param name="sender">The progress tracker object.</param>
     public delegate void ProgressUpdatedCallback(ProgressTracker sender);
 
-    private double _lastValue;
-    private double _value;
+    double _lastValue;
+    double _value;
 
     /// <summary>
     ///     The annotation of the currently running step.
@@ -34,11 +33,9 @@ public class ProgressTracker
     /// <summary>
     ///     The current step in the task.
     /// </summary>
-    public double Value
-    {
+    public double Value {
         get => _value;
-        set
-        {
+        set {
             _lastValue = _value;
             _value = Math.Max(Math.Min(value, TotalValue), 0); // Clamp value between 0 and TotalValue
             Delta = (_value - _lastValue) / TotalValue;
@@ -65,12 +62,11 @@ public class ProgressTracker
     /// </summary>
     /// <param name="totalValue"></param>
     /// <returns></returns>
-    public ProgressTracker SubStep(int totalValue = 1)
-    {
+    public ProgressTracker SubStep(int totalValue = 1) {
         var subTracker = new ProgressTracker();
         subTracker.Start(totalValue);
-        subTracker.ProgressUpdated += sender =>
-        {
+
+        subTracker.ProgressUpdated += sender => {
             Value += sender.Delta;
 
             if (sender.Annotation is not null)
@@ -86,8 +82,7 @@ public class ProgressTracker
     ///     Mark the current step as complete and move on.
     /// </summary>
     /// <param name="annotation">The annotation for the next step.</param>
-    public void Step(string annotation = null)
-    {
+    public void Step(string annotation = null) {
         Value++;
 
         if (annotation is not null)
@@ -102,8 +97,7 @@ public class ProgressTracker
     /// <param name="totalValue">The max amount of steps in the task.</param>
     /// <param name="annotation">The annotation of the first step.</param>
     /// <returns>A progress tracker refering to the same instance.</returns>
-    public ProgressTracker Start(int totalValue = 1, string annotation = null)
-    {
+    public ProgressTracker Start(int totalValue = 1, string annotation = null) {
         Annotation = annotation;
         Value = 0;
         TotalValue = totalValue;

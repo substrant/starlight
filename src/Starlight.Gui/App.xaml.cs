@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Windows;
+
 using Starlight.Apis;
 using Starlight.App;
 using Starlight.Launch;
@@ -11,10 +12,8 @@ namespace Starlight.Gui;
 /// <summary>
 ///     Interaction logic for App.xaml
 /// </summary>
-public partial class App : Application
-{
-    private void Application_Startup(object sender, StartupEventArgs e)
-    {
+public partial class App : Application {
+    void Application_Startup(object sender, StartupEventArgs e) {
         if (AutoUpdate.IsUpdateAvailable())
             AutoUpdate.UpdateOnExit();
 
@@ -22,12 +21,10 @@ public partial class App : Application
 
         var args = Environment.GetCommandLineArgs().Skip(1).ToArray();
 
-        if (args.Length > 0)
-        {
+        if (args.Length > 0) {
             var info = Scheme.Parse(args[0]);
 
-            if (info is null)
-            {
+            if (info is null) {
                 MessageBox.Show("An invalid payload was specified");
                 Shutdown(1);
                 return;
@@ -41,8 +38,7 @@ public partial class App : Application
             var launchWnd = new LaunchWindow(info);
             launchWnd.Show();
         }
-        else
-        {
+        else {
             var mainWnd = new MainWindow();
             mainWnd.Show();
         }

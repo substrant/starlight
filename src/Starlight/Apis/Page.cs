@@ -3,7 +3,9 @@ using System.Collections.Generic;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Newtonsoft.Json;
+
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
 
@@ -15,19 +17,18 @@ namespace Starlight.Apis;
 ///     <strong>Note:</strong> The generic object is deserialized using Json.NET (Newtonsoft.Json).
 /// </summary>
 /// <typeparam name="T">Any serializable class.</typeparam>
-public partial class Page<T> : IDisposable where T : class
-{
-    private readonly RestClient _client;
-    private readonly IReadOnlyDictionary<string, string> _extras;
-    private readonly int _limit;
-    private readonly Uri _resource;
+public partial class Page<T> : IDisposable where T : class {
+    readonly RestClient _client;
+    readonly IReadOnlyDictionary<string, string> _extras;
+    readonly int _limit;
+    readonly Uri _resource;
 
     /* IDisposable implementation */
 
-    private bool _disposed;
-    private string _lastCursor;
+    bool _disposed;
+    string _lastCursor;
 
-    private PageBody _lastFetchedBody;
+    PageBody _lastFetchedBody;
 
     /// <summary>
     ///     The current page number.
@@ -40,8 +41,7 @@ public partial class Page<T> : IDisposable where T : class
     /// </summary>
     /// <exception cref="ArgumentNullException" />
     /// <exception cref="ArgumentException" />
-    public Page(Uri resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
-    {
+    public Page(Uri resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null) {
         if (resource == null)
             throw new ArgumentNullException(nameof(resource));
 
@@ -63,8 +63,7 @@ public partial class Page<T> : IDisposable where T : class
     /// </summary>
     /// <exception cref="ArgumentNullException" />
     /// <exception cref="ArgumentException" />
-    public Page(Session session, Uri resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
-    {
+    public Page(Session session, Uri resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null) {
         if (session == null)
             throw new ArgumentNullException(nameof(session));
 
@@ -87,15 +86,14 @@ public partial class Page<T> : IDisposable where T : class
     /// </summary>
     /// <exception cref="ArgumentNullException" />
     /// <exception cref="ArgumentException" />
-    public Page(string resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
-    {
+    public Page(string resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null) {
         if (string.IsNullOrWhiteSpace(resource))
             throw new ArgumentNullException(nameof(resource));
 
         if (limit != 10 && limit != 25 && limit != 50 && limit != 100)
             throw new ArgumentException("The page limit must be either 10, 25, 50, or 100.", nameof(limit));
 
-        _resource = new Uri(resource);
+        _resource = new(resource);
         _client = new RestClient(new Uri(_resource.Scheme + "://" + _resource.Host)).UseNewtonsoftJson();
         _limit = limit;
         _extras = extras;
@@ -110,8 +108,7 @@ public partial class Page<T> : IDisposable where T : class
     /// </summary>
     /// <exception cref="ArgumentNullException" />
     /// <exception cref="ArgumentException" />
-    public Page(Session session, string resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null)
-    {
+    public Page(Session session, string resource, int limit = 100, IReadOnlyDictionary<string, string> extras = null) {
         if (session == null)
             throw new ArgumentNullException(nameof(session));
 
@@ -121,7 +118,8 @@ public partial class Page<T> : IDisposable where T : class
         if (limit != 10 && limit != 25 && limit != 50 && limit != 100)
             throw new ArgumentException("The page limit must be either 10, 25, 50, or 100.", nameof(limit));
 
-        _resource = new Uri(resource);
+        _resource = new(resource);
+
         _client = new RestClient(new Uri(_resource.Scheme + "://" + _resource.Host)).UseNewtonsoftJson()
             .AddCookie(".ROBLOSECURITY", session.AuthToken, "/", ".roblox.com");
         _limit = limit;
@@ -131,18 +129,17 @@ public partial class Page<T> : IDisposable where T : class
     /// <summary>
     ///     Clean up and release the client.
     /// </summary>
-    public void Dispose()
-    {
+    public void Dispose() {
         Dispose(true);
         GC.SuppressFinalize(this);
     }
 
     /// <exception cref="TaskCanceledException" />
-    internal async Task<T[]> InternalFetchAsync(string cursor, CancellationToken token = default)
-    {
+    internal async Task<T[]> InternalFetchAsync(string cursor, CancellationToken token = default) {
         var req = new RestRequest(_resource.AbsolutePath)
             .AddQueryParameter("limit", _limit)
             .AddQueryParameter("cursor", cursor);
+
         if (_extras is not null)
             foreach (var kv in _extras)
                 req.AddQueryParameter(kv.Key, kv.Value);
@@ -161,29 +158,25 @@ public partial class Page<T> : IDisposable where T : class
     /// </summary>
     /// <exception cref="ArgumentException" />
     /// <exception cref="TaskCanceledException" />
-    public async Task<T[]> FetchAsync(int newPageNumber, CancellationToken token = default)
-    {
+    public async Task<T[]> FetchAsync(int newPageNumber, CancellationToken token = default) {
         if (newPageNumber < 0)
             throw new ArgumentException("The page number must be greater than or equal to 0.", nameof(newPageNumber));
 
         var delta = PageNumber - newPageNumber;
         T[] data = null;
 
-        if (delta != 0)
-        {
+        if (delta != 0) {
             var absDelta = Math.Abs(delta);
             var sign = Math.Sign(delta);
 
             for (var i = 0; i < absDelta; i++)
-                data = sign switch
-                {
+                data = sign switch {
                     -1 => await InternalFetchAsync(_lastFetchedBody?.PreviousPageCursor, token),
-                    1 => await InternalFetchAsync(_lastFetchedBody?.NextPageCursor, token),
-                    _ => data
+                    1  => await InternalFetchAsync(_lastFetchedBody?.NextPageCursor, token),
+                    _  => data
                 };
         }
-        else
-        {
+        else {
             data = await InternalFetchAsync(_lastCursor, token);
         }
 
@@ -196,8 +189,7 @@ public partial class Page<T> : IDisposable where T : class
     /// </summary>
     /// <exception cref="ArgumentException" />
     /// <exception cref="TaskCanceledException" />
-    public async Task<T[]> FetchNextAsync(CancellationToken token = default)
-    {
+    public async Task<T[]> FetchNextAsync(CancellationToken token = default) {
         PageNumber++;
         return await FetchAsync(PageNumber, token);
     }
@@ -207,15 +199,13 @@ public partial class Page<T> : IDisposable where T : class
     /// </summary>
     /// <exception cref="ArgumentException" />
     /// <exception cref="TaskCanceledException" />
-    public async Task<T[]> FetchPreviousAsync(CancellationToken token = default)
-    {
+    public async Task<T[]> FetchPreviousAsync(CancellationToken token = default) {
         if (PageNumber != 0)
             PageNumber--;
         return await FetchAsync(PageNumber, token);
     }
 
-    protected virtual void Dispose(bool disposing)
-    {
+    protected virtual void Dispose(bool disposing) {
         if (!disposing || _disposed)
             return;
 
@@ -223,8 +213,7 @@ public partial class Page<T> : IDisposable where T : class
         _client.Dispose();
     }
 
-    private class PageBody
-    {
+    class PageBody {
         [JsonProperty("data")] public T[] Data;
         [JsonProperty("nextPageCursor")] public string NextPageCursor;
         [JsonProperty("previousPageCursor")] public string PreviousPageCursor;

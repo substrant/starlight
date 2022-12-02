@@ -2,29 +2,25 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+
 using Starlight.Bootstrap;
 
 namespace Starlight.App;
 
-public static class AppShared
-{
-    private static Client _appClient = InitAppClient();
+public static class AppShared {
+    static Client _appClient = InitAppClient();
 
-    private static Client InitAppClient()
-    {
-        try
-        {
+    static Client InitAppClient() {
+        try {
             var installPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Roblox");
             return Client.FromLocal(installPath);
         }
-        catch (ArgumentException)
-        {
+        catch (ArgumentException) {
             return null;
         }
     }
 
-    public static async Task<Client> GetSharedClientAsync(CancellationToken token = default)
-    {
+    public static async Task<Client> GetSharedClientAsync(CancellationToken token = default) {
         var latestHash = await Bootstrapper.GetLatestVersionHashAsync(true, token);
         var installPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Roblox");
 
@@ -34,8 +30,7 @@ public static class AppShared
         return _appClient;
     }
 
-    public static Client GetSharedClient()
-    {
+    public static Client GetSharedClient() {
         return AsyncHelpers.RunSync(() => GetSharedClientAsync());
     }
 }

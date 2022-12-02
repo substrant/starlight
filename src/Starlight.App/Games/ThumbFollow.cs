@@ -1,17 +1,18 @@
 ﻿using System;
 using System.Linq;
 using System.Threading.Tasks;
+
 using Newtonsoft.Json;
+
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
+
 using Starlight.Apis;
 
 namespace Starlight.App.Games;
 
-public class ThumbFollow
-{
-    public static async Task<Guid?> GetServerId(long userId, long placeId)
-    {
+public class ThumbFollow {
+    public static async Task<Guid?> GetServerId(long userId, long placeId) {
         using var thumbClient = new RestClient("https://thumbnails.roblox.com/").UseNewtonsoftJson();
 
         var thumb = await thumbClient.GetJsonAsync<ThumbResponse>(
@@ -23,12 +24,11 @@ public class ThumbFollow
         var lookFor = thumb.Data[0].ImageUrl;
 
         var pageClient = new Page<GameInfo>($"https://games.roblox.com/v1/games/{placeId}/servers/Public/");
+
         for (var page = await pageClient.FetchNextAsync(); page != null; page = await pageClient.FetchNextAsync())
-            foreach (var info in page)
-            {
+            foreach (var info in page) {
                 var batchReq = new RestRequest("/v1/batch", Method.Post)
-                    .AddJsonBody(info.PlayerTokens.Select(token => new
-                    {
+                    .AddJsonBody(info.PlayerTokens.Select(token => new {
                         format = "png",
                         requestId = $"0:{token}:AvatarHeadshot:150x150:png:regular",
                         size = "150x150",
@@ -48,21 +48,18 @@ public class ThumbFollow
         return null;
     }
 
-    private class GameInfo
-    {
+    class GameInfo {
         [JsonProperty("id")] public Guid? JobId;
         [JsonProperty("playerTokens")] public string[] PlayerTokens;
     }
 
-    private class ThumbData
-    {
+    class ThumbData {
         [JsonProperty("imageUrl")] public string ImageUrl;
         [JsonProperty("state")] public string State;
         [JsonProperty("targetId")] public long TargetId;
     }
 
-    private class ThumbResponse
-    {
+    class ThumbResponse {
         [JsonProperty("data")] public ThumbData[] Data;
     }
 }

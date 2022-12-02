@@ -3,6 +3,7 @@ using System.IO;
 using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
+
 using RestSharp;
 
 namespace Starlight.Bootstrap;
@@ -10,8 +11,7 @@ namespace Starlight.Bootstrap;
 /// <summary>
 ///     Represents a downloadable file.
 /// </summary>
-public partial class Downloadable
-{
+public partial class Downloadable {
     /// <summary>
     ///     <para>The MD5 checksum of the file.</para>
     ///     For more information on MD5:<br />
@@ -39,8 +39,7 @@ public partial class Downloadable
     /// </summary>
     public readonly string VersionHash;
 
-    internal Downloadable(string versionHash, string name, string checksum, long size, long trueSize)
-    {
+    internal Downloadable(string versionHash, string name, string checksum, long size, long trueSize) {
         VersionHash = versionHash;
         Name = name;
         Checksum = checksum;
@@ -53,17 +52,14 @@ public partial class Downloadable
     /// </summary>
     /// <exception cref="TaskCanceledException" />
     /// <exception cref="IOException" />
-    public async Task DownloadAsync(string dir, CancellationToken token = default)
-    {
+    public async Task DownloadAsync(string dir, CancellationToken token = default) {
         var filePath = Path.Combine(dir, Name);
 
-        using (var fileStm = File.OpenWrite(filePath))
-        {
+        using (var fileStm = File.OpenWrite(filePath)) {
             using var cdnClient = new RestClient("https://setup.rbxcdn.com");
-            var req = new RestRequest($"version-{VersionHash}-{Name}")
-            {
-                ResponseWriter = stm =>
-                {
+
+            var req = new RestRequest($"version-{VersionHash}-{Name}") {
+                ResponseWriter = stm => {
                     // ReSharper disable once AccessToDisposedClosure
                     stm.CopyTo(fileStm);
                     return null;
@@ -72,15 +68,13 @@ public partial class Downloadable
             await cdnClient.DownloadDataAsync(req, token);
         }
 
-        if (!Validate(filePath))
-        {
+        if (!Validate(filePath)) {
             File.Delete(filePath);
             throw new IOException("File failed checksum validation.");
         }
     }
 
-    internal bool Validate(string filePath)
-    {
+    internal bool Validate(string filePath) {
         if (!File.Exists(filePath) || new FileInfo(filePath).Length != Size)
             return false;
 

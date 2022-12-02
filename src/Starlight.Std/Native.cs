@@ -3,10 +3,8 @@ using System.Runtime.InteropServices;
 
 namespace Starlight.Std;
 
-internal class Native
-{
-    public enum CmdShow
-    {
+internal class Native {
+    public enum CmdShow {
         Hide,
         Show = 5,
         Minimize
@@ -41,8 +39,7 @@ internal class Native
     public static extern IntPtr SendMessage(IntPtr hWnd, int nMsg, int wParam, IntPtr lParam);
 
     [StructLayout(LayoutKind.Sequential)]
-    public struct Rect
-    {
+    public struct Rect {
         public int Left;
         public int Top;
         public int Right;

@@ -2,8 +2,7 @@
 
 namespace Starlight.App.Accounts;
 
-public class Account
-{
+public class Account {
     [JsonProperty("userId")] public long UserId { get; protected set; }
 
     [JsonProperty("annotation")] public string Annotation { get; set; }

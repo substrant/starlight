@@ -3,8 +3,7 @@
 /// <summary>
 ///     The method of joining to use.
 /// </summary>
-public enum JoinType
-{
+public enum JoinType {
     /// <summary>
     ///     Join a server that Roblox has selected for you.
     /// </summary>

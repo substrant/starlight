@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
+
 using Starlight.Bootstrap;
 using Starlight.Launch;
 using Starlight.Plugins;
@@ -11,8 +12,7 @@ using Starlight.Plugins;
 namespace Starlight.Std;
 
 // ReSharper disable once UnusedMember.Global
-public class Plugin : PluginBase
-{
+public class Plugin : PluginBase {
     public override string Name => "Starlight.Std";
 
     public override string Author => "RealNickk";
@@ -21,8 +21,7 @@ public class Plugin : PluginBase
 
     // Expected behavior; disable warning
 #pragma warning disable CS0672
-    public override void Load()
-    {
+    public override void Load() {
         /* Overloads */
 
         Sdk.SetDefaultValue<string>("versionHash", null);
@@ -43,12 +42,10 @@ public class Plugin : PluginBase
     }
 #pragma warning restore CS0672
 
-    public override Task<Client> PreLaunch(Client client, LaunchParams info, CancellationToken token = default)
-    {
+    public override Task<Client> PreLaunch(Client client, LaunchParams info, CancellationToken token = default) {
         /* Spoofing */
 
-        if (Sdk.GetValue("spoofTracker", out bool spoofTracker) && spoofTracker)
-        {
+        if (Sdk.GetValue("spoofTracker", out bool spoofTracker) && spoofTracker) {
             var seed = new byte[4];
 
             using var cryptoRng = new RNGCryptoServiceProvider();
@@ -64,8 +61,7 @@ public class Plugin : PluginBase
         return Task.FromResult<Client>(null); // Function is not async so return a task.
     }
 
-    public override async Task PostLaunch(ClientInstance inst, CancellationToken token = default)
-    {
+    public override async Task PostLaunch(ClientInstance inst, CancellationToken token = default) {
         /* Display */
 
         // ReSharper disable once InvertIf
@@ -76,19 +72,17 @@ public class Plugin : PluginBase
                 await inst.SetFrameDelayAsync(1.0d / fpsCap.Value);
     }
 
-    public override Task PostWindow(IntPtr hwnd, CancellationToken token = default)
-    {
+    public override Task PostWindow(IntPtr hwnd, CancellationToken token = default) {
         /* Display */
 
-        if (Sdk.GetValue("resolution", out string resValue) && !string.IsNullOrWhiteSpace(resValue))
-        {
+        if (Sdk.GetValue("resolution", out string resValue) && !string.IsNullOrWhiteSpace(resValue)) {
             var res = Utility.ParseResolution(resValue);
-            if (res.HasValue)
-            {
+
+            if (res.HasValue) {
                 // Get the bounds of the window and screen
                 var bounds = Utility.GetWindowBounds(hwnd);
-                var screenBounds = new Rectangle
-                {
+
+                var screenBounds = new Rectangle {
                     Width = (int)SystemParameters.PrimaryScreenWidth,
                     Height = (int)SystemParameters.PrimaryScreenHeight
                 };
@@ -107,15 +101,13 @@ public class Plugin : PluginBase
                 Native.SetWindowLong(hwnd, Native.GwlStyle, Native.WsPopupWindow);
                 Native.ShowWindow(hwnd, Native.CmdShow.Show);
             }
-            else
-            {
+            else {
                 throw new NotImplementedException();
             }
         }
 
         // ReSharper disable once InvertIf
-        if (Sdk.GetValue("headless", out bool isHeadless) && isHeadless)
-        {
+        if (Sdk.GetValue("headless", out bool isHeadless) && isHeadless) {
             Native.SendMessage(hwnd, Native.WmSysCommand, Native.ScMinimize,
                 IntPtr.Zero); // Just learned that minimize = no render :thumbsup:
             Native.ShowWindow(hwnd, Native.CmdShow.Show);

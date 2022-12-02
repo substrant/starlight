@@ -7,8 +7,7 @@ namespace Starlight.Misc;
 /// <summary>
 ///     Shared objects for the Starlight library.
 /// </summary>
-public static class Shared
-{
+public static class Shared {
     /// <summary>
     ///     The path the the plugin directory.
     /// </summary>

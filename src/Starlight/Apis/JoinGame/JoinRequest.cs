@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Text;
 using System.Web;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -10,8 +11,7 @@ namespace Starlight.Apis.JoinGame;
 /// <summary>
 ///     Represents a request to join a Roblox game.
 /// </summary>
-public class JoinRequest
-{
+public class JoinRequest {
     /// <summary>
     ///     <para>The game's access code.</para>
     ///     <strong>Note:</strong> Applies only when joining a reserved or private server.
@@ -57,36 +57,28 @@ public class JoinRequest
     /// <summary>
     ///     Instantiate a join request.
     /// </summary>
-    public JoinRequest()
-    {
-    }
+    public JoinRequest() { }
 
     [JsonIgnore]
-    internal string Endpoint
-    {
-        get
-        {
-            return ReqType switch
-            {
-                JoinType.Auto => "v1/join-game",
+    internal string Endpoint {
+        get {
+            return ReqType switch {
+                JoinType.Auto     => "v1/join-game",
                 JoinType.Specific => "/v1/join-game-instance",
-                JoinType.Private => "/v1/join-private-game",
-                _ => null
+                JoinType.Private  => "/v1/join-private-game",
+                _                 => null
             };
         }
     }
 
     [JsonProperty("request")]
-    internal string RequestName
-    {
-        get
-        {
-            return ReqType switch
-            {
-                JoinType.Auto => "RequestGame",
+    internal string RequestName {
+        get {
+            return ReqType switch {
+                JoinType.Auto     => "RequestGame",
                 JoinType.Specific => "RequestGame",
-                JoinType.Private => "RequestPrivateGame",
-                _ => null
+                JoinType.Private  => "RequestPrivateGame",
+                _                 => null
             };
         }
     }
@@ -94,8 +86,7 @@ public class JoinRequest
     /// <summary>
     ///     Instantiate a join request from <paramref name="launchUri" />.
     /// </summary>
-    public static JoinRequest FromUri(Uri launchUri)
-    {
+    public static JoinRequest FromUri(Uri launchUri) {
         var query = HttpUtility.ParseQueryString(launchUri.Query);
         return JObject.FromObject(query.Cast<string>().ToDictionary(k => k, v => query[v])).ToObject<JoinRequest>();
     }
@@ -103,11 +94,10 @@ public class JoinRequest
     /// <summary>
     ///     Serialize the current object into a launch URI.
     /// </summary>
-    public override string ToString()
-    {
+    public override string ToString() {
         var query = new StringBuilder();
-        foreach (var pair in JObject.FromObject(this))
-        {
+
+        foreach (var pair in JObject.FromObject(this)) {
             if (pair.Value?.Type == JTokenType.Null)
                 continue;
 

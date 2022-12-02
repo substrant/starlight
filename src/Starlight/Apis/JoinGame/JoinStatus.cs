@@ -3,8 +3,7 @@
 /// <summary>
 ///     The status of a <see cref="JoinResponse" />.
 /// </summary>
-public enum JoinStatus
-{
+public enum JoinStatus {
     /// <summary>
     ///     Request failed/rejected.
     /// </summary>
