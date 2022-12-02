@@ -26,7 +26,7 @@ build_script:
 test: off
 artifacts:
 - path: src\Starlight.Gui\bin\Release\
-  name: bundle
+  name: bundle_win32
 deploy: off
 only_commits:
   files:
