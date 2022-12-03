@@ -1,7 +1,7 @@
 
 [*.{appxmanifest,axml,build,c,c++,cc,cginc,compute,config,cp,cpp,cshtml,csproj,cu,cuh,cxx,dbml,discomap,dtd,fx,fxh,h,hh,hlsl,hlsli,hlslinc,hpp,htm,html,hxx,inc,inl,ino,ipp,jsproj,lsproj,mpp,mq4,mq5,mqh,njsproj,nuspec,proj,props,razor,resw,resx,StyleCop,targets,tasks,tpp,usf,ush,vbproj,xml,xsd}]
-indent_style = tab
-indent_size = tab
+indent_style = space
+indent_size = 4
 tab_width = 4
 
 [*.{asax,ascx,aspx,axaml,cs,css,master,paml,skin,vb,xaml,xamlx,xoml}]
