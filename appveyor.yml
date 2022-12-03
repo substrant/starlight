@@ -1,5 +1,5 @@
 environment:
-	version-tag: 2.0.0
+  version-tag: 2.0.0
 version: $(version-tag)+{build}
 build_cloud: WORKSTATION # Self-hosted build agent because builds are slow on AppVeyor's cloud
 max_jobs: 1
@@ -8,26 +8,26 @@ clone_depth: 5
 clone_folder: C:\Trunk\
 clone_script:
 - cmd: >-
-		git clone -q --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
-				cd %APPVEYOR_BUILD_FOLDER%
-				git checkout -qf %APPVEYOR_REPO_COMMIT%
-				git submodule update --init --recursive
+    git clone -q --branch=%APPVEYOR_REPO_BRANCH% https://github.com/%APPVEYOR_REPO_NAME%.git %APPVEYOR_BUILD_FOLDER%
+        cd %APPVEYOR_BUILD_FOLDER%
+        git checkout -qf %APPVEYOR_REPO_COMMIT%
+        git submodule update --init --recursive
 dotnet_csproj:
-	patch: true
-	file: '**\*.csproj'
-	version: '$(version-tag).{build}'
-	assembly_version: '$(version-tag).{build}'
-	file_version: '$(version-tag).{build}'
-	informational_version: '$(version-tag)+{build}'
+  patch: true
+  file: '**\*.csproj'
+  version: '$(version-tag).{build}'
+  assembly_version: '$(version-tag).{build}'
+  file_version: '$(version-tag).{build}'
+  informational_version: '$(version-tag)+{build}'
 cache:
-	- packages -> **\packages.config
+  - packages -> **\packages.config
 build_script:
 - ps: .\build.ps1
 test: off
 artifacts:
 - path: src\Starlight.Gui\bin\Release\
-	name: bundle_win32
+  name: bundle_win32
 deploy: off
 only_commits:
-	files:
-		- src\
+  files:
+    - src\
