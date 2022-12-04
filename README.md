@@ -15,7 +15,18 @@ An open-sourced Roblox multi-tool.
 <details>
 <summary>Creating an exception for Starlight (Windows Defender)</summary>
 <br>
-If Starlight is being flagged/deleted by Windows Defender, you can quite easily make an exception.
+
+If Starlight is being flagged/deleted by Windows Defender, you can quite easily make an exception. Starlight is installed into ".starlight" in your user folder (with the installation script) and is downloaded as a temporary file in the temp directory. You need to make an exception for "%userprofile%/.starlight/" and possibly "%temp%/bundle_win32.zip".
+
+You can create an exception by doing the following:
+
+1. Open Windows Defender.
+    - Windows 10: Go to Start (<kbd>Win</kbd>) -> Settings -> Update & Security -> Windows Security -> Virus & threat protection
+    - Windows 11: Go to Start (<kbd>Win</kbd>) -> Settings -> Privacy & Security -> Virus & threat protection
+1. Under "Virus & threat protection settings", click "Manage settings", then under "Exclusions", select "Add or remove exclusions".
+1. Click "Add a exclusion".
+1. Navigate to your profile (you can type `C:\Users\YourUsernameHere` or `%userprofile%` in the top path bar and press enter) and create a folder called ".starlight".
+1. Click into the ".starlight" folder and click "Open".
 
 </details>
 
