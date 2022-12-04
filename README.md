@@ -10,6 +10,15 @@ An open-sourced Roblox multi-tool.
 
 ## Installation
 
+**Starlight may be falsely flagged by your antivirus. If your antivirus is deleting Starlight, you'll have to make an exception rule.**
+
+<details>
+<summary>Creating an exception for Starlight (Windows Defender)</summary>
+<br>
+If Starlight is being flagged/deleted by Windows Defender, you can quite easily make an exception.
+
+</details>
+
 ### Powershell
 
 You can install Starlight with a single command line entry using Powershell.
@@ -33,17 +42,15 @@ Experimental builds of Starlight can be found on [AppVeyor](https://ci.appveyor.
 
 **Starlight does not have a Discord server.**
 
-If there is an issue with Starlight on your end, or you want to provide enhancement ideas for Starlight, please write an issue!
-
-When making an issue, please provide as much information as possible—reproduction steps, detailed examples.
-
-Don't be shy if it's your first issue—you're just talking to another person; there's no need to speak formally.
+If there is an issue with Starlight on your end, or you want to provide enhancement ideas for Starlight, please write an issue! When making an issue, please provide as much information as possible—reproduction steps, detailed examples. Don't be shy if it's your first issue—you're just talking to another person; there's no need to speak formally.
 
 ## Contribution
 
-Contribution to Starlight allowed and actively encouraged. When making pull requests, ensure that the new code follows the code style and is tested.
+Contribution to Starlight allowed and actively encouraged. When making pull requests, ensure that the new code follows the code style and is tested. Failure to do so will result in a postpone of the merge until the issues are fixed.
 
 ## Disclaimers
+
+Starlight is open-sourced software. The binaries that are distributed regarding Starlight may be flagged by an antivirus. Digital licenses for signing executable files are quite expensive, and we can't afford it. Antivirus programs are very unreliable and sometimes make zero sense. Starlight is not malware, and you can check that yourself by reverse engineering the binaries, which aren't obfuscated, but packed. You can also check the source code on GitHub and compile from the source. Releases of Starlight from Substrant are only available at GitHub, AppVeyor, or a Substrant-owned domain. Anywhere else Starlight is downloaded is not a safe source.
 
 Licenses provided with other software that modify Roblox—Synapse X, Script-Ware, etc.—may be compatible with Starlight. However, their licenses may not allow third party tools to modify Roblox along with their software.
 
