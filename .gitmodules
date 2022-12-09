@@ -1,6 +1,0 @@
-[submodule "submodules/HackerFramework"]
-	path = submodules/HackerFramework
-	url = https://github.com/RealNickk/HackerFramework.git
-[submodule "submodules/Substrant.Registry"]
-	path = submodules/Substrant.Registry
-	url = https://github.com/Substrant/Substrant.Registry.git
