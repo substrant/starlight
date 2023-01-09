@@ -225,8 +225,13 @@ public static partial class Bootstrapper {
         var downloadTracker = tracker?.SubStep(files.Count);
 
         void Download(Downloadable file) {
-            downloadTracker?.Step($"Downloading {file.Name}");
-            AsyncHelpers.RunSync(() => file.DownloadAsync(client.Location, token));
+            try {
+                downloadTracker?.Step($"Downloading {file.Name}");
+                AsyncHelpers.RunSync(() => file.DownloadAsync(client.Location, token));
+            }
+            catch (ThreadInterruptedException) {
+                // Abort.
+            }
         }
 
         await Utility.DisperseActionsAsync(files, Download, cfg.DownloadConcurrency, token);
@@ -238,30 +243,35 @@ public static partial class Bootstrapper {
         var postDownloadTracker = tracker?.SubStep(files.Count);
 
         void Extract(Downloadable file) {
-            var filePath = Path.Combine(client.Location, file.Name);
-            var fileExt = Path.GetExtension(file.Name);
+            try {
+                var filePath = Path.Combine(client.Location, file.Name);
+                var fileExt = Path.GetExtension(file.Name);
 
-            if (fileExt != ".zip" || !ZipMap.TryGetValue(file.Name, out var extractPath)) {
-                if (fileExt == ".exe") {
-                    postDownloadTracker?.Step($"Skipping {file.Name}");
-                    return;
+                if (fileExt != ".zip" || !ZipMap.TryGetValue(file.Name, out var extractPath)) {
+                    if (fileExt == ".exe") {
+                        postDownloadTracker?.Step($"Skipping {file.Name}");
+                        return;
+                    }
+
+                    postDownloadTracker?.Step($"Deleting {file.Name}");
+                    goto ExtractFin;
                 }
 
-                postDownloadTracker?.Step($"Deleting {file.Name}");
-                goto ExtractFin;
+                var extractTo = Path.Combine(client.Location, extractPath);
+                if (!Directory.Exists(extractTo)) Directory.CreateDirectory(extractTo);
+
+                postDownloadTracker?.Step($"Extracting {file.Name}");
+
+                using (var archive = ZipFile.OpenRead(filePath)) {
+                    archive.ExtractToDirectoryEx(extractTo, true);
+                }
+
+                ExtractFin:
+                File.Delete(filePath);
             }
-
-            var extractTo = Path.Combine(client.Location, extractPath);
-            if (!Directory.Exists(extractTo)) Directory.CreateDirectory(extractTo);
-
-            postDownloadTracker?.Step($"Extracting {file.Name}");
-
-            using (var archive = ZipFile.OpenRead(filePath)) {
-                archive.ExtractToDirectoryEx(extractTo, true);
+            catch (ThreadInterruptedException) {
+                // Abort.
             }
-
-            ExtractFin:
-            File.Delete(filePath);
         }
 
         await Utility.DisperseActionsAsync(files, Extract, cfg.UnzipConcurrency, token);

@@ -43,7 +43,8 @@ internal class Utility {
             while (curConcurrency >= maxConcurrency) {
                 if (WaitHandle.WaitAny(new[] { token.WaitHandle, threadFinishedEvent }) == 0) {
                     foreach (var t in threads) {
-                        t.Abort();
+                        t.Interrupt();
+                        t.Join();
                         curConcurrency--;
                     }
 
