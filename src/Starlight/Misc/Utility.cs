@@ -58,7 +58,8 @@ internal class Utility {
         while (curConcurrency > 0) {
             if (WaitHandle.WaitAny(new[] { token.WaitHandle, threadFinishedEvent }) == 0) {
                 foreach (var t in threads) {
-                    t.Abort();
+                    t.Interrupt();
+                    t.Join();
                     curConcurrency--;
                 }
 
