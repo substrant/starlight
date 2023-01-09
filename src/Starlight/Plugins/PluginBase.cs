@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -99,7 +100,7 @@ public abstract class PluginBase {
     /// <param name="inst">The running instance of Roblox.</param>
     /// <param name="token">The cancellation token used to cancel the task.</param>
     /// <exception cref="TaskCanceledException" />
-    public virtual Task PostLaunch(ClientInstance inst, CancellationToken token = default) {
+    public virtual Task PostLaunch(Process inst, CancellationToken token = default) {
         return Task.CompletedTask;
     }
 
@@ -109,7 +110,7 @@ public abstract class PluginBase {
     /// <param name="hwnd">Roblox's main window handle.</param>
     /// <param name="token">The cancellation token used to cancel the task.</param>
     /// <exception cref="TaskCanceledException" />
-    public virtual Task PostWindow(IntPtr hwnd, CancellationToken token = default) {
+    public virtual Task PostWindow(CancellationToken token = default) {
         return Task.CompletedTask;
     }
 }

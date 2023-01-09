@@ -46,7 +46,7 @@ public static partial class Launcher {
         throw new PrematureCloseException(client, proc);
     }
 
-    internal static async Task<ClientInstance> GetInstanceAsync(Client client, LaunchParams info,
+    internal static async Task<Process> LaunchInstanceAsync(Client client, LaunchParams info,
         CancellationToken token = default) {
         // Start Roblox
         Process proc = null;
@@ -69,20 +69,7 @@ public static partial class Launcher {
         if (!singEventFired)
             FailLaunch(client, proc);
 
-        // Get the instance
-        ClientInstance inst = null;
-
-        try {
-            inst = new(client, proc);
-        }
-        finally {
-            if (inst is null)
-                FailLaunch(client, proc);
-            else if (token.IsCancellationRequested)
-                CancelLaunch(proc);
-        }
-
-        return inst;
+        return proc;
     }
 
     /// <summary>
@@ -96,7 +83,7 @@ public static partial class Launcher {
     /// <exception cref="PrematureCloseException" />
     /// <exception cref="TaskCanceledException" />
     /// <exception cref="Exception">Thrown when a plugin throws an exception.</exception>
-    public static async Task<ClientInstance> LaunchAsync(Client client, LaunchParams info,
+    public static async Task<Process> LaunchAsync(Client client, LaunchParams info,
         CancellationToken token = default) {
         // Run pre-launch methods
         foreach (var plugin in PluginArbiter.GetEnabledPlugins()) {
@@ -113,12 +100,12 @@ public static partial class Launcher {
         if (!client.Exists)
             throw new ClientNotFoundException(client);
 
-        var inst = await GetInstanceAsync(client, info, token);
+        var inst = await LaunchInstanceAsync(client, info, token);
         var cancelSrc = new CancellationTokenSource();
 
 # pragma warning disable CS4014
         // Add a failsafe if launch fails
-        using var exitEvent = Utility.GetNativeEventWaitHandle(inst.Target.Handle);
+        using var exitEvent = Utility.GetNativeEventWaitHandle(inst.Handle.ToInt32());
 
         Task.Run(() => {
             // ReSharper disable once AccessToDisposedClosure
@@ -133,7 +120,7 @@ public static partial class Launcher {
                 await plugin.PostLaunch(inst, token);
         }
         catch (Exception) {
-            FailLaunch(client, inst.Proc);
+            FailLaunch(client, inst);
         }
 
         // Wait for Roblox's window to open
@@ -141,7 +128,7 @@ public static partial class Launcher {
         var hWnd = IntPtr.Zero;
 
         var windowTask = Task.Run(() => {
-            while ((hWnd = inst.Proc!.MainWindowHandle) == IntPtr.Zero
+            while ((hWnd = inst!.MainWindowHandle) == IntPtr.Zero
                    && !cancelSrc.IsCancellationRequested)
                 Thread.Sleep(TimeSpan.FromSeconds(1.0d / 15));
         }, token);
@@ -150,17 +137,17 @@ public static partial class Launcher {
         await windowTask.WaitAsync(token);
 
         if (cancelSrc.IsCancellationRequested)
-            FailLaunch(client, inst.Proc);
+            FailLaunch(client, inst);
         else if (token.IsCancellationRequested)
-            CancelLaunch(inst.Proc);
+            CancelLaunch(inst);
 
         // Run post-window methods
         try {
             foreach (var plugin in PluginArbiter.GetEnabledPlugins())
-                await plugin.PostWindow(hWnd, token);
+                await plugin.PostWindow(token);
         }
         catch (Exception) {
-            FailLaunch(client, inst.Proc);
+            FailLaunch(client, inst);
         }
 
         return inst;
