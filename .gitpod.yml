@@ -1,8 +1,18 @@
 workspaceLocation: Starlight/gitpod-ws.code-workspace
 
+tasks:
+  - before: |
+      sudo apt-get install -y cmake clang mingw-w64-common
+      cmake -S. -Bbuild -DCMAKE_EXPORT_COMPILE_COMMANDS=ON
+      cmake --build build --target all 
+
 image:
   file: .gitpod.Dockerfile
 
 vscode:
   extensions:
+    - llvm-vs-code-extensions.vscode-clangd
+    - twxs.cmake
+    - ms-vscode.cmake-tools
+    - webfreak.debug
     - muhammad-sammy.csharp
