@@ -1,5 +1,8 @@
 # Starlight
 
+# ⚠️ This project is no longer actively maintained!
+All software development in this repository by official contributors have abandoned the project in favor of a new and upcoming solution that works cross-platform. All versions of Starlight are archived and will no longer recieve patches. Unvarnished, unfinished, and unreleased branches are welcome to be finished by unofficial maintainers in forks. 
+
 ![Downloads](https://img.shields.io/github/downloads/Substrant/Starlight/total)
 ![Open Issues](https://img.shields.io/github/issues-raw/Substrant/Starlight)
 ![Open Issues](https://img.shields.io/github/issues-closed-raw/Substrant/Starlight)
